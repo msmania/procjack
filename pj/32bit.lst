@@ -1,0 +1,41 @@
+     1                                  [org 0]
+     2                                  [bits 32]
+     3                                  
+     4 00000000 56                      push    esi
+     5 00000001 8B742408                mov     esi,dword [esp+8]
+     6 00000005 57                      push    edi
+     7 00000006 8D8600040000            lea     eax,[esi+400h]
+     8 0000000C 50                      push    eax
+     9 0000000D B878563412              mov     eax, 0x12345678
+    10 00000012 FFD0                    call    eax ; LoadLibraryW
+    11 00000014 89C7                    mov     edi,eax
+    12 00000016 68ADDE0000              push    0DEADh
+    13 0000001B 57                      push    edi
+    14 0000001C B878563412              mov     eax, 0x12345678
+    15 00000021 FFD0                    call    eax ; GetProcAddress
+    16 00000023 6A00                    push    0
+    17 00000025 6A00                    push    0
+    18 00000027 56                      push    esi
+    19 00000028 50                      push    eax
+    20 00000029 6A00                    push    0
+    21 0000002B 6A00                    push    0
+    22 0000002D B878563412              mov     eax, 0x12345678
+    23 00000032 FFD0                    call    eax ; CreateThread
+    24 00000034 89C6                    mov     esi,eax
+    25 00000036 6AFF                    push    0FFFFFFFFh
+    26 00000038 56                      push    esi
+    27 00000039 B878563412              mov     eax, 0x12345678
+    28 0000003E FFD0                    call    eax ; WaitForSingleObject
+    29 00000040 56                      push    esi
+    30 00000041 B878563412              mov     eax, 0x12345678
+    31 00000046 FFD0                    call    eax ; CloseHandle
+    32 00000048 57                      push    edi
+    33 00000049 B878563412              mov     eax, 0x12345678
+    34 0000004E FFD0                    call    eax ; FreeLibrary
+    35 00000050 6A00                    push    0
+    36 00000052 B878563412              mov     eax, 0x12345678
+    37 00000057 FFD0                    call    eax ; ExitThread
+    38 00000059 5F                      pop     edi
+    39 0000005A 5E                      pop     esi
+    40 0000005B CD03                    int     3
+    41 0000005D CD03                    int     3

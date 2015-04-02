@@ -1,0 +1,9 @@
+;
+; spy.def
+;
+; https://msdn.microsoft.com/en-us/library/hyx1zcd3.aspx
+;
+
+LIBRARY "spy.dll"
+EXPORTS
+    Hello @100 NONAME PRIVATE
