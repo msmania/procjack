@@ -6,50 +6,22 @@
 
 #include <windows.h>
 #include <stdio.h>
-#include <strsafe.h>
 
 #define LOGERROR wprintf
 #define LOGINFO LOGERROR
 
 class CInjectData {
 private:
-    FARPROC LoadLibrary;
-    FARPROC FreeLibrary;
-    FARPROC GetProcAddress;
-    FARPROC CreateThread;
-    FARPROC ExitThread;
-    FARPROC WaitForSingleObject;
-    FARPROC CloseHandle;
+    bool FillFunction(BOOL Is64bit, LPCWSTR DllPath, WORD Ordinal, PBYTE Buffer, DWORD Length) {
+        HMODULE Kernel32 = GetModuleHandle(L"kernel32.dll");
+        FARPROC LoadLibrary = NULL;
+        FARPROC FreeLibrary = NULL;
+        FARPROC GetProcAddress = NULL;
+        FARPROC CreateThread = NULL;
+        FARPROC ExitThread = NULL;
+        FARPROC WaitForSingleObject = NULL;
+        FARPROC CloseHandle = NULL;
 
-public:
-    struct Package {
-        BYTE InitialCode[1024];
-        WCHAR DllPath[MAX_PATH];
-        BYTE Context[1];
-    };
-
-    CInjectData() {
-        HMODULE Kernel32 = ::LoadLibrary(L"kernel32.dll");
-
-        // We can assume the imagebase of kernel32.dll/ntdll.dll is the same in a remote process
-        LoadLibrary = ::GetProcAddress(Kernel32, "LoadLibraryW");
-        FreeLibrary = ::GetProcAddress(Kernel32, "FreeLibrary");
-        GetProcAddress = ::GetProcAddress(Kernel32, "GetProcAddress");
-        CreateThread = ::GetProcAddress(Kernel32, "CreateThread");
-        ExitThread = ::GetProcAddress(Kernel32, "ExitThread");
-        WaitForSingleObject = ::GetProcAddress(Kernel32, "WaitForSingleObject");
-        CloseHandle = ::GetProcAddress(Kernel32, "CloseHandle");
-
-        LOGINFO(L"%p KERNEL32!CloseHandle\n", CloseHandle);
-        LOGINFO(L"%p KERNEL32!WaitForSingleObject\n", WaitForSingleObject);
-        LOGINFO(L"%p KERNEL32!CreateThreadStub\n", CreateThread);
-        LOGINFO(L"%p ntdll!RtlExitUserThread\n", ExitThread);
-        LOGINFO(L"%p KERNEL32!FreeLibraryStub\n", FreeLibrary);
-        LOGINFO(L"%p KERNEL32!GetProcAddressStub\n", GetProcAddress);
-        LOGINFO(L"%p KERNEL32!LoadLibraryW\n", LoadLibrary);
-    }
-
-    bool FillData(BOOL Is64bit, LPCWSTR DllPath, WORD Ordinal, PBYTE Buffer, DWORD Length) {
         if ( Length<sizeof(Package) ) {
             LOGERROR(L"Buffer is small\n", 0);
             return false;
@@ -69,10 +41,28 @@ public:
         }
         */
 
-        if ( FAILED(StringCchCopy(p->DllPath, MAX_PATH, DllPath)) ) {
-            LOGERROR(L"StringCchCopy failed - %08x\n", GetLastError());
+        if ( !GetFullPathName(DllPath, MAX_PATH, p->DllPath, NULL) ) {
+            LOGERROR(L"GetFullPathName failed - %08x\n", GetLastError());
             return false;
         }
+
+        // We can assume the imagebase of kernel32.dll/ntdll.dll is the same in a remote process.
+        // However, we cannot use this trick for WOW process.
+        LoadLibrary = ::GetProcAddress(Kernel32, "LoadLibraryW");
+        FreeLibrary = ::GetProcAddress(Kernel32, "FreeLibrary");
+        GetProcAddress = ::GetProcAddress(Kernel32, "GetProcAddress");
+        CreateThread = ::GetProcAddress(Kernel32, "CreateThread");
+        ExitThread = ::GetProcAddress(Kernel32, "ExitThread");
+        WaitForSingleObject = ::GetProcAddress(Kernel32, "WaitForSingleObject");
+        CloseHandle = ::GetProcAddress(Kernel32, "CloseHandle");
+
+        LOGINFO(L"%p KERNEL32!CloseHandle\n", CloseHandle);
+        LOGINFO(L"%p KERNEL32!WaitForSingleObject\n", WaitForSingleObject);
+        LOGINFO(L"%p KERNEL32!CreateThreadStub\n", CreateThread);
+        LOGINFO(L"%p ntdll!RtlExitUserThread\n", ExitThread);
+        LOGINFO(L"%p KERNEL32!FreeLibraryStub\n", FreeLibrary);
+        LOGINFO(L"%p KERNEL32!GetProcAddressStub\n", GetProcAddress);
+        LOGINFO(L"%p KERNEL32!LoadLibraryW\n", LoadLibrary);
 
         if ( Is64bit ) {
             static BYTE CODE64[] = {
@@ -121,10 +111,43 @@ public:
 
         return true;
     }
+
+public:
+    struct Package {
+        BYTE InitialCode[1024];
+        WCHAR DllPath[MAX_PATH];
+        BYTE Context[1];
+    };
+
+    CInjectData() {}
+
+    bool FillData(BOOL Is64bit, LPCWSTR FilePath, INT Ordinal, PBYTE Buffer, DWORD Length) {
+        if ( Ordinal>=0 && Ordinal<=0xFFFF ) {
+            return FillFunction(Is64bit, FilePath, (WORD)Ordinal, Buffer, Length);
+        }
+        else {
+            HANDLE FileHandle = CreateFile(FilePath,
+                GENERIC_READ, FILE_SHARE_READ,
+                NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+            if ( FileHandle==INVALID_HANDLE_VALUE ) {
+                LOGERROR(L"CreateFile failed - %08x\n", GetLastError());
+                return false;
+            }
+            else {
+                DWORD BytesWritten = 0;
+                if ( !ReadFile(FileHandle, Buffer, Length, &BytesWritten, NULL) ) {
+                    LOGERROR(L"ReadFile failed - %08x\n", GetLastError());
+                    return false;
+                }
+                CloseHandle(FileHandle);
+                return true;
+            }
+            return false;
+        }
+    }
 };
 
-
-void Inject(DWORD RemoteProcessId, LPCWSTR FilenameToInject, WORD Ordinal) {
+void Inject(DWORD RemoteProcessId, LPCWSTR FilenameToInject, INT Ordinal) {
 
     // https://msdn.microsoft.com/en-us/library/windows/desktop/ms684880(v=vs.85).aspx
     CONST DWORD DesiredAccess =
@@ -201,8 +224,8 @@ void Inject(DWORD RemoteProcessId, LPCWSTR FilenameToInject, WORD Ordinal) {
     }
 
     RemoteThread = CreateRemoteThread(TargetProcess, NULL, 0,
-        (LPTHREAD_START_ROUTINE)(PBYTE)((CInjectData::Package*)RemoteAddress)->InitialCode,
-        RemoteAddress, 0, &RemoteThreadId);
+        (LPTHREAD_START_ROUTINE)RemoteAddress, RemoteAddress,
+        0, &RemoteThreadId);
     if ( !RemoteThread ) {
         LOGERROR(L"CreateRemoteThread failed - %08x\n", GetLastError());
         goto cleanup;
@@ -224,11 +247,11 @@ cleanup:
 }
 
 int wmain(int argc, WCHAR *argv[]) {
-    if ( argc<4 ) {
-        LOGINFO(L"usage: procjack <pid> <file to inject> <ordinal#>\n");
+    if ( argc<3 ) {
+        LOGINFO(L"usage: pj <pid> <file> [ordinal#]\n");
     }
     else {
-        Inject(_wtoi(argv[1]), argv[2], (WORD)_wtoi(argv[3]));
+        Inject(_wtoi(argv[1]), argv[2], argc>=4 ? _wtoi(argv[3]) : -1);
     }
 
     return 0;
