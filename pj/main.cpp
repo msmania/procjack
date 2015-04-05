@@ -122,8 +122,9 @@ public:
     CInjectData() {}
 
     bool FillData(BOOL Is64bit, LPCWSTR FilePath, INT Ordinal, PBYTE Buffer, DWORD Length) {
+        bool Ret = false;
         if ( Ordinal>=0 && Ordinal<=0xFFFF ) {
-            return FillFunction(Is64bit, FilePath, (WORD)Ordinal, Buffer, Length);
+            Ret = FillFunction(Is64bit, FilePath, (WORD)Ordinal, Buffer, Length);
         }
         else {
             HANDLE FileHandle = CreateFile(FilePath,
@@ -131,19 +132,19 @@ public:
                 NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
             if ( FileHandle==INVALID_HANDLE_VALUE ) {
                 LOGERROR(L"CreateFile failed - %08x\n", GetLastError());
-                return false;
             }
             else {
                 DWORD BytesWritten = 0;
-                if ( !ReadFile(FileHandle, Buffer, Length, &BytesWritten, NULL) ) {
+                if ( ReadFile(FileHandle, Buffer, Length, &BytesWritten, NULL) ) {
+                    Ret = true;
+                }
+                else {
                     LOGERROR(L"ReadFile failed - %08x\n", GetLastError());
-                    return false;
                 }
                 CloseHandle(FileHandle);
-                return true;
             }
-            return false;
         }
+        return Ret;
     }
 };
 
