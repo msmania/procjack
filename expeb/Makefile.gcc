@@ -1,0 +1,24 @@
+CC=g++
+RM=rm -f
+
+TARGET=expeb
+SRCS=$(wildcard *.cpp)
+OBJS=$(SRCS:.cpp=.o)
+
+CFLAGS=	-Wall -std=c++11 -g -O2
+
+#INCLUDES=-I/usr/local/openssl/current/include
+#LIBDIRS=-L/usr/local/openssl/current/lib
+#LIBS=-lm -lssl -lcrypto -ldl
+
+all: clean $(TARGET)
+
+clean:
+	$(RM) $(OBJS) $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CC) -o $@ $^ $(LIBDIRS) $(LIBS)
+
+$(OBJS): $(SRC)
+	$(CC) $(INCLUDES) $(CFLAGS) -c $(SRCS)
+

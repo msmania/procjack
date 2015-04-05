@@ -93,7 +93,7 @@ void GetProcAddress(unsigned long long int ImageBase) {
 
                 printf("%4d->%4d %p %p { 0x%08x 0x%08x .. } %s\n",
                     i, Ordinals[i], Name, Function,
-                    Name[0], Name[1], Name);
+                    Name[0], Name[1], (const char *)Name);
             }
         }
     }

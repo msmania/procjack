@@ -3,3 +3,5 @@
 obj/
 obj64/
 expeb/Makefile
+*.o
+expeb/expeb
