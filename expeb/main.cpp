@@ -10,11 +10,19 @@
 
 #ifdef MSVC
 #include <windows.h>
+#include <intrin.h>
 #endif
 
+#ifdef DEBUG
 #include <stdio.h>
+#define LOGDEBUG printf
+#else
+#define LOGDEBUG
+#endif
 
 static struct {
+    void *ntdll;
+    void *kernel32;
     void *LoadLibrary;
     void *FreeLibrary;
     void *GetProcAddress;
@@ -41,7 +49,56 @@ struct image_export_directory {
 #define image_file_machine_i386  0x014c
 #define image_file_machine_amd64 0x8664
 
-void GetProcAddress(unsigned long long int ImageBase) {
+// https://msdn.microsoft.com/en-us/library/windows/desktop/aa813708(v=vs.85).aspx
+struct list_entry {
+   struct list_entry *Flink;
+   struct list_entry *Blink;
+};
+
+typedef struct _PEB_LDR_DATA {
+  unsigned char  Reserved1[8];
+  void          *Reserved2[3];
+  list_entry     InMemoryOrderModuleList;
+} PEB_LDR_DATA, *PPEB_LDR_DATA;
+
+typedef struct _LSA_UNICODE_STRING {
+  unsigned short  Length;
+  unsigned short  MaximumLength;
+  unsigned short *Buffer;
+} LSA_UNICODE_STRING, *PLSA_UNICODE_STRING, UNICODE_STRING, *PUNICODE_STRING;
+
+typedef struct _LDR_DATA_TABLE_ENTRY {
+    void * Reserved1[2];
+    LIST_ENTRY InMemoryOrderLinks;
+    void * Reserved2[2];
+    void * DllBase;
+    void * EntryPoint;
+    void * Reserved3;
+    UNICODE_STRING FullDllName;
+    UNICODE_STRING BaseDllName;
+    /* not used */
+} LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;
+
+// https://msdn.microsoft.com/en-us/library/windows/desktop/aa813706(v=vs.85).aspx
+typedef struct _PEB {
+  unsigned char  Reserved1[2];
+  unsigned char  BeingDebugged;
+  unsigned char  Reserved2[1];
+  void          *Reserved3[2];
+  PPEB_LDR_DATA  Ldr;
+  void          *ProcessParameters;
+  unsigned char  Reserved4[104];
+  void          *Reserved5[52];
+  void          *PostProcessInitRoutine;
+  unsigned char  Reserved6[128];
+  void          *Reserved7[1];
+  unsigned long  SessionId;
+} PEB, *PPEB;
+
+// copied from ntdef.h
+#define containing_record(address, type, field) ((type *)((unsigned char *)(address) - (long)(&((type *)0)->field)))
+
+void GetProcAddress(void *ImageBase) {
     const unsigned short MZ_SIGNATURE = 0x5a4d;
     const unsigned int PE_SIGNATURE = 0x4550;
 
@@ -91,7 +148,7 @@ void GetProcAddress(unsigned long long int ImageBase) {
                     continue;
                 }
 
-                printf("%4d->%4d %p %p { 0x%08x 0x%08x .. } %s\n",
+                LOGDEBUG("%4d->%4d %p %p {0x%08x, 0x%08x, ..} %s\n",
                     i, Ordinals[i], Name, Function,
                     Name[0], Name[1], (const char *)Name);
             }
@@ -99,19 +156,56 @@ void GetProcAddress(unsigned long long int ImageBase) {
     }
 }
 
-int main() {
+void GetImageBase(PPEB Peb) {
+    list_entry *begin = &Peb->Ldr->InMemoryOrderModuleList;
+    for ( list_entry *p = begin->Flink ; p!=begin ; p=p->Flink ) {
+        PLDR_DATA_TABLE_ENTRY entry = containing_record(p, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
+
+        unsigned int *Name = (unsigned int *)entry->BaseDllName.Buffer;
+        if ( !g.ntdll &&
+             (Name[0]==0x0074006e && Name[1]==0x006c0064 && Name[2]==0x002e006c) ||
+             (Name[0]==0x0054004e && Name[1]==0x004c0044 && Name[2]==0x002e004c) ) {
+            g.ntdll = entry->DllBase;
+        }
+        else if ( !g.kernel32 &&
+                  (Name[0]==0x0045004b && Name[1]==0x004e0052 && Name[2]==0x004c0045 && Name[3]==0x00320033 && Name[4]==0x0044002e) ||
+                  (Name[0]==0x0065006b && Name[1]==0x006e0072 && Name[2]==0x006c0065 && Name[3]==0x00320033 && Name[4]==0x0064002e) ) {
+            g.kernel32 = entry->DllBase;
+        }
+        else {
+            continue;
+        }
+
+        LOGDEBUG("%p %S\n", entry->DllBase, entry->BaseDllName.Buffer);
+    }
+}
+
+// http://en.wikipedia.org/wiki/Win32_Thread_Information_Block
+//
+// [fs:0030h] --> x86 PEB
+// [gs:0030h] --> x64 TEB
+PPEB GetPeb() {
+    void *Peb = NULL;
+
 #ifdef MSVC
-    GetProcAddress((unsigned long long int)GetModuleHandle(L"ntdll.dll"));
-    GetProcAddress((unsigned long long int)GetModuleHandle(L"kernel32.dll"));
+#ifdef _WIN64
+    void *Teb = (void *)__readgsqword(0x30);
+    LOGDEBUG("TEB = %p\n", Teb);
+
+    // 0x60 = ntdll!_TEB::ProcessEnvironmentBlock
+    Peb = *(void**)((unsigned char *)Teb + 0x60);
+#else
+    Peb = (void *)__readfsdword(0x30);
+#endif
 #endif
 
-    printf("%p KERNEL32!CloseHandle\n", g.CloseHandle);
-    printf("%p KERNEL32!WaitForSingleObject\n", g.WaitForSingleObject);
-    printf("%p KERNEL32!CreateThreadStub\n", g.CreateThread);
-    printf("%p ntdll!RtlExitUserThread\n", g.ExitThread);
-    printf("%p KERNEL32!FreeLibraryStub\n", g.FreeLibrary);
-    printf("%p KERNEL32!GetProcAddressStub\n", g.GetProcAddress);
-    printf("%p KERNEL32!LoadLibraryW\n", g.LoadLibrary);
+    LOGDEBUG("PEB = %p\n", Peb);
+    return (PPEB)Peb;
+}
 
+int main() {
+    GetImageBase(GetPeb());
+    GetProcAddress(g.ntdll);
+    GetProcAddress(g.kernel32);
     return 0;
 }
