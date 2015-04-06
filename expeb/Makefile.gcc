@@ -3,22 +3,17 @@ RM=rm -f
 
 TARGET=expeb
 SRCS=$(wildcard *.cpp)
-OBJS=$(SRCS:.cpp=.o)
 
 CFLAGS=	-Wall -std=c++11 -g -O2
 
-#INCLUDES=-I/usr/local/openssl/current/include
-#LIBDIRS=-L/usr/local/openssl/current/lib
-#LIBS=-lm -lssl -lcrypto -ldl
-
-all: clean $(TARGET)
+all: clean $(TARGET)32 $(TARGET)64
 
 clean:
-	$(RM) $(OBJS) $(TARGET)
+	$(RM) $(TARGET)32 $(TARGET)64
+	rm -fR *.dSYM
 
-$(TARGET): $(OBJS)
-	$(CC) -o $@ $^ $(LIBDIRS) $(LIBS)
+$(TARGET)32: $(SRCS)
+	$(CC) -o $@ $(CFLAGS) -m32 $(SRCS)
 
-$(OBJS): $(SRC)
-	$(CC) $(INCLUDES) $(CFLAGS) -c $(SRCS)
-
+$(TARGET)64: $(SRCS)
+	$(CC) -o $@ $(CFLAGS) $(SRCS)

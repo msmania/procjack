@@ -13,25 +13,12 @@
 #include <intrin.h>
 #endif
 
-#define DEBUG
 #ifdef DEBUG
 #include <stdio.h>
 #define LOGDEBUG printf
 #else
 #define LOGDEBUG
 #endif
-
-static struct {
-    void *ntdll;
-    void *kernel32;
-    void *LoadLibrary;
-    void *FreeLibrary;
-    void *GetProcAddress;
-    void *CreateThread;
-    void *ExitThread;
-    void *WaitForSingleObject;
-    void *CloseHandle;
-} g = {0};
 
 struct image_export_directory {
     unsigned int   Characteristics;
@@ -96,10 +83,26 @@ typedef struct _PEB {
   unsigned long  SessionId;
 } PEB, *PPEB;
 
+struct Package {
+    unsigned char InitialCode[2048];
+    unsigned short DllPath[260];
+    PPEB  peb;
+    void *ntdll;
+    void *kernel32;
+    void *LoadLibrary;
+    void *FreeLibrary;
+    void *GetProcAddress;
+    void *CreateThread;
+    void *ExitThread;
+    void *WaitForSingleObject;
+    void *CloseHandle;
+    unsigned char Context[1];
+};
+
 // copied from ntdef.h
 #define containing_record(address, type, field) ((type *)((unsigned char *)(address) - (long)(&((type *)0)->field)))
 
-void GetProcAddress(void *ImageBase) {
+void GetProcAddress(void *ImageBase, Package *package) {
     const unsigned short MZ_SIGNATURE = 0x5a4d;
     const unsigned int PE_SIGNATURE = 0x4550;
 
@@ -124,26 +127,26 @@ void GetProcAddress(void *ImageBase) {
                 unsigned int * Name = (unsigned int *)(p + Names[i]);
                 void *Function = p + Functions[Ordinals[i]];
 
-                if ( !g.LoadLibrary && Name[0]==0x64616f4c && Name[1]==0x7262694c && Name[2]==0x57797261 && (Name[3]&0xff)==0 ) {
-                    g.LoadLibrary = Function;
+                if ( !package->LoadLibrary && Name[0]==0x64616f4c && Name[1]==0x7262694c && Name[2]==0x57797261 && (Name[3]&0xff)==0 ) {
+                    package->LoadLibrary = Function;
                 }
-                else if ( !g.FreeLibrary && Name[0]==0x65657246 && Name[1]==0x7262694c && Name[2]==0x00797261 ) {
-                    g.FreeLibrary = Function;
+                else if ( !package->FreeLibrary && Name[0]==0x65657246 && Name[1]==0x7262694c && Name[2]==0x00797261 ) {
+                    package->FreeLibrary = Function;
                 }
-                else if ( !g.GetProcAddress && Name[0]==0x50746547 && Name[1]==0x41636f72 && Name[2]==0x65726464 && (Name[3]&0xffffff)==0x007373 ) {
-                    g.GetProcAddress = Function;
+                else if ( !package->GetProcAddress && Name[0]==0x50746547 && Name[1]==0x41636f72 && Name[2]==0x65726464 && (Name[3]&0xffffff)==0x007373 ) {
+                    package->GetProcAddress = Function;
                 }
-                else if ( !g.CreateThread && Name[0]==0x61657243 && Name[1]==0x68546574 && Name[2]==0x64616572 && (Name[3]&0xff)==0 ) {
-                    g.CreateThread = Function;
+                else if ( !package->CreateThread && Name[0]==0x61657243 && Name[1]==0x68546574 && Name[2]==0x64616572 && (Name[3]&0xff)==0 ) {
+                    package->CreateThread = Function;
                 }
-                else if ( !g.ExitThread && Name[0]==0x456c7452 && Name[1]==0x55746978 && Name[2]==0x54726573 && Name[3]==0x61657268 && (Name[4]&0xffff)==0x0064 ) {
-                    g.ExitThread = Function;
+                else if ( !package->ExitThread && Name[0]==0x456c7452 && Name[1]==0x55746978 && Name[2]==0x54726573 && Name[3]==0x61657268 && (Name[4]&0xffff)==0x0064 ) {
+                    package->ExitThread = Function;
                 }
-                else if ( !g.WaitForSingleObject && Name[0]==0x74696157 && Name[1]==0x53726f46 && Name[2]==0x6c676e69 && Name[3]==0x6a624f65 && Name[4]==0x00746365 ) {
-                    g.WaitForSingleObject = Function;
+                else if ( !package->WaitForSingleObject && Name[0]==0x74696157 && Name[1]==0x53726f46 && Name[2]==0x6c676e69 && Name[3]==0x6a624f65 && Name[4]==0x00746365 ) {
+                    package->WaitForSingleObject = Function;
                 }
-                else if ( !g.CloseHandle && Name[0]==0x736f6c43 && Name[1]==0x6e614865 && Name[2]==0x00656c64 ) {
-                    g.CloseHandle = Function;
+                else if ( !package->CloseHandle && Name[0]==0x736f6c43 && Name[1]==0x6e614865 && Name[2]==0x00656c64 ) {
+                    package->CloseHandle = Function;
                 }
                 else {
                     continue;
@@ -157,21 +160,21 @@ void GetProcAddress(void *ImageBase) {
     }
 }
 
-void GetImageBase(PPEB Peb) {
-    list_entry *begin = &Peb->Ldr->InMemoryOrderModuleList;
+void GetImageBase(Package *package) {
+    list_entry *begin = &package->peb->Ldr->InMemoryOrderModuleList;
     for ( list_entry *p = begin->Flink ; p!=begin ; p=p->Flink ) {
         PLDR_DATA_TABLE_ENTRY entry = containing_record(p, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
 
         unsigned int *Name = (unsigned int *)entry->BaseDllName.Buffer;
-        if ( !g.ntdll &&
+        if ( !package->ntdll &&
              (Name[0]==0x0074006e && Name[1]==0x006c0064 && Name[2]==0x002e006c) ||
              (Name[0]==0x0054004e && Name[1]==0x004c0044 && Name[2]==0x002e004c) ) {
-            g.ntdll = entry->DllBase;
+            package->ntdll = entry->DllBase;
         }
-        else if ( !g.kernel32 &&
+        else if ( !package->kernel32 &&
                   (Name[0]==0x0045004b && Name[1]==0x004e0052 && Name[2]==0x004c0045 && Name[3]==0x00320033 && Name[4]==0x0044002e) ||
                   (Name[0]==0x0065006b && Name[1]==0x006e0072 && Name[2]==0x006c0065 && Name[3]==0x00320033 && Name[4]==0x0064002e) ) {
-            g.kernel32 = entry->DllBase;
+            package->kernel32 = entry->DllBase;
         }
         else {
             continue;
@@ -204,9 +207,17 @@ PPEB GetPeb() {
     return (PPEB)Peb;
 }
 
+unsigned int ShellCode(Package *p) {
+    p->peb = GetPeb();
+    GetImageBase(p);
+    GetProcAddress(p->ntdll, p);
+    GetProcAddress(p->kernel32, p);
+    return 42;
+}
+
 int main() {
-    GetImageBase(GetPeb());
-    GetProcAddress(g.ntdll);
-    GetProcAddress(g.kernel32);
+    Package p = {0};
+    LOGDEBUG("sizeof(Package) = %lu\n", sizeof(Package));
+    ShellCode(&p);
     return 0;
 }

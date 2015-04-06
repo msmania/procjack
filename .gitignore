@@ -4,4 +4,6 @@ obj/
 obj64/
 expeb/Makefile
 *.o
-expeb/expeb
+*.dSYM
+expeb/expeb32
+expeb/expeb64
