@@ -13,6 +13,7 @@
 #include <intrin.h>
 #endif
 
+#define DEBUG
 #ifdef DEBUG
 #include <stdio.h>
 #define LOGDEBUG printf
@@ -68,14 +69,14 @@ typedef struct _LSA_UNICODE_STRING {
 } LSA_UNICODE_STRING, *PLSA_UNICODE_STRING, UNICODE_STRING, *PUNICODE_STRING;
 
 typedef struct _LDR_DATA_TABLE_ENTRY {
-    void * Reserved1[2];
-    LIST_ENTRY InMemoryOrderLinks;
-    void * Reserved2[2];
-    void * DllBase;
-    void * EntryPoint;
-    void * Reserved3;
-    UNICODE_STRING FullDllName;
-    UNICODE_STRING BaseDllName;
+    void           *Reserved1[2];
+    list_entry      InMemoryOrderLinks;
+    void           *Reserved2[2];
+    void           *DllBase;
+    void           *EntryPoint;
+    void           *Reserved3;
+    UNICODE_STRING  FullDllName;
+    UNICODE_STRING  BaseDllName;
     /* not used */
 } LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;
 
@@ -185,7 +186,7 @@ void GetImageBase(PPEB Peb) {
 // [fs:0030h] --> x86 PEB
 // [gs:0030h] --> x64 TEB
 PPEB GetPeb() {
-    void *Peb = NULL;
+    void *Peb = 0;
 
 #ifdef MSVC
 #ifdef _WIN64
