@@ -1,0 +1,229 @@
+00000000  488B81080A0000    mov rax,[rcx+0xa08]
+00000007  4C8BC1            mov r8,rcx
+0000000A  4C8B4818          mov r9,[rax+0x18]
+0000000E  498B5120          mov rdx,[r9+0x20]
+00000012  4983C120          add r9,byte +0x20
+00000016  493BD1            cmp rdx,r9
+00000019  0F84CC000000      jz qword 0xeb
+0000001F  4C8B91100A0000    mov r10,[rcx+0xa10]
+00000026  488B4250          mov rax,[rdx+0x50]
+0000002A  4D85D2            test r10,r10
+0000002D  751A              jnz 0x49
+0000002F  81386E007400      cmp dword [rax],0x74006e
+00000035  7512              jnz 0x49
+00000037  81780464006C00    cmp dword [rax+0x4],0x6c0064
+0000003E  7509              jnz 0x49
+00000040  8178086C002E00    cmp dword [rax+0x8],0x2e006c
+00000047  741C              jz 0x65
+00000049  8B08              mov ecx,[rax]
+0000004B  81F94E005400      cmp ecx,0x54004e
+00000051  751F              jnz 0x72
+00000053  81780444004C00    cmp dword [rax+0x4],0x4c0044
+0000005A  7516              jnz 0x72
+0000005C  8178084C002E00    cmp dword [rax+0x8],0x2e004c
+00000063  750D              jnz 0x72
+00000065  4C8B5220          mov r10,[rdx+0x20]
+00000069  4D8990100A0000    mov [r8+0xa10],r10
+00000070  EB6D              jmp short 0xdf
+00000072  4983B8180A000000  cmp qword [r8+0xa18],byte +0x0
+0000007A  752C              jnz 0xa8
+0000007C  81F94B004500      cmp ecx,0x45004b
+00000082  7524              jnz 0xa8
+00000084  81780452004E00    cmp dword [rax+0x4],0x4e0052
+0000008B  751B              jnz 0xa8
+0000008D  81780845004C00    cmp dword [rax+0x8],0x4c0045
+00000094  7512              jnz 0xa8
+00000096  81780C33003200    cmp dword [rax+0xc],0x320033
+0000009D  7509              jnz 0xa8
+0000009F  8178102E004400    cmp dword [rax+0x10],0x44002e
+000000A6  742C              jz 0xd4
+000000A8  81F96B006500      cmp ecx,0x65006b
+000000AE  752F              jnz 0xdf
+000000B0  81780472006E00    cmp dword [rax+0x4],0x6e0072
+000000B7  7526              jnz 0xdf
+000000B9  81780865006C00    cmp dword [rax+0x8],0x6c0065
+000000C0  751D              jnz 0xdf
+000000C2  81780C33003200    cmp dword [rax+0xc],0x320033
+000000C9  7514              jnz 0xdf
+000000CB  8178102E006400    cmp dword [rax+0x10],0x64002e
+000000D2  750B              jnz 0xdf
+000000D4  488B4220          mov rax,[rdx+0x20]
+000000D8  498980180A0000    mov [r8+0xa18],rax
+000000DF  488B12            mov rdx,[rdx]
+000000E2  493BD1            cmp rdx,r9
+000000E5  0F853BFFFFFF      jnz qword 0x26
+000000EB  F3C3              rep ret
+000000ED  CC                int3
+000000EE  CC                int3
+000000EF  CC                int3
+000000F0  65488B0425300000  mov rax,[gs:0x30]
+         -00
+000000F9  488B4060          mov rax,[rax+0x60]
+000000FD  C3                ret
+000000FE  CC                int3
+000000FF  CC                int3
+00000100  4883EC08          sub rsp,byte +0x8
+00000104  B84D5A0000        mov eax,0x5a4d
+00000109  4C8BD1            mov r10,rcx
+0000010C  663901            cmp [rcx],ax
+0000010F  0F8540020000      jnz qword 0x355
+00000115  448B493C          mov r9d,[rcx+0x3c]
+00000119  41813C0950450000  cmp dword [r9+rcx],0x4550
+00000121  0F852E020000      jnz qword 0x355
+00000127  450FB7440904      movzx r8d,word [r9+rcx+0x4]
+0000012D  41BB4C010000      mov r11d,0x14c
+00000133  66453BC3          cmp r8w,r11w
+00000137  740F              jz 0x148
+00000139  B864860000        mov eax,0x8664
+0000013E  66443BC0          cmp r8w,ax
+00000142  0F850D020000      jnz qword 0x355
+00000148  48895C2410        mov [rsp+0x10],rbx
+0000014D  66453BC3          cmp r8w,r11w
+00000151  4889742420        mov [rsp+0x20],rsi
+00000156  48893C24          mov [rsp],rdi
+0000015A  B870000000        mov eax,0x70
+0000015F  B960000000        mov ecx,0x60
+00000164  0F44C1            cmovz eax,ecx
+00000167  4533DB            xor r11d,r11d
+0000016A  4903C1            add rax,r9
+0000016D  468B4C1018        mov r9d,[rax+r10+0x18]
+00000172  4D03CA            add r9,r10
+00000175  418B5920          mov ebx,[r9+0x20]
+00000179  418B7924          mov edi,[r9+0x24]
+0000017D  418B711C          mov esi,[r9+0x1c]
+00000181  4903DA            add rbx,r10
+00000184  4903FA            add rdi,r10
+00000187  4903F2            add rsi,r10
+0000018A  45395918          cmp [r9+0x18],r11d
+0000018E  0F86B3010000      jna qword 0x347
+00000194  48896C2418        mov [rsp+0x18],rbp
+00000199  488BAA200A0000    mov rbp,[rdx+0xa20]
+000001A0  420FB70C5F        movzx ecx,word [rdi+r11*2]
+000001A5  428B049B          mov eax,[rbx+r11*4]
+000001A9  448B048E          mov r8d,[rsi+rcx*4]
+000001AD  4903C2            add rax,r10
+000001B0  4D03C2            add r8,r10
+000001B3  4885ED            test rbp,rbp
+000001B6  752F              jnz 0x1e7
+000001B8  81384C6F6164      cmp dword [rax],0x64616f4c
+000001BE  7527              jnz 0x1e7
+000001C0  8178044C696272    cmp dword [rax+0x4],0x7262694c
+000001C7  751E              jnz 0x1e7
+000001C9  81780861727957    cmp dword [rax+0x8],0x57797261
+000001D0  7515              jnz 0x1e7
+000001D2  4038680C          cmp [rax+0xc],bpl
+000001D6  750F              jnz 0x1e7
+000001D8  498BE8            mov rbp,r8
+000001DB  4C8982200A0000    mov [rdx+0xa20],r8
+000001E2  E94E010000        jmp qword 0x335
+000001E7  4883BA280A000000  cmp qword [rdx+0xa28],byte +0x0
+000001EF  7526              jnz 0x217
+000001F1  813846726565      cmp dword [rax],0x65657246
+000001F7  751E              jnz 0x217
+000001F9  8178044C696272    cmp dword [rax+0x4],0x7262694c
+00000200  7515              jnz 0x217
+00000202  81780861727900    cmp dword [rax+0x8],0x797261
+00000209  750C              jnz 0x217
+0000020B  4C8982280A0000    mov [rdx+0xa28],r8
+00000212  E91E010000        jmp qword 0x335
+00000217  4883BA300A000000  cmp qword [rdx+0xa30],byte +0x0
+0000021F  7537              jnz 0x258
+00000221  813847657450      cmp dword [rax],0x50746547
+00000227  752F              jnz 0x258
+00000229  817804726F6341    cmp dword [rax+0x4],0x41636f72
+00000230  7526              jnz 0x258
+00000232  81780864647265    cmp dword [rax+0x8],0x65726464
+00000239  751D              jnz 0x258
+0000023B  8B480C            mov ecx,[rax+0xc]
+0000023E  81E1FFFFFF00      and ecx,0xffffff
+00000244  81F973730000      cmp ecx,0x7373
+0000024A  750C              jnz 0x258
+0000024C  4C8982300A0000    mov [rdx+0xa30],r8
+00000253  E9DD000000        jmp qword 0x335
+00000258  4883BA380A000000  cmp qword [rdx+0xa38],byte +0x0
+00000260  752C              jnz 0x28e
+00000262  813843726561      cmp dword [rax],0x61657243
+00000268  7524              jnz 0x28e
+0000026A  81780474655468    cmp dword [rax+0x4],0x68546574
+00000271  751B              jnz 0x28e
+00000273  81780872656164    cmp dword [rax+0x8],0x64616572
+0000027A  7512              jnz 0x28e
+0000027C  80780C00          cmp byte [rax+0xc],0x0
+00000280  750C              jnz 0x28e
+00000282  4C8982380A0000    mov [rdx+0xa38],r8
+00000289  E9A7000000        jmp qword 0x335
+0000028E  4883BA400A000000  cmp qword [rdx+0xa40],byte +0x0
+00000296  7533              jnz 0x2cb
+00000298  813852746C45      cmp dword [rax],0x456c7452
+0000029E  752B              jnz 0x2cb
+000002A0  81780478697455    cmp dword [rax+0x4],0x55746978
+000002A7  7522              jnz 0x2cb
+000002A9  81780873657254    cmp dword [rax+0x8],0x54726573
+000002B0  7519              jnz 0x2cb
+000002B2  81780C68726561    cmp dword [rax+0xc],0x61657268
+000002B9  7510              jnz 0x2cb
+000002BB  6683781064        cmp word [rax+0x10],byte +0x64
+000002C0  7509              jnz 0x2cb
+000002C2  4C8982400A0000    mov [rdx+0xa40],r8
+000002C9  EB6A              jmp short 0x335
+000002CB  4883BA480A000000  cmp qword [rdx+0xa48],byte +0x0
+000002D3  7535              jnz 0x30a
+000002D5  813857616974      cmp dword [rax],0x74696157
+000002DB  752D              jnz 0x30a
+000002DD  817804466F7253    cmp dword [rax+0x4],0x53726f46
+000002E4  7524              jnz 0x30a
+000002E6  817808696E676C    cmp dword [rax+0x8],0x6c676e69
+000002ED  751B              jnz 0x30a
+000002EF  81780C654F626A    cmp dword [rax+0xc],0x6a624f65
+000002F6  7512              jnz 0x30a
+000002F8  81781065637400    cmp dword [rax+0x10],0x746365
+000002FF  7509              jnz 0x30a
+00000301  4C8982480A0000    mov [rdx+0xa48],r8
+00000308  EB2B              jmp short 0x335
+0000030A  4883BA500A000000  cmp qword [rdx+0xa50],byte +0x0
+00000312  7521              jnz 0x335
+00000314  8138436C6F73      cmp dword [rax],0x736f6c43
+0000031A  7519              jnz 0x335
+0000031C  8178046548616E    cmp dword [rax+0x4],0x6e614865
+00000323  7510              jnz 0x335
+00000325  817808646C6500    cmp dword [rax+0x8],0x656c64
+0000032C  7507              jnz 0x335
+0000032E  4C8982500A0000    mov [rdx+0xa50],r8
+00000335  41FFC3            inc r11d
+00000338  453B5918          cmp r11d,[r9+0x18]
+0000033C  0F825EFEFFFF      jc qword 0x1a0
+00000342  488B6C2418        mov rbp,[rsp+0x18]
+00000347  488B742420        mov rsi,[rsp+0x20]
+0000034C  488B5C2410        mov rbx,[rsp+0x10]
+00000351  488B3C24          mov rdi,[rsp]
+00000355  4883C408          add rsp,byte +0x8
+00000359  C3                ret
+0000035A  CC                int3
+0000035B  CC                int3
+0000035C  CC                int3
+0000035D  CC                int3
+0000035E  CC                int3
+0000035F  CC                int3
+00000360  4053              push rbx
+00000362  4883EC20          sub rsp,byte +0x20
+00000366  65488B0425300000  mov rax,[gs:0x30]
+         -00
+0000036F  488BD9            mov rbx,rcx
+00000372  488B5060          mov rdx,[rax+0x60]
+00000376  488991080A0000    mov [rcx+0xa08],rdx
+0000037D  E87EFCFFFF        call qword 0x0
+00000382  488B8B100A0000    mov rcx,[rbx+0xa10]
+00000389  488BD3            mov rdx,rbx
+0000038C  E86FFDFFFF        call qword 0x100
+00000391  488B8B180A0000    mov rcx,[rbx+0xa18]
+00000398  488BD3            mov rdx,rbx
+0000039B  E860FDFFFF        call qword 0x100
+000003A0  B82A000000        mov eax,0x2a
+000003A5  4883C420          add rsp,byte +0x20
+000003A9  5B                pop rbx
+000003AA  C3                ret
+000003AB  CC                int3
+000003AC  CC                int3
+000003AD  CC                int3
+000003AE  CC                int3
+000003AF  CC                int3
