@@ -1,11 +1,36 @@
 [org 0]
 [bits 64]
 
+ShellCode:
+push rbx
+sub rsp,byte +0x20
+mov rax,[gs:0x30]
+mov rbx,rcx
+mov rdx,[rax+0x60]
+mov [rcx+0xa08],rdx
+call GetImageBase
+
+mov rcx,[rbx+0xa10]
+mov rdx,rbx
+call GetProcAddress
+
+mov rcx,[rbx+0xa18]
+mov rdx,rbx
+call GetProcAddress
+
+mov eax,0x2a
+add rsp,byte +0x20
+pop rbx
+ret
+
+int3
+int3
+
 GetImageBase:
-mov rax,[rcx+0xa08]
+mov rax,[rcx+0xa08]     ; rax = PEB
 mov r8,rcx
-mov r9,[rax+0x18]
-mov rdx,[r9+0x20]
+mov r9,[rax+0x18]       ; PEB::Ldr
+mov rdx,[r9+0x20]       ; PEB::Ldr->InMemoryOrderModuleList
 add r9,byte +0x20
 cmp rdx,r9
 jz label0xeb
@@ -84,20 +109,10 @@ mov [r8+0xa18],rax
 label0xdf:
 mov rdx,[rdx]
 cmp rdx,r9
-jz label0x26
+jnz label0x26
 
 label0xeb:
 rep ret
-
-
-int3
-int3
-int3
-
-
-mov rax,[gs:0x30]
-mov rax,[rax+0x60]
-ret
 
 
 int3
@@ -109,11 +124,11 @@ sub rsp,byte +0x8
 mov eax,0x5a4d
 mov r10,rcx
 cmp [rcx],ax
-jz label0x355
+jnz label0x355
 
 mov r9d,[rcx+0x3c]
 cmp dword [r9+rcx],0x4550
-jz label0x355
+jnz label0x355
 
 movzx r8d,word [r9+rcx+0x4]
 mov r11d,0x14c
@@ -122,7 +137,7 @@ jz label0x148
 
 mov eax,0x8664
 cmp r8w,ax
-jz label0x355
+jnz label0x355
 
 label0x148:
 mov [rsp+0x10],rbx
@@ -187,7 +202,7 @@ cmp dword [rax+0x8],0x797261
 jnz label0x217
 
 mov [rdx+0xa28],r8
-jmp qword 0x335
+jmp label0x335
 
 label0x217:
 cmp qword [rdx+0xa30],byte +0x0
@@ -305,39 +320,5 @@ add rsp,byte +0x8
 ret
 
 
-int3
-int3
-int3
-int3
-int3
-int3
-
-
-ShellCode:
-push rbx
-sub rsp,byte +0x20
-mov rax,[gs:0x30]
-mov rbx,rcx
-mov rdx,[rax+0x60]
-mov [rcx+0xa08],rdx
-call GetImageBase
-
-mov rcx,[rbx+0xa10]
-mov rdx,rbx
-call GetProcAddress
-
-mov rcx,[rbx+0xa18]
-mov rdx,rbx
-call GetProcAddress
-
-mov eax,0x2a
-add rsp,byte +0x20
-pop rbx
-ret
-
-
-int3
-int3
-int3
 int3
 int3

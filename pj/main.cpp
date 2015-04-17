@@ -203,6 +203,7 @@ void Inject(DWORD RemoteProcessId, LPCWSTR FilenameToInject, INT Ordinal) {
         goto cleanup;
     }
 
+    ZeroMemory(&InjectionPackage, sizeof(InjectionPackage));
     if ( !inject.FillData(
             Platform==win64,
             FilenameToInject,

@@ -1,11 +1,35 @@
 [org 0]
 [bits 32]
 
+ShellCode:
+mov eax,[fs:0x30]
+push esi
+mov esi,[esp+0x8]
+push esi
+mov [esi+0xa08],eax
+call GetImageBase
+
+push esi
+push dword [esi+0xa0c]
+call GetProcAddress
+
+push esi
+push dword [esi+0xa10]
+call GetProcAddress
+
+add esp,byte +0x14
+mov eax,0x2a
+pop esi
+ret
+
+int3
+int3
+
 GetImageBase:
 push ebx
 push esi
-mov esi,[esp+0xc]
-mov eax,[esi+0xa08]
+mov esi,[esp+0xc]       ; esi = Context
+mov eax,[esi+0xa08]     ; eax = PEB
 mov ebx,[eax+0xc]
 add ebx,byte +0x14
 mov ecx,[ebx]
@@ -42,7 +66,7 @@ jnz label0x6b
 
 label0x60:
 mov edi,[ecx+0x10]
-mov [esi+0xa0c],edi
+mov [esi+0xa0c],edi     ; package->ntdll
 jmp short label0xd5
 
 label0x6b:
@@ -82,7 +106,7 @@ jnz label0xd5
 
 label0xcc:
 mov eax,[ecx+0x10]
-mov [esi+0xa10],eax
+mov [esi+0xa10],eax     ; package->kernel32
 
 label0xd5:
 mov ecx,[ecx]
@@ -97,33 +121,6 @@ pop ebx
 ret
 
 
-
-
-int3
-int3
-int3
-int3
-int3
-int3
-int3
-int3
-int3
-int3
-int3
-int3
-int3
-
-
-mov eax,[fs:0x30]
-ret
-
-int3
-int3
-int3
-int3
-int3
-int3
-int3
 int3
 int3
 
@@ -200,7 +197,7 @@ cmp byte [eax+0xc],0x0
 jnz label0x1d5
 
 mov ebp,esi
-mov [edx+0xa14],esi
+mov [edx+0xa14],esi     ; package->LoadLibrary
 jmp dword label0x317
 
 label0x1d5:
@@ -216,7 +213,7 @@ jnz label0x203
 cmp dword [eax+0x8],0x797261
 jnz label0x203
 
-mov [edx+0xa18],esi
+mov [edx+0xa18],esi     ; package->FreeLibrary
 jmp dword label0x317
 
 label0x203:
@@ -237,7 +234,7 @@ and ecx,0xffffff
 cmp ecx,0x7373
 jnz label0x242
 
-mov [edx+0xa1c],esi
+mov [edx+0xa1c],esi     ; package->GetProcAddress
 jmp dword label0x317
 
 label0x242:
@@ -256,7 +253,7 @@ jnz label0x276
 cmp byte [eax+0xc],0x0
 jnz label0x276
 
-mov [edx+0xa20],esi
+mov [edx+0xa20],esi     ; package->CreateThread
 jmp dword label0x317
 
 label0x276:
@@ -278,7 +275,7 @@ jnz label0x2b1
 cmp word [eax+0x10],byte +0x64
 jnz label0x2b1
 
-mov [edx+0xa24],esi
+mov [edx+0xa24],esi     ; package->ExitThread
 jmp short label0x317
 
 label0x2b1:
@@ -300,7 +297,7 @@ jnz label0x2ee
 cmp dword [eax+0x10],0x746365
 jnz label0x2ee
 
-mov [edx+0xa28],esi
+mov [edx+0xa28],esi     ; package->WaitForSingleObject
 jmp short label0x317
 
 label0x2ee:
@@ -316,7 +313,7 @@ jnz label0x317
 cmp dword [eax+0x8],0x656c64
 jnz label0x317
 
-mov [edx+0xa2c],esi
+mov [edx+0xa2c],esi     ; package->CloseHandle
 
 label0x317:
 mov eax,[esp+0x10]
@@ -339,44 +336,6 @@ pop ebx
 add esp,byte +0xc
 ret
 
-int3
-int3
-int3
-int3
-int3
-int3
-int3
-int3
-int3
-int3
-int3
 
-ShellCode:
-mov eax,[fs:0x30]
-push esi
-mov esi,[esp+0x8]
-push esi
-mov [esi+0xa08],eax
-call GetImageBase
-
-push esi
-push dword [esi+0xa0c]
-call GetProcAddress
-
-push esi
-push dword [esi+0xa10]
-call GetProcAddress
-
-add esp,byte +0x14
-mov eax,0x2a
-pop esi
-ret
-
-
-int3
-int3
-int3
-int3
-int3
 int3
 int3
