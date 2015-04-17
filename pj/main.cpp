@@ -10,6 +10,8 @@
 #define LOGERROR wprintf
 #define LOGINFO LOGERROR
 
+#define CONTEXT_CAST(type, pointer, field) ((type)(((CInjectData::Package*)(pointer))->field))
+
 class CInjectData {
 private:
     bool FillFunction(BOOL Is64bit, LPCWSTR DllPath, WORD Ordinal, PBYTE Buffer, DWORD Length) {
@@ -29,19 +31,7 @@ private:
 
         Package *p = (Package*)Buffer;
 
-        /*
-        DWORD WINAPI Anonymous(_In_  LPVOID Context) {
-            HMODULE hm = LoadLibrary(((INJECTDATA*)Context)->DllPath);
-            LPTHREAD_START_ROUTINE f = (LPTHREAD_START_ROUTINE)GetProcAddress(hm, MAKEINTRESOURCEA(0xdead));
-            HANDLE ht = CreateThread(NULL, 0, f, Context, 0, NULL);
-            WaitForSingleObject(ht, INFINITE);
-            CloseHandle(ht);
-            FreeLibrary(hm);
-            ExitThread(0);
-        }
-        */
-
-        if ( !GetFullPathName(DllPath, MAX_PATH, p->DllPath, NULL) ) {
+        if ( !GetFullPathName(DllPath, MAX_PATH, (PWCHAR)p->DllPath, NULL) ) {
             LOGERROR(L"GetFullPathName failed - %08x\n", GetLastError());
             return false;
         }
@@ -112,12 +102,72 @@ private:
         return true;
     }
 
+    typedef HMODULE (WINAPI *LOADLIBRARY)(
+      _In_  LPCWSTR lpFileName
+    );
+
+    typedef FARPROC (WINAPI *GETPROCADDRESS)(
+      _In_  HMODULE hModule,
+      _In_  LPCSTR lpProcName
+    );
+
+    typedef HANDLE (WINAPI *CREATETHREAD)(
+      _In_opt_   LPSECURITY_ATTRIBUTES lpThreadAttributes,
+      _In_       SIZE_T dwStackSize,
+      _In_       LPTHREAD_START_ROUTINE lpStartAddress,
+      _In_opt_   LPVOID lpParameter,
+      _In_       DWORD dwCreationFlags,
+      _Out_opt_  LPDWORD lpThreadId
+    );
+
+    typedef DWORD (WINAPI *WAITFORSINGLEOBJECT)(
+      _In_  HANDLE hHandle,
+      _In_  DWORD dwMilliseconds
+    );
+
+    typedef BOOL (WINAPI *CLOSEHANDLE)(
+      _In_  HANDLE hObject
+    );
+
+    typedef BOOL (WINAPI *FREELIBRARY)(
+      _In_  HMODULE hModule
+    );
+
+    typedef VOID (WINAPI *EXITTHREAD)(
+      _In_  DWORD dwExitCode
+    );
+
 public:
     struct Package {
-        BYTE InitialCode[1024];
-        WCHAR DllPath[MAX_PATH];
-        BYTE Context[1];
+        unsigned char InitialCode[2048];
+        unsigned short DllPath[260];
+        void *peb;
+        void *ntdll;
+        void *kernel32;
+        void *LoadLibrary;
+        void *FreeLibrary;
+        void *GetProcAddress;
+        void *CreateThread;
+        void *ExitThread;
+        void *WaitForSingleObject;
+        void *CloseHandle;
+        unsigned char Context[1];
     };
+
+    static DWORD WINAPI ShellCode(_In_  LPVOID p) {
+        HMODULE hm = CONTEXT_CAST(LOADLIBRARY, p, LoadLibrary)(CONTEXT_CAST(PWCHAR, p, DllPath));
+        if ( hm ) {
+            LPTHREAD_START_ROUTINE f = (LPTHREAD_START_ROUTINE)CONTEXT_CAST(GETPROCADDRESS, p, GetProcAddress)(hm, MAKEINTRESOURCEA(0xdead));
+            HANDLE ht = CONTEXT_CAST(CREATETHREAD, p, CreateThread)(NULL, 0, f, p, 0, NULL);
+            if ( ht ) {
+                CONTEXT_CAST(WAITFORSINGLEOBJECT, p, WaitForSingleObject)(ht, INFINITE);
+                CONTEXT_CAST(CLOSEHANDLE, p, CloseHandle)(ht);
+            }
+            CONTEXT_CAST(FREELIBRARY, p, FreeLibrary)(hm);
+        }
+        CONTEXT_CAST(EXITTHREAD, p, ExitThread)(0);
+        return 0;
+    }
 
     CInjectData() {}
 
@@ -213,6 +263,9 @@ void Inject(DWORD RemoteProcessId, LPCWSTR FilenameToInject, INT Ordinal) {
         goto cleanup;
     }
 
+    CONST WCHAR Spy[] = L"D:\\GitHub\\procjack\\bin64\\spy.dll";
+    CopyMemory(CONTEXT_CAST(PVOID, InjectionPackage, DllPath), Spy, sizeof(Spy));
+
     RemoteAddress = VirtualAllocEx(TargetProcess, NULL, PackageSize,
         MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     if ( !RemoteAddress ) {
@@ -249,7 +302,10 @@ cleanup:
 }
 
 int wmain(int argc, WCHAR *argv[]) {
-    if ( argc<3 ) {
+    if ( argc<0 ) {
+        CInjectData::ShellCode(0);
+    }
+    else if ( argc<3 ) {
         LOGINFO(L"usage: pj <pid> <file> [ordinal#]\n");
     }
     else {

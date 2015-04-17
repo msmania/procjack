@@ -1,6 +1,21 @@
 [org 0]
 [bits 32]
 
+; pj!CInjectData::Package
+;    +0x000 InitialCode      : [2048] UChar
+;    +0x800 DllPath          : [260] Uint2B
+;    +0xa08 peb              : Ptr32 Void
+;    +0xa0c ntdll            : Ptr32 Void
+;    +0xa10 kernel32         : Ptr32 Void
+;    +0xa14 LoadLibraryW     : Ptr32 Void
+;    +0xa18 FreeLibrary      : Ptr32 Void
+;    +0xa1c GetProcAddress   : Ptr32 Void
+;    +0xa20 CreateThread     : Ptr32 Void
+;    +0xa24 ExitThread       : Ptr32 Void
+;    +0xa28 WaitForSingleObject : Ptr32 Void
+;    +0xa2c CloseHandle      : Ptr32 Void
+;    +0xa30 Context          : [1] UChar
+
 ShellCode:
 mov eax,[fs:0x30]
 push esi
@@ -16,6 +31,52 @@ call GetProcAddress
 push esi
 push dword [esi+0xa10]
 call GetProcAddress
+
+push    edi
+lea     eax, [esi+800h]
+push    eax
+mov     eax, [esi+0A14h]
+call    eax     ; LoadLibrary
+mov     edi, eax
+test    edi, edi
+je      label00a61640
+
+mov     ecx, [esi+0A1Ch]
+push    ebx
+push    064h    ; Ordinal
+push    edi
+call    ecx     ; GetProcAddress
+push    0
+push    0
+push    esi
+push    eax
+mov     eax, [esi+0A20h]
+push    0
+push    0
+call    eax     ; CreateThread
+mov     ebx, eax
+test    ebx, ebx
+je      label00a61636
+
+mov     ecx, [esi+0A28h]
+push    0FFFFFFFFh
+push    ebx
+call    ecx     ; WaitForSingleObject
+mov     eax, [esi+0A2Ch]
+push    ebx
+call    eax     ; CloseHandle
+
+label00a61636:
+mov     eax, [esi+0A18h]
+push    edi
+call    eax     ; FreeLibrary
+pop     ebx
+
+label00a61640:
+mov     eax, [esi+0A24h]
+push    0
+call    eax     ; ExitThread
+pop     edi
 
 add esp,byte +0x14
 mov eax,0x2a

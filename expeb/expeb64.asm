@@ -1,25 +1,77 @@
 [org 0]
 [bits 64]
 
+;pj!CInjectData::Package
+;   +0x000 InitialCode      : [2048] UChar
+;   +0x800 DllPath          : [260] Uint2B
+;   +0xa08 peb              : Ptr64 Void
+;   +0xa10 ntdll            : Ptr64 Void
+;   +0xa18 kernel32         : Ptr64 Void
+;   +0xa20 LoadLibraryW     : Ptr64 Void
+;   +0xa28 FreeLibrary      : Ptr64 Void
+;   +0xa30 GetProcAddress   : Ptr64 Void
+;   +0xa38 CreateThread     : Ptr64 Void
+;   +0xa40 ExitThread       : Ptr64 Void
+;   +0xa48 WaitForSingleObject : Ptr64 Void
+;   +0xa50 CloseHandle      : Ptr64 Void
+;   +0xa58 Context          : [1] UChar
+
 ShellCode:
 push rbx
-sub rsp,byte +0x20
+sub rsp,byte +0x30
 mov rax,[gs:0x30]
-mov rbx,rcx
+mov rbx,rcx             ; rbx=Context
 mov rdx,[rax+0x60]
-mov [rcx+0xa08],rdx
+mov [rcx+0xa08],rdx     ; rcx=Context, rdx=peb
 call GetImageBase
 
-mov rcx,[rbx+0xa10]
-mov rdx,rbx
+mov rcx,[rbx+0xa10]     ; rcx=ntdll
+mov rdx,rbx             ; rdx=Context
 call GetProcAddress
 
-mov rcx,[rbx+0xa18]
-mov rdx,rbx
+mov rcx,[rbx+0xa18]     ; rcx=kernel32
+mov rdx,rbx             ; rdx=Context
 call GetProcAddress
+
+mov     rcx,rbx
+add     rcx,800h
+call    [rbx+0A20h]     ; LoadLibrary
+mov     rdi,rax
+test    rax,rax
+je      labelfd2f1789
+
+mov     edx,064h        ; Ordinal
+mov     rcx,rax
+mov     [rsp+40h], rsi
+call    [rbx+0A30h]     ; GetProcAddress
+xor     ecx, ecx
+mov     r9, rbx
+mov     [rsp+28h], rcx
+mov     r8, rax
+xor     edx, edx
+mov     [rsp+20h], ecx
+call    [rbx+0A38h]     ; CreateThread
+mov     rsi, rax
+test    rax, rax
+je      labelfd2f177b
+
+or      edx, 0FFFFFFFFh
+mov     rcx, rax
+call    [rbx+0A48h]     ; WaitForSingleObject
+mov     rcx, rsi
+call    [rbx+0A50h]     ; CloseHandle
+
+labelfd2f177b:
+mov     rcx, rdi
+call    [rbx+0A28h]     ; FreeLibrary
+mov     rsi, [rsp+40h]
+
+labelfd2f1789:
+xor     ecx, ecx
+call    [rbx+0A40h]     ; ExitThread
 
 mov eax,0x2a
-add rsp,byte +0x20
+add rsp,byte +0x30
 pop rbx
 ret
 
