@@ -4,7 +4,8 @@ TARGET=pj.exe
 OBJS=\
     $(OBJDIR)\main.obj
 
-LIBS=
+LIBS=advapi32.lib\
+     authz.lib
 
 CFLAGS=\
     /nologo\
