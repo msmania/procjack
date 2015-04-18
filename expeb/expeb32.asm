@@ -36,16 +36,19 @@ push    edi
 lea     eax, [esi+800h]
 push    eax
 mov     eax, [esi+0A14h]
-call    eax     ; LoadLibrary
+call    eax         ; LoadLibrary
 mov     edi, eax
 test    edi, edi
-je      label00a61640
+je      label00c114a4
 
 mov     ecx, [esi+0A1Ch]
-push    ebx
-push    064h    ; Ordinal
+push    0DEADh      ; Ordinal
 push    edi
-call    ecx     ; GetProcAddress
+call    ecx         ; GetProcAddress
+test    eax, eax
+je      label00c1149b
+
+push    ebx
 push    0
 push    0
 push    esi
@@ -53,29 +56,31 @@ push    eax
 mov     eax, [esi+0A20h]
 push    0
 push    0
-call    eax     ; CreateThread
+call    eax         ; CreateThread
 mov     ebx, eax
 test    ebx, ebx
-je      label00a61636
+je      label00c1149a
 
 mov     ecx, [esi+0A28h]
 push    0FFFFFFFFh
 push    ebx
-call    ecx     ; WaitForSingleObject
+call    ecx         ; WaitForSingleObject
 mov     eax, [esi+0A2Ch]
 push    ebx
-call    eax     ; CloseHandle
+call    eax         ; CloseHandle
 
-label00a61636:
-mov     eax, [esi+0A18h]
-push    edi
-call    eax     ; FreeLibrary
+label00c1149a:
 pop     ebx
 
-label00a61640:
+label00c1149b:
+mov     eax, [esi+0A18h]
+push    edi
+call    eax         ; FreeLibrary
+
+label00c114a4:
 mov     eax, [esi+0A24h]
 push    0
-call    eax     ; ExitThread
+call    eax         ; ExitThread
 pop     edi
 
 add esp,byte +0x14

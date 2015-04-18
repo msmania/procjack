@@ -33,49 +33,53 @@ mov rcx,[rbx+0xa18]     ; rcx=kernel32
 mov rdx,rbx             ; rdx=Context
 call GetProcAddress
 
-mov     rcx,rbx
-add     rcx,800h
-call    [rbx+0A20h]     ; LoadLibrary
-mov     rdi,rax
-test    rax,rax
-je      labelfd2f1789
+mov     rcx, rbx
+add     rcx, 800h
+call    [rbx+0A20h]       ; LoadLibrary
+mov     rdi, rax
+test    rax, rax
+je      label352e15fe
 
-mov     edx,064h        ; Ordinal
-mov     rcx,rax
-mov     [rsp+40h], rsi
-call    [rbx+0A30h]     ; GetProcAddress
+mov     edx, 0DEADh                  ; Ordinal
+mov     rcx, rax
+call    [rbx+0A30h]       ; GetProcAddress
+test    rax, rax
+je      label352e15f5
+
 xor     ecx, ecx
 mov     r9, rbx
-mov     [rsp+28h], rcx
 mov     r8, rax
-xor     edx, edx
+mov     [rsp+28h], rcx
+xor     edx,edx
+mov     [rsp+40h], rsi
 mov     [rsp+20h], ecx
-call    [rbx+0A38h]     ; CreateThread
+call    [rbx+0A38h]       ; CreateThread
 mov     rsi, rax
 test    rax, rax
-je      labelfd2f177b
+je      label352e15f0
 
 or      edx, 0FFFFFFFFh
 mov     rcx, rax
-call    [rbx+0A48h]     ; WaitForSingleObject
+call    [rbx+0A48h]       ; WaitForSingleObject
 mov     rcx, rsi
-call    [rbx+0A50h]     ; CloseHandle
+call    [rbx+0A50h]       ; CloseHandle
 
-labelfd2f177b:
-mov     rcx, rdi
-call    [rbx+0A28h]     ; FreeLibrary
+label352e15f0:
 mov     rsi, [rsp+40h]
 
-labelfd2f1789:
+label352e15f5:
+mov     rcx, rdi
+call    [rbx+0A28h]       ; FreeLibrary
+
+label352e15fe:
 xor     ecx, ecx
-call    [rbx+0A40h]     ; ExitThread
+call    [rbx+0A40h]       ; ExitThread
 
 mov eax,0x2a
 add rsp,byte +0x30
 pop rbx
 ret
 
-int3
 int3
 
 GetImageBase:
@@ -167,7 +171,6 @@ label0xeb:
 rep ret
 
 
-int3
 int3
 
 

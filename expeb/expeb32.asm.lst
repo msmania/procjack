@@ -22,381 +22,386 @@
     22 00000007 8B742408                mov esi,[esp+0x8]
     23 0000000B 56                      push esi
     24 0000000C 8986080A0000            mov [esi+0xa08],eax
-    25 00000012 E887000000              call GetImageBase
+    25 00000012 E88E000000              call GetImageBase
     26                                  
     27 00000017 56                      push esi
     28 00000018 FFB60C0A0000            push dword [esi+0xa0c]
-    29 0000001E E860010000              call GetProcAddress
+    29 0000001E E867010000              call GetProcAddress
     30                                  
     31 00000023 56                      push esi
     32 00000024 FFB6100A0000            push dword [esi+0xa10]
-    33 0000002A E854010000              call GetProcAddress
+    33 0000002A E85B010000              call GetProcAddress
     34                                  
     35 0000002F 57                      push    edi
     36 00000030 8D8600080000            lea     eax, [esi+800h]
     37 00000036 50                      push    eax
     38 00000037 8B86140A0000            mov     eax, [esi+0A14h]
-    39 0000003D FFD0                    call    eax     ; LoadLibrary
+    39 0000003D FFD0                    call    eax         ; LoadLibrary
     40 0000003F 89C7                    mov     edi, eax
     41 00000041 85FF                    test    edi, edi
-    42 00000043 7442                    je      label00a61640
+    42 00000043 7449                    je      label00c114a4
     43                                  
     44 00000045 8B8E1C0A0000            mov     ecx, [esi+0A1Ch]
-    45 0000004B 53                      push    ebx
-    46 0000004C 6A64                    push    064h    ; Ordinal
-    47 0000004E 57                      push    edi
-    48 0000004F FFD1                    call    ecx     ; GetProcAddress
-    49 00000051 6A00                    push    0
-    50 00000053 6A00                    push    0
-    51 00000055 56                      push    esi
-    52 00000056 50                      push    eax
-    53 00000057 8B86200A0000            mov     eax, [esi+0A20h]
-    54 0000005D 6A00                    push    0
-    55 0000005F 6A00                    push    0
-    56 00000061 FFD0                    call    eax     ; CreateThread
-    57 00000063 89C3                    mov     ebx, eax
-    58 00000065 85DB                    test    ebx, ebx
-    59 00000067 7414                    je      label00a61636
-    60                                  
-    61 00000069 8B8E280A0000            mov     ecx, [esi+0A28h]
-    62 0000006F 6AFF                    push    0FFFFFFFFh
-    63 00000071 53                      push    ebx
-    64 00000072 FFD1                    call    ecx     ; WaitForSingleObject
-    65 00000074 8B862C0A0000            mov     eax, [esi+0A2Ch]
-    66 0000007A 53                      push    ebx
-    67 0000007B FFD0                    call    eax     ; CloseHandle
-    68                                  
-    69                                  label00a61636:
-    70 0000007D 8B86180A0000            mov     eax, [esi+0A18h]
-    71 00000083 57                      push    edi
-    72 00000084 FFD0                    call    eax     ; FreeLibrary
-    73 00000086 5B                      pop     ebx
+    45 0000004B 68ADDE0000              push    0DEADh      ; Ordinal
+    46 00000050 57                      push    edi
+    47 00000051 FFD1                    call    ecx         ; GetProcAddress
+    48 00000053 85C0                    test    eax, eax
+    49 00000055 742E                    je      label00c1149b
+    50                                  
+    51 00000057 53                      push    ebx
+    52 00000058 6A00                    push    0
+    53 0000005A 6A00                    push    0
+    54 0000005C 56                      push    esi
+    55 0000005D 50                      push    eax
+    56 0000005E 8B86200A0000            mov     eax, [esi+0A20h]
+    57 00000064 6A00                    push    0
+    58 00000066 6A00                    push    0
+    59 00000068 FFD0                    call    eax         ; CreateThread
+    60 0000006A 89C3                    mov     ebx, eax
+    61 0000006C 85DB                    test    ebx, ebx
+    62 0000006E 7414                    je      label00c1149a
+    63                                  
+    64 00000070 8B8E280A0000            mov     ecx, [esi+0A28h]
+    65 00000076 6AFF                    push    0FFFFFFFFh
+    66 00000078 53                      push    ebx
+    67 00000079 FFD1                    call    ecx         ; WaitForSingleObject
+    68 0000007B 8B862C0A0000            mov     eax, [esi+0A2Ch]
+    69 00000081 53                      push    ebx
+    70 00000082 FFD0                    call    eax         ; CloseHandle
+    71                                  
+    72                                  label00c1149a:
+    73 00000084 5B                      pop     ebx
     74                                  
-    75                                  label00a61640:
-    76 00000087 8B86240A0000            mov     eax, [esi+0A24h]
-    77 0000008D 6A00                    push    0
-    78 0000008F FFD0                    call    eax     ; ExitThread
-    79 00000091 5F                      pop     edi
-    80                                  
-    81 00000092 83C414                  add esp,byte +0x14
-    82 00000095 B82A000000              mov eax,0x2a
-    83 0000009A 5E                      pop esi
-    84 0000009B C3                      ret
+    75                                  label00c1149b:
+    76 00000085 8B86180A0000            mov     eax, [esi+0A18h]
+    77 0000008B 57                      push    edi
+    78 0000008C FFD0                    call    eax         ; FreeLibrary
+    79                                  
+    80                                  label00c114a4:
+    81 0000008E 8B86240A0000            mov     eax, [esi+0A24h]
+    82 00000094 6A00                    push    0
+    83 00000096 FFD0                    call    eax         ; ExitThread
+    84 00000098 5F                      pop     edi
     85                                  
-    86 0000009C CC                      int3
-    87 0000009D CC                      int3
-    88                                  
-    89                                  GetImageBase:
-    90 0000009E 53                      push ebx
-    91 0000009F 56                      push esi
-    92 000000A0 8B74240C                mov esi,[esp+0xc]       ; esi = Context
-    93 000000A4 8B86080A0000            mov eax,[esi+0xa08]     ; eax = PEB
-    94 000000AA 8B580C                  mov ebx,[eax+0xc]
-    95 000000AD 83C314                  add ebx,byte +0x14
-    96 000000B0 8B0B                    mov ecx,[ebx]
-    97 000000B2 39D9                    cmp ecx,ebx
-    98 000000B4 0F84C4000000            jz label0xe0
-    99                                  
-   100 000000BA 57                      push edi
-   101 000000BB 8BBE0C0A0000            mov edi,[esi+0xa0c]
-   102                                  
-   103                                  label0x23:
-   104 000000C1 8B4128                  mov eax,[ecx+0x28]
-   105 000000C4 85FF                    test edi,edi
-   106 000000C6 751A                    jnz label0x44
+    86 00000099 83C414                  add esp,byte +0x14
+    87 0000009C B82A000000              mov eax,0x2a
+    88 000000A1 5E                      pop esi
+    89 000000A2 C3                      ret
+    90                                  
+    91 000000A3 CC                      int3
+    92 000000A4 CC                      int3
+    93                                  
+    94                                  GetImageBase:
+    95 000000A5 53                      push ebx
+    96 000000A6 56                      push esi
+    97 000000A7 8B74240C                mov esi,[esp+0xc]       ; esi = Context
+    98 000000AB 8B86080A0000            mov eax,[esi+0xa08]     ; eax = PEB
+    99 000000B1 8B580C                  mov ebx,[eax+0xc]
+   100 000000B4 83C314                  add ebx,byte +0x14
+   101 000000B7 8B0B                    mov ecx,[ebx]
+   102 000000B9 39D9                    cmp ecx,ebx
+   103 000000BB 0F84C4000000            jz label0xe0
+   104                                  
+   105 000000C1 57                      push edi
+   106 000000C2 8BBE0C0A0000            mov edi,[esi+0xa0c]
    107                                  
-   108 000000C8 81386E007400            cmp dword [eax],0x74006e
-   109 000000CE 7512                    jnz label0x44
-   110                                  
-   111 000000D0 81780464006C00          cmp dword [eax+0x4],0x6c0064
-   112 000000D7 7509                    jnz label0x44
-   113                                  
-   114 000000D9 8178086C002E00          cmp dword [eax+0x8],0x2e006c
-   115 000000E0 741C                    jz label0x60
-   116                                  
-   117                                  label0x44:
-   118 000000E2 8B10                    mov edx,[eax]
-   119 000000E4 81FA4E005400            cmp edx,0x54004e
-   120 000000EA 751D                    jnz label0x6b
+   108                                  label0x23:
+   109 000000C8 8B4128                  mov eax,[ecx+0x28]
+   110 000000CB 85FF                    test edi,edi
+   111 000000CD 751A                    jnz label0x44
+   112                                  
+   113 000000CF 81386E007400            cmp dword [eax],0x74006e
+   114 000000D5 7512                    jnz label0x44
+   115                                  
+   116 000000D7 81780464006C00          cmp dword [eax+0x4],0x6c0064
+   117 000000DE 7509                    jnz label0x44
+   118                                  
+   119 000000E0 8178086C002E00          cmp dword [eax+0x8],0x2e006c
+   120 000000E7 741C                    jz label0x60
    121                                  
-   122 000000EC 81780444004C00          cmp dword [eax+0x4],0x4c0044
-   123 000000F3 7514                    jnz label0x6b
-   124                                  
-   125 000000F5 8178084C002E00          cmp dword [eax+0x8],0x2e004c
-   126 000000FC 750B                    jnz label0x6b
-   127                                  
-   128                                  label0x60:
-   129 000000FE 8B7910                  mov edi,[ecx+0x10]
-   130 00000101 89BE0C0A0000            mov [esi+0xa0c],edi     ; package->ntdll
-   131 00000107 EB6A                    jmp short label0xd5
+   122                                  label0x44:
+   123 000000E9 8B10                    mov edx,[eax]
+   124 000000EB 81FA4E005400            cmp edx,0x54004e
+   125 000000F1 751D                    jnz label0x6b
+   126                                  
+   127 000000F3 81780444004C00          cmp dword [eax+0x4],0x4c0044
+   128 000000FA 7514                    jnz label0x6b
+   129                                  
+   130 000000FC 8178084C002E00          cmp dword [eax+0x8],0x2e004c
+   131 00000103 750B                    jnz label0x6b
    132                                  
-   133                                  label0x6b:
-   134 00000109 83BE100A000000          cmp dword [esi+0xa10],byte +0x0
-   135 00000110 752C                    jnz label0xa0
-   136                                  
-   137 00000112 81FA4B004500            cmp edx,0x45004b
-   138 00000118 7524                    jnz label0xa0
-   139                                  
-   140 0000011A 81780452004E00          cmp dword [eax+0x4],0x4e0052
-   141 00000121 751B                    jnz label0xa0
-   142                                  
-   143 00000123 81780845004C00          cmp dword [eax+0x8],0x4c0045
-   144 0000012A 7512                    jnz label0xa0
-   145                                  
-   146 0000012C 81780C33003200          cmp dword [eax+0xc],0x320033
-   147 00000133 7509                    jnz label0xa0
-   148                                  
-   149 00000135 8178102E004400          cmp dword [eax+0x10],0x44002e
-   150 0000013C 742C                    jz label0xcc
-   151                                  
-   152                                  label0xa0:
-   153 0000013E 81FA6B006500            cmp edx,0x65006b
-   154 00000144 752D                    jnz label0xd5
-   155                                  
-   156 00000146 81780472006E00          cmp dword [eax+0x4],0x6e0072
-   157 0000014D 7524                    jnz label0xd5
-   158                                  
-   159 0000014F 81780865006C00          cmp dword [eax+0x8],0x6c0065
-   160 00000156 751B                    jnz label0xd5
-   161                                  
-   162 00000158 81780C33003200          cmp dword [eax+0xc],0x320033
-   163 0000015F 7512                    jnz label0xd5
-   164                                  
-   165 00000161 8178102E006400          cmp dword [eax+0x10],0x64002e
-   166 00000168 7509                    jnz label0xd5
-   167                                  
-   168                                  label0xcc:
-   169 0000016A 8B4110                  mov eax,[ecx+0x10]
-   170 0000016D 8986100A0000            mov [esi+0xa10],eax     ; package->kernel32
-   171                                  
-   172                                  label0xd5:
-   173 00000173 8B09                    mov ecx,[ecx]
-   174 00000175 39D9                    cmp ecx,ebx
-   175 00000177 0F8544FFFFFF            jnz label0x23
+   133                                  label0x60:
+   134 00000105 8B7910                  mov edi,[ecx+0x10]
+   135 00000108 89BE0C0A0000            mov [esi+0xa0c],edi     ; package->ntdll
+   136 0000010E EB6A                    jmp short label0xd5
+   137                                  
+   138                                  label0x6b:
+   139 00000110 83BE100A000000          cmp dword [esi+0xa10],byte +0x0
+   140 00000117 752C                    jnz label0xa0
+   141                                  
+   142 00000119 81FA4B004500            cmp edx,0x45004b
+   143 0000011F 7524                    jnz label0xa0
+   144                                  
+   145 00000121 81780452004E00          cmp dword [eax+0x4],0x4e0052
+   146 00000128 751B                    jnz label0xa0
+   147                                  
+   148 0000012A 81780845004C00          cmp dword [eax+0x8],0x4c0045
+   149 00000131 7512                    jnz label0xa0
+   150                                  
+   151 00000133 81780C33003200          cmp dword [eax+0xc],0x320033
+   152 0000013A 7509                    jnz label0xa0
+   153                                  
+   154 0000013C 8178102E004400          cmp dword [eax+0x10],0x44002e
+   155 00000143 742C                    jz label0xcc
+   156                                  
+   157                                  label0xa0:
+   158 00000145 81FA6B006500            cmp edx,0x65006b
+   159 0000014B 752D                    jnz label0xd5
+   160                                  
+   161 0000014D 81780472006E00          cmp dword [eax+0x4],0x6e0072
+   162 00000154 7524                    jnz label0xd5
+   163                                  
+   164 00000156 81780865006C00          cmp dword [eax+0x8],0x6c0065
+   165 0000015D 751B                    jnz label0xd5
+   166                                  
+   167 0000015F 81780C33003200          cmp dword [eax+0xc],0x320033
+   168 00000166 7512                    jnz label0xd5
+   169                                  
+   170 00000168 8178102E006400          cmp dword [eax+0x10],0x64002e
+   171 0000016F 7509                    jnz label0xd5
+   172                                  
+   173                                  label0xcc:
+   174 00000171 8B4110                  mov eax,[ecx+0x10]
+   175 00000174 8986100A0000            mov [esi+0xa10],eax     ; package->kernel32
    176                                  
-   177 0000017D 5F                      pop edi
-   178                                  
-   179                                  label0xe0:
-   180 0000017E 5E                      pop esi
-   181 0000017F 5B                      pop ebx
-   182 00000180 C3                      ret
+   177                                  label0xd5:
+   178 0000017A 8B09                    mov ecx,[ecx]
+   179 0000017C 39D9                    cmp ecx,ebx
+   180 0000017E 0F8544FFFFFF            jnz label0x23
+   181                                  
+   182 00000184 5F                      pop edi
    183                                  
-   184                                  
-   185 00000181 CC                      int3
-   186 00000182 CC                      int3
-   187                                  
+   184                                  label0xe0:
+   185 00000185 5E                      pop esi
+   186 00000186 5B                      pop ebx
+   187 00000187 C3                      ret
    188                                  
-   189                                  GetProcAddress:
-   190 00000183 83EC0C                  sub esp,byte +0xc
-   191 00000186 B84D5A0000              mov eax,0x5a4d
-   192 0000018B 53                      push ebx
-   193 0000018C 8B5C2414                mov ebx,[esp+0x14]
-   194 00000190 663903                  cmp [ebx],ax
-   195 00000193 0F851A020000            jnz label0x330
-   196                                  
-   197 00000199 8B533C                  mov edx,[ebx+0x3c]
-   198 0000019C 813C1A50450000          cmp dword [edx+ebx],0x4550
-   199 000001A3 0F850A020000            jnz label0x330
-   200                                  
-   201 000001A9 0FB74C1A04              movzx ecx,word [edx+ebx+0x4]
-   202 000001AE 57                      push edi
-   203 000001AF BF4C010000              mov edi,0x14c
-   204 000001B4 6639F9                  cmp cx,di
-   205 000001B7 740E                    jz label0x144
-   206                                  
-   207 000001B9 B864860000              mov eax,0x8664
-   208 000001BE 6639C1                  cmp cx,ax
-   209 000001C1 0F85EB010000            jnz label0x32f
-   210                                  
-   211                                  label0x144:
-   212 000001C7 6639F9                  cmp cx,di
-   213 000001CA 56                      push esi
-   214 000001CB BE60000000              mov esi,0x60
-   215 000001D0 B870000000              mov eax,0x70
-   216 000001D5 0F44C6                  cmovz eax,esi
-   217 000001D8 01D0                    add eax,edx
-   218 000001DA 31FF                    xor edi,edi
-   219 000001DC 8B441818                mov eax,[eax+ebx+0x18]
-   220 000001E0 01D8                    add eax,ebx
-   221 000001E2 8944240C                mov [esp+0xc],eax
-   222 000001E6 8B4820                  mov ecx,[eax+0x20]
-   223 000001E9 8B7024                  mov esi,[eax+0x24]
-   224 000001EC 8B501C                  mov edx,[eax+0x1c]
-   225 000001EF 01D9                    add ecx,ebx
-   226 000001F1 01DE                    add esi,ebx
-   227 000001F3 01DA                    add edx,ebx
-   228 000001F5 894C2410                mov [esp+0x10],ecx
-   229 000001F9 89742414                mov [esp+0x14],esi
-   230 000001FD 8954241C                mov [esp+0x1c],edx
-   231 00000201 397818                  cmp [eax+0x18],edi
-   232 00000204 0F86A7010000            jna label0x32e
-   233                                  
-   234 0000020A 8B542420                mov edx,[esp+0x20]
-   235 0000020E 55                      push ebp
-   236 0000020F 8BAA140A0000            mov ebp,[edx+0xa14]
-   237                                  
-   238                                  label0x192:
-   239 00000215 8B04B9                  mov eax,[ecx+edi*4]
-   240 00000218 0FB70C7E                movzx ecx,word [esi+edi*2]
-   241 0000021C 8B742420                mov esi,[esp+0x20]
-   242 00000220 01D8                    add eax,ebx
-   243 00000222 8B348E                  mov esi,[esi+ecx*4]
-   244 00000225 01DE                    add esi,ebx
-   245 00000227 85ED                    test ebp,ebp
-   246 00000229 752D                    jnz label0x1d5
-   247                                  
-   248 0000022B 81384C6F6164            cmp dword [eax],0x64616f4c
-   249 00000231 7525                    jnz label0x1d5
-   250                                  
-   251 00000233 8178044C696272          cmp dword [eax+0x4],0x7262694c
-   252 0000023A 751C                    jnz label0x1d5
-   253                                  
-   254 0000023C 81780861727957          cmp dword [eax+0x8],0x57797261
-   255 00000243 7513                    jnz label0x1d5
-   256                                  
-   257 00000245 80780C00                cmp byte [eax+0xc],0x0
-   258 00000249 750D                    jnz label0x1d5
-   259                                  
-   260 0000024B 89F5                    mov ebp,esi
-   261 0000024D 89B2140A0000            mov [edx+0xa14],esi     ; package->LoadLibrary
-   262 00000253 E942010000              jmp dword label0x317
-   263                                  
-   264                                  label0x1d5:
-   265 00000258 83BA180A000000          cmp dword [edx+0xa18],byte +0x0
-   266 0000025F 7525                    jnz label0x203
-   267                                  
-   268 00000261 813846726565            cmp dword [eax],0x65657246
-   269 00000267 751D                    jnz label0x203
-   270                                  
-   271 00000269 8178044C696272          cmp dword [eax+0x4],0x7262694c
-   272 00000270 7514                    jnz label0x203
-   273                                  
-   274 00000272 81780861727900          cmp dword [eax+0x8],0x797261
-   275 00000279 750B                    jnz label0x203
-   276                                  
-   277 0000027B 89B2180A0000            mov [edx+0xa18],esi     ; package->FreeLibrary
-   278 00000281 E914010000              jmp dword label0x317
-   279                                  
-   280                                  label0x203:
-   281 00000286 83BA1C0A000000          cmp dword [edx+0xa1c],byte +0x0
-   282 0000028D 7536                    jnz label0x242
-   283                                  
-   284 0000028F 813847657450            cmp dword [eax],0x50746547
-   285 00000295 752E                    jnz label0x242
-   286                                  
-   287 00000297 817804726F6341          cmp dword [eax+0x4],0x41636f72
-   288 0000029E 7525                    jnz label0x242
-   289                                  
-   290 000002A0 81780864647265          cmp dword [eax+0x8],0x65726464
-   291 000002A7 751C                    jnz label0x242
-   292                                  
-   293 000002A9 8B480C                  mov ecx,[eax+0xc]
-   294 000002AC 81E1FFFFFF00            and ecx,0xffffff
-   295 000002B2 81F973730000            cmp ecx,0x7373
-   296 000002B8 750B                    jnz label0x242
+   189                                  
+   190 00000188 CC                      int3
+   191 00000189 CC                      int3
+   192                                  
+   193                                  
+   194                                  GetProcAddress:
+   195 0000018A 83EC0C                  sub esp,byte +0xc
+   196 0000018D B84D5A0000              mov eax,0x5a4d
+   197 00000192 53                      push ebx
+   198 00000193 8B5C2414                mov ebx,[esp+0x14]
+   199 00000197 663903                  cmp [ebx],ax
+   200 0000019A 0F851A020000            jnz label0x330
+   201                                  
+   202 000001A0 8B533C                  mov edx,[ebx+0x3c]
+   203 000001A3 813C1A50450000          cmp dword [edx+ebx],0x4550
+   204 000001AA 0F850A020000            jnz label0x330
+   205                                  
+   206 000001B0 0FB74C1A04              movzx ecx,word [edx+ebx+0x4]
+   207 000001B5 57                      push edi
+   208 000001B6 BF4C010000              mov edi,0x14c
+   209 000001BB 6639F9                  cmp cx,di
+   210 000001BE 740E                    jz label0x144
+   211                                  
+   212 000001C0 B864860000              mov eax,0x8664
+   213 000001C5 6639C1                  cmp cx,ax
+   214 000001C8 0F85EB010000            jnz label0x32f
+   215                                  
+   216                                  label0x144:
+   217 000001CE 6639F9                  cmp cx,di
+   218 000001D1 56                      push esi
+   219 000001D2 BE60000000              mov esi,0x60
+   220 000001D7 B870000000              mov eax,0x70
+   221 000001DC 0F44C6                  cmovz eax,esi
+   222 000001DF 01D0                    add eax,edx
+   223 000001E1 31FF                    xor edi,edi
+   224 000001E3 8B441818                mov eax,[eax+ebx+0x18]
+   225 000001E7 01D8                    add eax,ebx
+   226 000001E9 8944240C                mov [esp+0xc],eax
+   227 000001ED 8B4820                  mov ecx,[eax+0x20]
+   228 000001F0 8B7024                  mov esi,[eax+0x24]
+   229 000001F3 8B501C                  mov edx,[eax+0x1c]
+   230 000001F6 01D9                    add ecx,ebx
+   231 000001F8 01DE                    add esi,ebx
+   232 000001FA 01DA                    add edx,ebx
+   233 000001FC 894C2410                mov [esp+0x10],ecx
+   234 00000200 89742414                mov [esp+0x14],esi
+   235 00000204 8954241C                mov [esp+0x1c],edx
+   236 00000208 397818                  cmp [eax+0x18],edi
+   237 0000020B 0F86A7010000            jna label0x32e
+   238                                  
+   239 00000211 8B542420                mov edx,[esp+0x20]
+   240 00000215 55                      push ebp
+   241 00000216 8BAA140A0000            mov ebp,[edx+0xa14]
+   242                                  
+   243                                  label0x192:
+   244 0000021C 8B04B9                  mov eax,[ecx+edi*4]
+   245 0000021F 0FB70C7E                movzx ecx,word [esi+edi*2]
+   246 00000223 8B742420                mov esi,[esp+0x20]
+   247 00000227 01D8                    add eax,ebx
+   248 00000229 8B348E                  mov esi,[esi+ecx*4]
+   249 0000022C 01DE                    add esi,ebx
+   250 0000022E 85ED                    test ebp,ebp
+   251 00000230 752D                    jnz label0x1d5
+   252                                  
+   253 00000232 81384C6F6164            cmp dword [eax],0x64616f4c
+   254 00000238 7525                    jnz label0x1d5
+   255                                  
+   256 0000023A 8178044C696272          cmp dword [eax+0x4],0x7262694c
+   257 00000241 751C                    jnz label0x1d5
+   258                                  
+   259 00000243 81780861727957          cmp dword [eax+0x8],0x57797261
+   260 0000024A 7513                    jnz label0x1d5
+   261                                  
+   262 0000024C 80780C00                cmp byte [eax+0xc],0x0
+   263 00000250 750D                    jnz label0x1d5
+   264                                  
+   265 00000252 89F5                    mov ebp,esi
+   266 00000254 89B2140A0000            mov [edx+0xa14],esi     ; package->LoadLibrary
+   267 0000025A E942010000              jmp dword label0x317
+   268                                  
+   269                                  label0x1d5:
+   270 0000025F 83BA180A000000          cmp dword [edx+0xa18],byte +0x0
+   271 00000266 7525                    jnz label0x203
+   272                                  
+   273 00000268 813846726565            cmp dword [eax],0x65657246
+   274 0000026E 751D                    jnz label0x203
+   275                                  
+   276 00000270 8178044C696272          cmp dword [eax+0x4],0x7262694c
+   277 00000277 7514                    jnz label0x203
+   278                                  
+   279 00000279 81780861727900          cmp dword [eax+0x8],0x797261
+   280 00000280 750B                    jnz label0x203
+   281                                  
+   282 00000282 89B2180A0000            mov [edx+0xa18],esi     ; package->FreeLibrary
+   283 00000288 E914010000              jmp dword label0x317
+   284                                  
+   285                                  label0x203:
+   286 0000028D 83BA1C0A000000          cmp dword [edx+0xa1c],byte +0x0
+   287 00000294 7536                    jnz label0x242
+   288                                  
+   289 00000296 813847657450            cmp dword [eax],0x50746547
+   290 0000029C 752E                    jnz label0x242
+   291                                  
+   292 0000029E 817804726F6341          cmp dword [eax+0x4],0x41636f72
+   293 000002A5 7525                    jnz label0x242
+   294                                  
+   295 000002A7 81780864647265          cmp dword [eax+0x8],0x65726464
+   296 000002AE 751C                    jnz label0x242
    297                                  
-   298 000002BA 89B21C0A0000            mov [edx+0xa1c],esi     ; package->GetProcAddress
-   299 000002C0 E9D5000000              jmp dword label0x317
-   300                                  
-   301                                  label0x242:
-   302 000002C5 83BA200A000000          cmp dword [edx+0xa20],byte +0x0
-   303 000002CC 752B                    jnz label0x276
-   304                                  
-   305 000002CE 813843726561            cmp dword [eax],0x61657243
-   306 000002D4 7523                    jnz label0x276
-   307                                  
-   308 000002D6 81780474655468          cmp dword [eax+0x4],0x68546574
-   309 000002DD 751A                    jnz label0x276
-   310                                  
-   311 000002DF 81780872656164          cmp dword [eax+0x8],0x64616572
-   312 000002E6 7511                    jnz label0x276
-   313                                  
-   314 000002E8 80780C00                cmp byte [eax+0xc],0x0
-   315 000002EC 750B                    jnz label0x276
-   316                                  
-   317 000002EE 89B2200A0000            mov [edx+0xa20],esi     ; package->CreateThread
-   318 000002F4 E9A1000000              jmp dword label0x317
-   319                                  
-   320                                  label0x276:
-   321 000002F9 83BA240A000000          cmp dword [edx+0xa24],byte +0x0
-   322 00000300 7532                    jnz label0x2b1
-   323                                  
-   324 00000302 813852746C45            cmp dword [eax],0x456c7452
-   325 00000308 752A                    jnz label0x2b1
-   326                                  
-   327 0000030A 81780478697455          cmp dword [eax+0x4],0x55746978
-   328 00000311 7521                    jnz label0x2b1
-   329                                  
-   330 00000313 81780873657254          cmp dword [eax+0x8],0x54726573
-   331 0000031A 7518                    jnz label0x2b1
-   332                                  
-   333 0000031C 81780C68726561          cmp dword [eax+0xc],0x61657268
-   334 00000323 750F                    jnz label0x2b1
-   335                                  
-   336 00000325 6683781064              cmp word [eax+0x10],byte +0x64
-   337 0000032A 7508                    jnz label0x2b1
-   338                                  
-   339 0000032C 89B2240A0000            mov [edx+0xa24],esi     ; package->ExitThread
-   340 00000332 EB66                    jmp short label0x317
-   341                                  
-   342                                  label0x2b1:
-   343 00000334 83BA280A000000          cmp dword [edx+0xa28],byte +0x0
-   344 0000033B 7534                    jnz label0x2ee
-   345                                  
-   346 0000033D 813857616974            cmp dword [eax],0x74696157
-   347 00000343 752C                    jnz label0x2ee
-   348                                  
-   349 00000345 817804466F7253          cmp dword [eax+0x4],0x53726f46
-   350 0000034C 7523                    jnz label0x2ee
-   351                                  
-   352 0000034E 817808696E676C          cmp dword [eax+0x8],0x6c676e69
-   353 00000355 751A                    jnz label0x2ee
-   354                                  
-   355 00000357 81780C654F626A          cmp dword [eax+0xc],0x6a624f65
-   356 0000035E 7511                    jnz label0x2ee
-   357                                  
-   358 00000360 81781065637400          cmp dword [eax+0x10],0x746365
-   359 00000367 7508                    jnz label0x2ee
-   360                                  
-   361 00000369 89B2280A0000            mov [edx+0xa28],esi     ; package->WaitForSingleObject
-   362 0000036F EB29                    jmp short label0x317
-   363                                  
-   364                                  label0x2ee:
-   365 00000371 83BA2C0A000000          cmp dword [edx+0xa2c],byte +0x0
-   366 00000378 7520                    jnz label0x317
-   367                                  
-   368 0000037A 8138436C6F73            cmp dword [eax],0x736f6c43
-   369 00000380 7518                    jnz label0x317
-   370                                  
-   371 00000382 8178046548616E          cmp dword [eax+0x4],0x6e614865
-   372 00000389 750F                    jnz label0x317
-   373                                  
-   374 0000038B 817808646C6500          cmp dword [eax+0x8],0x656c64
-   375 00000392 7506                    jnz label0x317
-   376                                  
-   377 00000394 89B22C0A0000            mov [edx+0xa2c],esi     ; package->CloseHandle
+   298 000002B0 8B480C                  mov ecx,[eax+0xc]
+   299 000002B3 81E1FFFFFF00            and ecx,0xffffff
+   300 000002B9 81F973730000            cmp ecx,0x7373
+   301 000002BF 750B                    jnz label0x242
+   302                                  
+   303 000002C1 89B21C0A0000            mov [edx+0xa1c],esi     ; package->GetProcAddress
+   304 000002C7 E9D5000000              jmp dword label0x317
+   305                                  
+   306                                  label0x242:
+   307 000002CC 83BA200A000000          cmp dword [edx+0xa20],byte +0x0
+   308 000002D3 752B                    jnz label0x276
+   309                                  
+   310 000002D5 813843726561            cmp dword [eax],0x61657243
+   311 000002DB 7523                    jnz label0x276
+   312                                  
+   313 000002DD 81780474655468          cmp dword [eax+0x4],0x68546574
+   314 000002E4 751A                    jnz label0x276
+   315                                  
+   316 000002E6 81780872656164          cmp dword [eax+0x8],0x64616572
+   317 000002ED 7511                    jnz label0x276
+   318                                  
+   319 000002EF 80780C00                cmp byte [eax+0xc],0x0
+   320 000002F3 750B                    jnz label0x276
+   321                                  
+   322 000002F5 89B2200A0000            mov [edx+0xa20],esi     ; package->CreateThread
+   323 000002FB E9A1000000              jmp dword label0x317
+   324                                  
+   325                                  label0x276:
+   326 00000300 83BA240A000000          cmp dword [edx+0xa24],byte +0x0
+   327 00000307 7532                    jnz label0x2b1
+   328                                  
+   329 00000309 813852746C45            cmp dword [eax],0x456c7452
+   330 0000030F 752A                    jnz label0x2b1
+   331                                  
+   332 00000311 81780478697455          cmp dword [eax+0x4],0x55746978
+   333 00000318 7521                    jnz label0x2b1
+   334                                  
+   335 0000031A 81780873657254          cmp dword [eax+0x8],0x54726573
+   336 00000321 7518                    jnz label0x2b1
+   337                                  
+   338 00000323 81780C68726561          cmp dword [eax+0xc],0x61657268
+   339 0000032A 750F                    jnz label0x2b1
+   340                                  
+   341 0000032C 6683781064              cmp word [eax+0x10],byte +0x64
+   342 00000331 7508                    jnz label0x2b1
+   343                                  
+   344 00000333 89B2240A0000            mov [edx+0xa24],esi     ; package->ExitThread
+   345 00000339 EB66                    jmp short label0x317
+   346                                  
+   347                                  label0x2b1:
+   348 0000033B 83BA280A000000          cmp dword [edx+0xa28],byte +0x0
+   349 00000342 7534                    jnz label0x2ee
+   350                                  
+   351 00000344 813857616974            cmp dword [eax],0x74696157
+   352 0000034A 752C                    jnz label0x2ee
+   353                                  
+   354 0000034C 817804466F7253          cmp dword [eax+0x4],0x53726f46
+   355 00000353 7523                    jnz label0x2ee
+   356                                  
+   357 00000355 817808696E676C          cmp dword [eax+0x8],0x6c676e69
+   358 0000035C 751A                    jnz label0x2ee
+   359                                  
+   360 0000035E 81780C654F626A          cmp dword [eax+0xc],0x6a624f65
+   361 00000365 7511                    jnz label0x2ee
+   362                                  
+   363 00000367 81781065637400          cmp dword [eax+0x10],0x746365
+   364 0000036E 7508                    jnz label0x2ee
+   365                                  
+   366 00000370 89B2280A0000            mov [edx+0xa28],esi     ; package->WaitForSingleObject
+   367 00000376 EB29                    jmp short label0x317
+   368                                  
+   369                                  label0x2ee:
+   370 00000378 83BA2C0A000000          cmp dword [edx+0xa2c],byte +0x0
+   371 0000037F 7520                    jnz label0x317
+   372                                  
+   373 00000381 8138436C6F73            cmp dword [eax],0x736f6c43
+   374 00000387 7518                    jnz label0x317
+   375                                  
+   376 00000389 8178046548616E          cmp dword [eax+0x4],0x6e614865
+   377 00000390 750F                    jnz label0x317
    378                                  
-   379                                  label0x317:
-   380 0000039A 8B442410                mov eax,[esp+0x10]
-   381 0000039E 8B4C2414                mov ecx,[esp+0x14]
-   382 000003A2 8B742418                mov esi,[esp+0x18]
-   383 000003A6 47                      inc edi
-   384 000003A7 3B7818                  cmp edi,[eax+0x18]
-   385 000003AA 0F8265FEFFFF            jc label0x192
-   386                                  
-   387 000003B0 5D                      pop ebp
-   388                                  
-   389                                  label0x32e:
-   390 000003B1 5E                      pop esi
+   379 00000392 817808646C6500          cmp dword [eax+0x8],0x656c64
+   380 00000399 7506                    jnz label0x317
+   381                                  
+   382 0000039B 89B22C0A0000            mov [edx+0xa2c],esi     ; package->CloseHandle
+   383                                  
+   384                                  label0x317:
+   385 000003A1 8B442410                mov eax,[esp+0x10]
+   386 000003A5 8B4C2414                mov ecx,[esp+0x14]
+   387 000003A9 8B742418                mov esi,[esp+0x18]
+   388 000003AD 47                      inc edi
+   389 000003AE 3B7818                  cmp edi,[eax+0x18]
+   390 000003B1 0F8265FEFFFF            jc label0x192
    391                                  
-   392                                  label0x32f:
-   393 000003B2 5F                      pop edi
-   394                                  
-   395                                  label0x330:
-   396 000003B3 5B                      pop ebx
-   397 000003B4 83C40C                  add esp,byte +0xc
-   398 000003B7 C3                      ret
+   392 000003B7 5D                      pop ebp
+   393                                  
+   394                                  label0x32e:
+   395 000003B8 5E                      pop esi
+   396                                  
+   397                                  label0x32f:
+   398 000003B9 5F                      pop edi
    399                                  
-   400                                  
-   401 000003B8 CC                      int3
-   402 000003B9 CC                      int3
+   400                                  label0x330:
+   401 000003BA 5B                      pop ebx
+   402 000003BB 83C40C                  add esp,byte +0xc
+   403 000003BE C3                      ret
+   404                                  
+   405                                  
+   406 000003BF CC                      int3
+   407 000003C0 CC                      int3
