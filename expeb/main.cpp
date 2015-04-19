@@ -172,8 +172,8 @@ void GetImageBase(Package *package) {
             package->ntdll = entry->DllBase;
         }
         else if ( !package->kernel32 &&
-                  (Name[0]==0x0045004b && Name[1]==0x004e0052 && Name[2]==0x004c0045 && Name[3]==0x00320033 && Name[4]==0x0044002e) ||
-                  (Name[0]==0x0065006b && Name[1]==0x006e0072 && Name[2]==0x006c0065 && Name[3]==0x00320033 && Name[4]==0x0064002e) ) {
+                  (Name[0]==0x0045004b && Name[1]==0x004e0052 && Name[2]==0x004c0045 && Name[3]==0x00320033 && (Name[4]&0xffff)==0x002e) ||
+                  (Name[0]==0x0065006b && Name[1]==0x006e0072 && Name[2]==0x006c0065 && Name[3]==0x00320033 && (Name[4]&0xffff)==0x002e) ) {
             package->kernel32 = entry->DllBase;
         }
         else {
