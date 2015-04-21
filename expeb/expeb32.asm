@@ -17,76 +17,62 @@
 ;    +0xa30 Context          : [1] UChar
 
 ShellCode:
-mov eax,[fs:0x30]
-push esi
-mov esi,[esp+0x8]
-push esi
-mov [esi+0xa08],eax
-call GetImageBase
-
-push esi
-push dword [esi+0xa0c]
-call GetProcAddress
-
-push esi
-push dword [esi+0xa10]
-call GetProcAddress
-
+mov     eax, [fs:0x30]
+push    ebx
+push    esi
+mov     esi, [esp+0Ch]  ; esi = Context
 push    edi
+push    esi
+xor     edi,edi
+mov     [esi+0A08h], eax
+call    GetImageBase
+
+push    esi
+push    dword [esi+0A0Ch]
+call    GetProcAddress
+
+push    esi
+push    dword [esi+0A10h]
+call    GetProcAddress
+
+add     esp, 14h
 lea     eax, [esi+800h]
 push    eax
 mov     eax, [esi+0A14h]
-call    eax         ; LoadLibrary
-mov     edi, eax
-test    edi, edi
-je      label00c114a4
+call    eax             ; LoadLibrary
 
-mov     ecx, [esi+0A1Ch]
-push    0DEADh      ; Ordinal
-push    edi
-call    ecx         ; GetProcAddress
-test    eax, eax
-je      label00c1149b
-
-push    ebx
-push    0
-push    0
-push    esi
-push    eax
-mov     eax, [esi+0A20h]
-push    0
-push    0
-call    eax         ; CreateThread
 mov     ebx, eax
 test    ebx, ebx
-je      label00c1149a
+je      label00df13ab
 
-mov     ecx, [esi+0A28h]
-push    0FFFFFFFFh
+mov     eax, [esi+0A1Ch]
+push    0DEADh          ; Ordinal
 push    ebx
-call    ecx         ; WaitForSingleObject
-mov     eax, [esi+0A2Ch]
+call    eax             ; GetProcAddress
+
+test    eax,eax
+je      label00df13a2
+
+push    esi
+call    eax
+
+mov     edi, eax
+
+label00df13a2:
+mov     ecx, [esi+0A18h]
 push    ebx
-call    eax         ; CloseHandle
+call    ecx             ; FreeLibrary
 
-label00c1149a:
-pop     ebx
-
-label00c1149b:
-mov     eax, [esi+0A18h]
+label00df13ab:
+mov     ecx, [esi+0A24h]
 push    edi
-call    eax         ; FreeLibrary
+call    ecx             ; ExitThread
 
-label00c114a4:
-mov     eax, [esi+0A24h]
-push    0
-call    eax         ; ExitThread
+mov     eax,edi
 pop     edi
-
-add esp,byte +0x14
-mov eax,0x2a
-pop esi
-ret
+pop     esi
+pop     ebx
+ret     4
 
 int3
 int3

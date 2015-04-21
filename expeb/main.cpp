@@ -11,6 +11,8 @@
 #ifdef MSVC
 #include <windows.h>
 #include <intrin.h>
+#else
+#define WINAPI
 #endif
 
 #ifdef DEBUG
@@ -98,6 +100,46 @@ struct Package {
     void *CloseHandle;
     unsigned char Context[1];
 };
+
+typedef void *(WINAPI *LOADLIBRARY)(
+  _In_  void *lpFileName
+);
+
+typedef void *(WINAPI *GETPROCADDRESS)(
+  _In_  void *hModule,
+  _In_  void *lpProcName
+);
+
+typedef void *(WINAPI *CREATETHREAD)(
+  void *lpThreadAttributes,
+  size_t dwStackSize,
+  void *lpStartAddress,
+  void *lpParameter,
+  unsigned int dwCreationFlags,
+  void *lpThreadId
+);
+
+typedef unsigned int (WINAPI *WAITFORSINGLEOBJECT)(
+  void *hHandle,
+  unsigned int dwMilliseconds
+);
+
+typedef unsigned int (WINAPI *CLOSEHANDLE)(
+  void *hObject
+);
+
+typedef unsigned int (WINAPI *FREELIBRARY)(
+  void *hModule
+);
+
+typedef void (WINAPI *EXITTHREAD)(
+  unsigned int dwExitCode
+);
+
+typedef unsigned int (WINAPI *THREADPROC)(
+  void *lpParameter
+);
+
 
 // copied from ntdef.h
 #define containing_record(address, type, field) ((type *)((unsigned char *)(address) - (long)(&((type *)0)->field)))
@@ -207,12 +249,25 @@ PPEB GetPeb() {
     return (PPEB)Peb;
 }
 
-unsigned int ShellCode(Package *p) {
+unsigned int WINAPI ShellCode(Package *p) {
+    unsigned int Ret = 0;
+
     p->peb = GetPeb();
     GetImageBase(p);
     GetProcAddress(p->ntdll, p);
     GetProcAddress(p->kernel32, p);
-    return 42;
+
+    void *hm = LOADLIBRARY(p->LoadLibrary)(p->DllPath);
+    if ( hm ) {
+        THREADPROC f = (THREADPROC)GETPROCADDRESS(p->GetProcAddress)(hm, MAKEINTRESOURCEA(0xdead));
+        if ( f ) {
+            Ret = f(p);
+        }
+        FREELIBRARY(p->FreeLibrary)(hm);
+    }
+
+    EXITTHREAD(p->ExitThread)(Ret);
+    return Ret;
 }
 
 int main() {
