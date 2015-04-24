@@ -11,6 +11,8 @@
 #ifdef MSVC
 #include <windows.h>
 #include <intrin.h>
+
+#define MEM_RELEASE 0x8000
 #else
 #define WINAPI
 #endif
@@ -98,6 +100,7 @@ struct Package {
     void *ExitThread;
     void *WaitForSingleObject;
     void *CloseHandle;
+    void *VirtualFree;
     unsigned char Context[1];
 };
 
@@ -140,6 +143,11 @@ typedef unsigned int (WINAPI *THREADPROC)(
   void *lpParameter
 );
 
+typedef unsigned int (WINAPI *VIRTUALFREE)(
+  void *lpAddress,
+  size_t dwSize,
+  unsigned int dwFreeType
+);
 
 // copied from ntdef.h
 #define containing_record(address, type, field) ((type *)((unsigned char *)(address) - (long)(&((type *)0)->field)))
@@ -189,6 +197,9 @@ void GetProcAddress(void *ImageBase, Package *package) {
                 }
                 else if ( !package->CloseHandle && Name[0]==0x736f6c43 && Name[1]==0x6e614865 && Name[2]==0x00656c64 ) {
                     package->CloseHandle = Function;
+                }
+                else if ( !package->VirtualFree && Name[0]==0x74726956 && Name[1]==0x466c6175 && Name[2]==0x00656572 ) {
+                    package->VirtualFree = Function;
                 }
                 else {
                     continue;
@@ -265,6 +276,8 @@ unsigned int WINAPI ShellCode(Package *p) {
         }
         FREELIBRARY(p->FreeLibrary)(hm);
     }
+
+    VIRTUALFREE(p->VirtualFree)(p, 0, MEM_RELEASE);
 
     EXITTHREAD(p->ExitThread)(Ret);
     return Ret;

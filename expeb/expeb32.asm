@@ -18,10 +18,7 @@
 
 ShellCode:
 mov     eax, [fs:0x30]
-push    ebx
-push    esi
-mov     esi, [esp+0Ch]  ; esi = Context
-push    edi
+mov     esi, [esp+4]    ; esi = Context
 push    esi
 xor     edi,edi
 mov     [esi+0A08h], eax
@@ -64,15 +61,15 @@ push    ebx
 call    ecx             ; FreeLibrary
 
 label00df13ab:
-mov     ecx, [esi+0A24h]
-push    edi
-call    ecx             ; ExitThread
+push    8000h
+push    0
+push    esi
 
-mov     eax,edi
-pop     edi
-pop     esi
-pop     ebx
-ret     4
+mov     eax, [esi+0A24h]
+push    eax             ; ExitThread
+
+mov     eax, [esi+0A30h]
+jmp     eax             ; VirtualFree
 
 int3
 int3
@@ -328,7 +325,7 @@ cmp word [eax+0x10],byte +0x64
 jnz label0x2b1
 
 mov [edx+0xa24],esi     ; package->ExitThread
-jmp short label0x317
+jmp label0x317
 
 label0x2b1:
 cmp dword [edx+0xa28],byte +0x0
@@ -354,18 +351,33 @@ jmp short label0x317
 
 label0x2ee:
 cmp dword [edx+0xa2c],byte +0x0
-jnz label0x317
+jnz check_virtualfree
 
 cmp dword [eax],0x736f6c43
-jnz label0x317
+jnz check_virtualfree
 
 cmp dword [eax+0x4],0x6e614865
-jnz label0x317
+jnz check_virtualfree
 
 cmp dword [eax+0x8],0x656c64
-jnz label0x317
+jnz check_virtualfree
 
 mov [edx+0xa2c],esi     ; package->CloseHandle
+
+check_virtualfree:
+cmp dword [edx+0A30h], 0
+jne label0x317
+
+cmp dword [eax], 74726956h
+jne label0x317
+
+cmp dword [eax+4], 466C6175h
+jne label0x317
+
+cmp dword [eax+8], 656572h
+jne label0x317
+
+mov [edx+0A30h], esi    ; package->VirtualFree
 
 label0x317:
 mov eax,[esp+0x10]

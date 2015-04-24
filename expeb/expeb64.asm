@@ -58,15 +58,11 @@ mov     rcx, rsi
 call    [rbx+0A28h]     ; FreeLibrary
 
 label19c213e3:
-mov     ecx, edi
-call    [rbx+0A40h]     ; ExitThread
-
-mov     rbx, [rsp+30h]
-mov     rsi, [rsp+38h]
-mov     eax, edi
-add     rsp, 20h
-pop     rdi
-ret
+xor     edx,edx
+mov     r8d,8000h
+mov     rcx,rbx
+push    qword [rbx+0A40h]   ; ExitThread
+jmp     [rbx+0A58h]         ; VirtualFree
 
 int3
 
@@ -333,18 +329,34 @@ jmp label0x335
 
 label0x30a:
 cmp qword [rdx+0xa50],byte +0x0
-jnz label0x335
+jnz check_virtualfree
 
 cmp dword [rax],0x736f6c43
-jnz label0x335
+jnz check_virtualfree
 
 cmp dword [rax+0x4],0x6e614865
-jnz label0x335
+jnz check_virtualfree
 
 cmp dword [rax+0x8],0x656c64
-jnz label0x335
+jnz check_virtualfree
 
 mov [rdx+0xa50],r8
+jmp label0x335
+
+check_virtualfree:
+cmp dword [rdx+0A58h], 0
+jne label0x335
+
+cmp dword [rax], 74726956h
+jne label0x335
+
+cmp dword [rax+4], 466C6175h
+jne label0x335
+
+cmp dword [rax+8], 656572h
+jne label0x335
+
+mov [rdx+0A58h], r8
 
 label0x335:
 inc r11d
