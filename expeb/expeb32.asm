@@ -1,405 +1,286 @@
 [org 0]
 [bits 32]
 
-; pj!CInjectData::Package
+; 0:000> dt expeb!Package
 ;    +0x000 InitialCode      : [2048] UChar
 ;    +0x800 DllPath          : [260] Uint2B
-;    +0xa08 peb              : Ptr32 Void
-;    +0xa0c ntdll            : Ptr32 Void
-;    +0xa10 kernel32         : Ptr32 Void
-;    +0xa14 LoadLibraryW     : Ptr32 Void
-;    +0xa18 FreeLibrary      : Ptr32 Void
-;    +0xa1c GetProcAddress   : Ptr32 Void
-;    +0xa20 CreateThread     : Ptr32 Void
-;    +0xa24 ExitThread       : Ptr32 Void
-;    +0xa28 WaitForSingleObject : Ptr32 Void
-;    +0xa2c CloseHandle      : Ptr32 Void
-;    +0xa30 Context          : [1] UChar
-
+;    +0xa08 peb              : Ptr32 _PEB
+;    +0xa0c kernel32         : Ptr32 Void
+;    +0xa10 xxxLoadLibrary   : Ptr32 Void
+;    +0xa14 xxxFreeLibrary   : Ptr32 Void
+;    +0xa18 xxxGetProcAddress : Ptr32 Void
+;    +0xa1c Context          : [1] UChar
+;
 ShellCode:
-mov     eax, [fs:0x30]
-mov     esi, [esp+4]    ; esi = Context
+sub     esp,10h
+mov     eax,dword [fs:00000030h]
+push    ebx
 push    esi
+mov     esi,dword [esp+1Ch]
+push    edi
+push    esi
+mov     dword [esp+10h],123h
 xor     edi,edi
-mov     [esi+0A08h], eax
+mov     dword [esp+14h],0
+mov     dword [esp+18h],456h
+mov     dword [esp+1Ch],0
+mov     dword [esi+0A08h],eax
 call    GetImageBase
-
 push    esi
 push    dword [esi+0A0Ch]
 call    GetProcAddress
-
-push    esi
-push    dword [esi+0A10h]
-call    GetProcAddress
-
-add     esp, 14h
-lea     eax, [esi+800h]
+add     esp,0Ch
+lea     eax,[esi+800h]
 push    eax
-mov     eax, [esi+0A14h]
-call    eax             ; LoadLibrary
+mov     eax,dword [esi+0A10h]
+call    eax        ; LoadLibrary
+mov     ebx,eax
+test    ebx,ebx
+je      ShellCode_Exit
 
-mov     ebx, eax
-test    ebx, ebx
-je      label00df13ab
-
-mov     eax, [esi+0A1Ch]
-push    0DEADh          ; Ordinal
+mov     eax,dword [esi+0A18h]
+push    0DEADh
 push    ebx
-call    eax             ; GetProcAddress
-
+call    eax        ; GetProcAddress
 test    eax,eax
-je      label00df13a2
+je      ShellCode_FreeLibrary
 
 push    esi
 call    eax
+mov     edi,eax
 
-mov     edi, eax
-
-label00df13a2:
-mov     ecx, [esi+0A18h]
+ShellCode_FreeLibrary:
+mov     ecx,dword [esi+0A14h]
 push    ebx
-call    ecx             ; FreeLibrary
+call    ecx        ; FreeLibrary
 
-label00df13ab:
+ShellCode_Exit:
+lea     eax,[esp+0Ch]
+mov     dword [eax], 74697845h
+mov     dword [eax+4h], 65726854h
+mov     dword [eax+8h], 00006461h
+push    eax
+push    dword [esi+0A0Ch]
+mov     eax,dword [esi+0A18h]
+call    eax        ; GetProcAddress("ExitThread")
+mov     edi,eax
+
+lea     eax,[esp+0Ch]
+mov     dword [eax], 74726956h
+mov     dword [eax+4h], 466c6175h
+mov     dword [eax+8h], 00656572h
+push    eax
+push    dword [esi+0A0Ch]
+mov     eax,dword [esi+0A18h]
+call    eax        ; GetProcAddress("VirtualAlloc")
+
 push    8000h
 push    0
 push    esi
 
-mov     eax, [esi+0A24h]
-push    eax             ; ExitThread
+push    edi
+jmp     eax
 
-mov     eax, [esi+0A30h]
-jmp     eax             ; VirtualFree
-
-int3
 int3
 
 GetImageBase:
-push ebx
-push esi
-mov esi,[esp+0xc]       ; esi = Context
-mov eax,[esi+0xa08]     ; eax = PEB
-mov ebx,[eax+0xc]
-add ebx,byte +0x14
-mov ecx,[ebx]
-cmp ecx,ebx
-jz label0xe0
+push    ebx
+mov     ebx,dword [esp+8]
+push    edi
+mov     eax,dword [ebx+0A08h]
+mov     edi,dword [eax+0Ch]
+add     edi,14h
+mov     edx,dword [edi]
+cmp     edx,edi
+je      GetImageBase_Exit
 
-push edi
-mov edi,[esi+0xa0c]
+push    esi
+mov     esi,dword [ebx+0A0Ch]
+nop
 
-label0x23:
-mov eax,[ecx+0x28]
-test edi,edi
-jnz label0x44
+GetImageBase_Loop:
+mov     eax,dword [edx+28h]
+test    esi,esi
+jne     GetImageBase_Lower
 
-cmp dword [eax],0x74006e
-jnz label0x44
+cmp     dword [eax],45004Bh
+jne     GetImageBase_Lower
 
-cmp dword [eax+0x4],0x6c0064
-jnz label0x44
+cmp     dword [eax+4],4E0052h
+jne     GetImageBase_Lower
 
-cmp dword [eax+0x8],0x2e006c
-jz label0x60
+cmp     dword [eax+8],4C0045h
+jne     GetImageBase_Lower
 
-label0x44:
-mov edx,[eax]
-cmp edx,0x54004e
-jnz label0x6b
+cmp     dword [eax+0Ch],320033h
+jne     GetImageBase_Lower
 
-cmp dword [eax+0x4],0x4c0044
-jnz label0x6b
+cmp     word [eax+10h],2Eh
+je      GetImageBase_Found
 
-cmp dword [eax+0x8],0x2e004c
-jnz label0x6b
+GetImageBase_Lower:
+cmp     dword [eax],65006Bh
+jne     GetImageBase_Continue
 
-label0x60:
-mov edi,[ecx+0x10]
-mov [esi+0xa0c],edi     ; package->ntdll
-jmp short label0xd5
+cmp     dword [eax+4],6E0072h
+jne     GetImageBase_Continue
 
-label0x6b:
-cmp dword [esi+0xa10],byte +0x0
-jnz label0xa0
+cmp     dword [eax+8],6C0065h
+jne     GetImageBase_Continue
 
-cmp edx,0x45004b
-jnz label0xa0
+cmp     dword [eax+0Ch],320033h
+jne     GetImageBase_Continue
 
-cmp dword [eax+0x4],0x4e0052
-jnz label0xa0
+cmp     word [eax+10h],2Eh
+jne     GetImageBase_Continue
 
-cmp dword [eax+0x8],0x4c0045
-jnz label0xa0
+GetImageBase_Found:
+mov     esi,dword [edx+10h]
+mov     dword [ebx+0A0Ch],esi
 
-cmp dword [eax+0xc],0x320033
-jnz label0xa0
+GetImageBase_Continue:
+mov     edx,dword [edx]
+cmp     edx,edi
+jne     GetImageBase_Loop
 
-cmp word [eax+0x10],0x002e
-jz label0xcc
+pop     esi
 
-label0xa0:
-cmp edx,0x65006b
-jnz label0xd5
-
-cmp dword [eax+0x4],0x6e0072
-jnz label0xd5
-
-cmp dword [eax+0x8],0x6c0065
-jnz label0xd5
-
-cmp dword [eax+0xc],0x320033
-jnz label0xd5
-
-cmp word [eax+0x10],0x002e
-jnz label0xd5
-
-label0xcc:
-mov eax,[ecx+0x10]
-mov [esi+0xa10],eax     ; package->kernel32
-
-label0xd5:
-mov ecx,[ecx]
-cmp ecx,ebx
-jnz label0x23
-
-pop edi
-
-label0xe0:
-pop esi
-pop ebx
+GetImageBase_Exit:
+pop     edi
+pop     ebx
 ret
 
-
 int3
-int3
-
 
 GetProcAddress:
-sub esp,byte +0xc
-mov eax,0x5a4d
-push ebx
-mov ebx,[esp+0x14]
-cmp [ebx],ax
-jnz label0x330
+sub     esp,8
+mov     eax,5A4Dh
+push    edi
+mov     edi,dword [esp+10h]
+cmp     word [edi],ax
+jne     GetProcAddress_Exit
 
-mov edx,[ebx+0x3c]
-cmp dword [edx+ebx],0x4550
-jnz label0x330
+mov     edx,dword [edi+3Ch]
+cmp     dword [edx+edi],4550h
+jne     GetProcAddress_Exit
 
-movzx ecx,word [edx+ebx+0x4]
-push edi
-mov edi,0x14c
-cmp cx,di
-jz label0x144
+movzx   ecx,word [edx+edi+4]
+push    ebx
+mov     ebx,14Ch
+cmp     cx,bx
+je      GetProcAddress_Loop
 
-mov eax,0x8664
-cmp cx,ax
-jnz label0x32f
+mov     eax,8664h
+cmp     cx,ax
+jne     GetProcAddress_Exit_ebx
 
-label0x144:
-cmp cx,di
-push esi
-mov esi,0x60
-mov eax,0x70
-cmovz eax,esi
-add eax,edx
-xor edi,edi
-mov eax,[eax+ebx+0x18]
-add eax,ebx
-mov [esp+0xc],eax
-mov ecx,[eax+0x20]
-mov esi,[eax+0x24]
-mov edx,[eax+0x1c]
-add ecx,ebx
-add esi,ebx
-add edx,ebx
-mov [esp+0x10],ecx
-mov [esp+0x14],esi
-mov [esp+0x1c],edx
-cmp [eax+0x18],edi
-jna label0x32e
+GetProcAddress_Loop:
+push    ebp
+cmp     cx,bx
+mov     eax,70h
+push    esi
+mov     esi,60h
+cmove   eax,esi
+xor     esi,esi
+add     eax,edx
+mov     ebp,dword [eax+edi+18h]
+mov     eax,dword [ebp+edi+20h]
+add     ebp,edi
+add     eax,edi
+mov     dword [esp+10h],eax
+mov     ecx,dword [ebp+24h]
+mov     edx,dword [ebp+1Ch]
+add     ecx,edi
+add     edx,edi
+mov     dword [esp+14h],ecx
+mov     dword [esp+1Ch],edx
+cmp     dword [ebp+18h],esi
+jbe     GetProcAddress_LoopEnd
 
-mov edx,[esp+0x20]
-push ebp
-mov ebp,[edx+0xa14]
+mov     edx,dword [esp+20h]
+mov     ebx,dword [edx+0A10h]
+nop
 
-label0x192:
-mov eax,[ecx+edi*4]
-movzx ecx,word [esi+edi*2]
-mov esi,[esp+0x20]
-add eax,ebx
-mov esi,[esi+ecx*4]
-add esi,ebx
-test ebp,ebp
-jnz label0x1d5
+GetProcAddress_LoopStart:
+movzx   ecx,word [ecx+esi*2]
+mov     edx,dword [esp+1Ch]
+mov     eax,dword [eax+esi*4]
+add     eax,edi
+mov     ecx,dword [edx+ecx*4]
+mov     edx,dword [esp+20h]
+add     ecx,edi
+test    ebx,ebx
+jne     GetProcAddress_FreeLibrary
 
-cmp dword [eax],0x64616f4c
-jnz label0x1d5
+cmp     dword [eax],64616F4Ch
+jne     GetProcAddress_FreeLibrary
 
-cmp dword [eax+0x4],0x7262694c
-jnz label0x1d5
+cmp     dword [eax+4],7262694Ch
+jne     GetProcAddress_FreeLibrary
 
-cmp dword [eax+0x8],0x57797261
-jnz label0x1d5
+cmp     dword [eax+8],57797261h
+jne     GetProcAddress_FreeLibrary
 
-cmp byte [eax+0xc],0x0
-jnz label0x1d5
+cmp     byte [eax+0Ch],0
+jne     GetProcAddress_FreeLibrary
 
-mov ebp,esi
-mov [edx+0xa14],esi     ; package->LoadLibrary
-jmp dword label0x317
+mov     ebx,ecx
+mov     dword [edx+0A10h],ecx
+jmp     GetProcAddress_Continue
 
-label0x1d5:
-cmp dword [edx+0xa18],byte +0x0
-jnz label0x203
+GetProcAddress_FreeLibrary:
+cmp     dword [edx+0A14h],0
+jne     GetProcAddress_GetProcAddress
 
-cmp dword [eax],0x65657246
-jnz label0x203
+cmp     dword [eax],65657246h
+jne     GetProcAddress_GetProcAddress
 
-cmp dword [eax+0x4],0x7262694c
-jnz label0x203
+cmp     dword [eax+4],7262694Ch
+jne     GetProcAddress_GetProcAddress
 
-cmp dword [eax+0x8],0x797261
-jnz label0x203
+cmp     dword [eax+8],797261h
+jne     GetProcAddress_GetProcAddress
 
-mov [edx+0xa18],esi     ; package->FreeLibrary
-jmp dword label0x317
+mov     dword [edx+0A14h],ecx
+jmp     GetProcAddress_Continue
 
-label0x203:
-cmp dword [edx+0xa1c],byte +0x0
-jnz label0x242
+GetProcAddress_GetProcAddress:
+cmp     dword [edx+0A18h],0
+jne     GetProcAddress_Continue
 
-cmp dword [eax],0x50746547
-jnz label0x242
+cmp     dword [eax],50746547h
+jne     GetProcAddress_Continue
 
-cmp dword [eax+0x4],0x41636f72
-jnz label0x242
+cmp     dword [eax+4],41636F72h
+jne     GetProcAddress_Continue
 
-cmp dword [eax+0x8],0x65726464
-jnz label0x242
+cmp     dword [eax+8],65726464h
+jne     GetProcAddress_Continue
 
-mov ecx,[eax+0xc]
-and ecx,0xffffff
-cmp ecx,0x7373
-jnz label0x242
+mov     eax,dword [eax+0Ch]
+and     eax,0FFFFFFh
+cmp     eax,7373h
+jne     GetProcAddress_Continue
 
-mov [edx+0xa1c],esi     ; package->GetProcAddress
-jmp dword label0x317
+mov     dword [edx+0A18h],ecx
 
-label0x242:
-cmp dword [edx+0xa20],byte +0x0
-jnz label0x276
+GetProcAddress_Continue:
+mov     eax,dword [esp+10h]
+inc     esi
+mov     ecx,dword [esp+14h]
+cmp     esi,dword [ebp+18h]
+jb      GetProcAddress_LoopStart
 
-cmp dword [eax],0x61657243
-jnz label0x276
+GetProcAddress_LoopEnd:
+pop     esi
+pop     ebp
 
-cmp dword [eax+0x4],0x68546574
-jnz label0x276
+GetProcAddress_Exit_ebx:
+pop     ebx
 
-cmp dword [eax+0x8],0x64616572
-jnz label0x276
-
-cmp byte [eax+0xc],0x0
-jnz label0x276
-
-mov [edx+0xa20],esi     ; package->CreateThread
-jmp dword label0x317
-
-label0x276:
-cmp dword [edx+0xa24],byte +0x0
-jnz label0x2b1
-
-cmp dword [eax],0x456c7452
-jnz label0x2b1
-
-cmp dword [eax+0x4],0x55746978
-jnz label0x2b1
-
-cmp dword [eax+0x8],0x54726573
-jnz label0x2b1
-
-cmp dword [eax+0xc],0x61657268
-jnz label0x2b1
-
-cmp word [eax+0x10],byte +0x64
-jnz label0x2b1
-
-mov [edx+0xa24],esi     ; package->ExitThread
-jmp label0x317
-
-label0x2b1:
-cmp dword [edx+0xa28],byte +0x0
-jnz label0x2ee
-
-cmp dword [eax],0x74696157
-jnz label0x2ee
-
-cmp dword [eax+0x4],0x53726f46
-jnz label0x2ee
-
-cmp dword [eax+0x8],0x6c676e69
-jnz label0x2ee
-
-cmp dword [eax+0xc],0x6a624f65
-jnz label0x2ee
-
-cmp dword [eax+0x10],0x746365
-jnz label0x2ee
-
-mov [edx+0xa28],esi     ; package->WaitForSingleObject
-jmp short label0x317
-
-label0x2ee:
-cmp dword [edx+0xa2c],byte +0x0
-jnz check_virtualfree
-
-cmp dword [eax],0x736f6c43
-jnz check_virtualfree
-
-cmp dword [eax+0x4],0x6e614865
-jnz check_virtualfree
-
-cmp dword [eax+0x8],0x656c64
-jnz check_virtualfree
-
-mov [edx+0xa2c],esi     ; package->CloseHandle
-
-check_virtualfree:
-cmp dword [edx+0A30h], 0
-jne label0x317
-
-cmp dword [eax], 74726956h
-jne label0x317
-
-cmp dword [eax+4], 466C6175h
-jne label0x317
-
-cmp dword [eax+8], 656572h
-jne label0x317
-
-mov [edx+0A30h], esi    ; package->VirtualFree
-
-label0x317:
-mov eax,[esp+0x10]
-mov ecx,[esp+0x14]
-mov esi,[esp+0x18]
-inc edi
-cmp edi,[eax+0x18]
-jc label0x192
-
-pop ebp
-
-label0x32e:
-pop esi
-
-label0x32f:
-pop edi
-
-label0x330:
-pop ebx
-add esp,byte +0xc
+GetProcAddress_Exit:
+pop     edi
+add     esp,8
 ret
 
-
-int3
 int3

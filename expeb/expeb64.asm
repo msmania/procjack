@@ -1,379 +1,260 @@
 [org 0]
 [bits 64]
 
-;pj!CInjectData::Package
-;   +0x000 InitialCode      : [2048] UChar
-;   +0x800 DllPath          : [260] Uint2B
-;   +0xa08 peb              : Ptr64 Void
-;   +0xa10 ntdll            : Ptr64 Void
-;   +0xa18 kernel32         : Ptr64 Void
-;   +0xa20 LoadLibraryW     : Ptr64 Void
-;   +0xa28 FreeLibrary      : Ptr64 Void
-;   +0xa30 GetProcAddress   : Ptr64 Void
-;   +0xa38 CreateThread     : Ptr64 Void
-;   +0xa40 ExitThread       : Ptr64 Void
-;   +0xa48 WaitForSingleObject : Ptr64 Void
-;   +0xa50 CloseHandle      : Ptr64 Void
-;   +0xa58 Context          : [1] UChar
-
+; 0:000> dt expeb!Package
+;    +0x000 InitialCode      : [2048] UChar
+;    +0x800 DllPath          : [260] Uint2B
+;    +0xa08 peb              : Ptr64 _PEB
+;    +0xa10 kernel32         : Ptr64 Void
+;    +0xa18 xxxLoadLibrary   : Ptr64 Void
+;    +0xa20 xxxFreeLibrary   : Ptr64 Void
+;    +0xa28 xxxGetProcAddress : Ptr64 Void
+;    +0xa30 Context          : [1] UChar
+;
 ShellCode:
-mov     [rsp+8], rbx
-mov     [rsp+10h], rsi
+mov     qword [rsp+8],rbx
+mov     qword [rsp+10h],rsi
 push    rdi
-sub     rsp, 20h
-mov     rax, [gs:30h]
-mov     rbx, rcx
-xor     edi, edi
-mov     rdx, [rax+60h]  ; rbx = Context
-mov     [rcx+0A08h], rdx
+sub     rsp,30h
+
+mov     rax,qword [gs:30h]
+mov     rbx,rcx
+xor     edi,edi
+mov     rdx,qword [rax+60h]
+mov     qword [rcx+0A08h],rdx
 call    GetImageBase
-
-mov     rcx, [rbx+0A10h]
-mov     rdx, rbx
+mov     rcx,qword [rbx+0A10h]
+mov     rdx,rbx
 call    GetProcAddress
+lea     rcx,[rbx+800h]
+call    qword [rbx+0A18h] ; LoadLibrary
+mov     rsi,rax
+test    rax,rax
+je      Cleanup_ShellCode
 
-mov     rcx, [rbx+0A18h]
-mov     rdx, rbx
-call    GetProcAddress
+mov     edx,0DEADh        ; Ordinal
+mov     rcx,rax
+call    qword [rbx+0A28h] ; GetProcAddress
+test    rax,rax
+je      labelFreeLibrary
 
-lea     rcx, [rbx+800h]
-call    [rbx+0A20h]     ; LoadLibrary
-mov     rsi, rax
-test    rax, rax
-je      label19c213e3
-
-mov     edx, 0DEADh     ; Ordial
-mov     rcx, rax
-call    [rbx+0A30h]     ; GetProcAddress
-test    rax, rax
-je      label19c213da
-
-mov     rcx, rbx
+mov     rcx,rbx
 call    rax
+mov     edi,eax
 
-mov     edi, eax
+labelFreeLibrary:
+mov     rcx,rsi
+call    qword [rbx+0A20h] ; FreeLibrary
 
-label19c213da:
-mov     rcx, rsi
-call    [rbx+0A28h]     ; FreeLibrary
+Cleanup_ShellCode:
+mov     dword [rsp+20h], 74697845h
+mov     dword [rsp+24h], 65726854h
+mov     qword [rsp+28h], 00006461h
 
-label19c213e3:
+mov     rcx,qword [rbx+0A10h]
+lea     rdx, [rsp+20h]
+call    qword [rbx+0A28h] ; GetProcAddress("ExitThread")
+mov     rdi, rax
+
+mov     dword [rsp+28h], 74726956h
+mov     dword [rsp+2Ch], 466c6175h
+mov     dword [rsp+30h], 00656572h
+mov     rcx,qword [rbx+0A10h]
+lea     rdx, [rsp+28h]
+call    qword [rbx+0A28h] ; GetProcAddress("VirtualFree")
+
 xor     edx,edx
 mov     r8d,8000h
 mov     rcx,rbx
-push    qword [rbx+0A40h]   ; ExitThread
-jmp     [rbx+0A58h]         ; VirtualFree
+push    rdi
+jmp     rax
 
 int3
 
 GetImageBase:
-mov rax,[rcx+0xa08]     ; rax = PEB
-mov r8,rcx
-mov r9,[rax+0x18]       ; PEB::Ldr
-mov rdx,[r9+0x20]       ; PEB::Ldr->InMemoryOrderModuleList
-add r9,byte +0x20
-cmp rdx,r9
-jz label0xeb
+mov     rax,qword [rcx+0A08h]   ; rax = PEB
+mov     r8,qword [rax+18h]      ; PEB::Ldr
+mov     rdx,qword [r8+20h]      ; PEB::Ldr->InMemoryOrderModuleList
+add     r8,20h
+cmp     rdx,r8
+je      Exit_GetImageBase
 
-mov r10,[rcx+0xa10]
+mov     r9,qword [rcx+0A10h]
+nop
 
-label0x26:
-mov rax,[rdx+0x50]
-test r10,r10
-jnz label0x49
+GetImageBase_Loop:
+mov     rax,qword [rdx+50h]
+test    r9,r9
+jne     GetImageBase_Lower
 
-cmp dword [rax],0x74006e
-jnz label0x49
+cmp     dword [rax],45004Bh
+jne     GetImageBase_Lower
 
-cmp dword [rax+0x4],0x6c0064
-jnz label0x49
+cmp     dword [rax+4],4E0052h
+jne     GetImageBase_Lower
 
-cmp dword [rax+0x8],0x2e006c
-jz label0x65
+cmp     dword [rax+8],4C0045h
+jne     GetImageBase_Lower
 
-label0x49:
-mov ecx,[rax]
-cmp ecx,0x54004e
-jnz label0x72
+cmp     dword [rax+0Ch],320033h
+jne     GetImageBase_Lower
 
-cmp dword [rax+0x4],0x4c0044
-jnz label0x72
+cmp     word [rax+10h],2Eh
+je      GetImageBase_Found
 
-cmp dword [rax+0x8],0x2e004c
-jnz label0x72
+GetImageBase_Lower:
+cmp     dword [rax],65006Bh
+jne     GetImageBase_Continue
 
-label0x65:
-mov r10,[rdx+0x20]
-mov [r8+0xa10],r10
-jmp label0xdf
+cmp     dword [rax+4],6E0072h
+jne     GetImageBase_Continue
 
-label0x72:
-cmp qword [r8+0xa18],byte +0x0
-jnz label0xa8
+cmp     dword [rax+8],6C0065h
+jne     GetImageBase_Continue
 
-cmp ecx,0x45004b
-jnz label0xa8
+cmp     dword [rax+0Ch],320033h
+jne     GetImageBase_Continue
 
-cmp dword [rax+0x4],0x4e0052
-jnz label0xa8
+cmp     word [rax+10h],2Eh
+jne     GetImageBase_Continue
 
-cmp dword [rax+0x8],0x4c0045
-jnz label0xa8
+GetImageBase_Found:
+mov     r9,qword [rdx+20h]
+mov     qword [rcx+0A10h],r9
+jmp     Exit_GetImageBase
 
-cmp dword [rax+0xc],0x320033
-jnz label0xa8
+GetImageBase_Continue:
+mov     rdx,qword [rdx]
+cmp     rdx,r8
+jne     GetImageBase_Loop
 
-cmp word [rax+0x10],0x002e
-jz label0xd4
-
-label0xa8:
-cmp ecx,0x65006b
-jnz label0xdf
-
-cmp dword [rax+0x4],0x6e0072
-jnz label0xdf
-
-cmp dword [rax+0x8],0x6c0065
-jnz label0xdf
-
-cmp dword [rax+0xc],0x320033
-jnz label0xdf
-
-cmp word [rax+0x10],0x002e
-jnz label0xdf
-
-label0xd4:
-mov rax,[rdx+0x20]
-mov [r8+0xa18],rax
-
-label0xdf:
-mov rdx,[rdx]
-cmp rdx,r9
-jnz label0x26
-
-label0xeb:
-rep ret
-
-
-int3
-
-
-GetProcAddress:
-sub rsp,byte +0x8
-mov eax,0x5a4d
-mov r10,rcx
-cmp [rcx],ax
-jnz label0x355
-
-mov r9d,[rcx+0x3c]
-cmp dword [r9+rcx],0x4550
-jnz label0x355
-
-movzx r8d,word [r9+rcx+0x4]
-mov r11d,0x14c
-cmp r8w,r11w
-jz label0x148
-
-mov eax,0x8664
-cmp r8w,ax
-jnz label0x355
-
-label0x148:
-mov [rsp+0x10],rbx
-cmp r8w,r11w
-mov [rsp+0x20],rsi
-mov [rsp],rdi
-mov eax,0x70
-mov ecx,0x60
-cmovz eax,ecx
-xor r11d,r11d
-add rax,r9
-mov r9d,[rax+r10+0x18]
-add r9,r10
-mov ebx,[r9+0x20]
-mov edi,[r9+0x24]
-mov esi,[r9+0x1c]
-add rbx,r10
-add rdi,r10
-add rsi,r10
-cmp [r9+0x18],r11d
-jna label0x347
-
-mov [rsp+0x18],rbp
-mov rbp,[rdx+0xa20]
-
-label0x1a0:
-movzx ecx,word [rdi+r11*2]
-mov eax,[rbx+r11*4]
-mov r8d,[rsi+rcx*4]
-add rax,r10
-add r8,r10
-test rbp,rbp
-jnz label0x1e7
-
-cmp dword [rax],0x64616f4c
-jnz label0x1e7
-
-cmp dword [rax+0x4],0x7262694c
-jnz label0x1e7
-
-cmp dword [rax+0x8],0x57797261
-jnz label0x1e7
-
-cmp [rax+0xc],bpl
-jnz label0x1e7
-
-mov rbp,r8
-mov [rdx+0xa20],r8
-jmp label0x335
-
-label0x1e7:
-cmp qword [rdx+0xa28],byte +0x0
-jnz label0x217
-
-cmp dword [rax],0x65657246
-jnz label0x217
-
-cmp dword [rax+0x4],0x7262694c
-jnz label0x217
-
-cmp dword [rax+0x8],0x797261
-jnz label0x217
-
-mov [rdx+0xa28],r8
-jmp label0x335
-
-label0x217:
-cmp qword [rdx+0xa30],byte +0x0
-jnz label0x258
-
-cmp dword [rax],0x50746547
-jnz label0x258
-
-cmp dword [rax+0x4],0x41636f72
-jnz label0x258
-
-cmp dword [rax+0x8],0x65726464
-jnz label0x258
-
-mov ecx,[rax+0xc]
-and ecx,0xffffff
-cmp ecx,0x7373
-jnz label0x258
-
-mov [rdx+0xa30],r8
-jmp label0x335
-
-label0x258:
-cmp qword [rdx+0xa38],byte +0x0
-jnz label0x28e
-
-cmp dword [rax],0x61657243
-jnz label0x28e
-
-cmp dword [rax+0x4],0x68546574
-jnz label0x28e
-
-cmp dword [rax+0x8],0x64616572
-jnz label0x28e
-
-cmp byte [rax+0xc],0x0
-jnz label0x28e
-
-mov [rdx+0xa38],r8
-jmp label0x335
-
-label0x28e:
-cmp qword [rdx+0xa40],byte +0x0
-jnz label0x2cb
-
-cmp dword [rax],0x456c7452
-jnz label0x2cb
-
-cmp dword [rax+0x4],0x55746978
-jnz label0x2cb
-
-cmp dword [rax+0x8],0x54726573
-jnz label0x2cb
-
-cmp dword [rax+0xc],0x61657268
-jnz label0x2cb
-
-cmp word [rax+0x10],byte +0x64
-jnz label0x2cb
-
-mov [rdx+0xa40],r8
-jmp label0x335
-
-label0x2cb:
-cmp qword [rdx+0xa48],byte +0x0
-jnz label0x30a
-
-cmp dword [rax],0x74696157
-jnz label0x30a
-
-cmp dword [rax+0x4],0x53726f46
-jnz label0x30a
-
-cmp dword [rax+0x8],0x6c676e69
-jnz label0x30a
-
-cmp dword [rax+0xc],0x6a624f65
-jnz label0x30a
-
-cmp dword [rax+0x10],0x746365
-jnz label0x30a
-
-mov [rdx+0xa48],r8
-jmp label0x335
-
-label0x30a:
-cmp qword [rdx+0xa50],byte +0x0
-jnz check_virtualfree
-
-cmp dword [rax],0x736f6c43
-jnz check_virtualfree
-
-cmp dword [rax+0x4],0x6e614865
-jnz check_virtualfree
-
-cmp dword [rax+0x8],0x656c64
-jnz check_virtualfree
-
-mov [rdx+0xa50],r8
-jmp label0x335
-
-check_virtualfree:
-cmp dword [rdx+0A58h], 0
-jne label0x335
-
-cmp dword [rax], 74726956h
-jne label0x335
-
-cmp dword [rax+4], 466C6175h
-jne label0x335
-
-cmp dword [rax+8], 656572h
-jne label0x335
-
-mov [rdx+0A58h], r8
-
-label0x335:
-inc r11d
-cmp r11d,[r9+0x18]
-jc label0x1a0
-
-mov rbp,[rsp+0x18]
-
-label0x347:
-mov rsi,[rsp+0x20]
-mov rbx,[rsp+0x10]
-mov rdi,[rsp]
-
-label0x355:
-add rsp,byte +0x8
+Exit_GetImageBase:
 ret
 
-
 int3
+
+GetProcAddress:
+sub     rsp,8
+mov     eax,5A4Dh
+mov     r10,rdx
+mov     r11,rcx
+cmp     word [rcx],ax
+jne     GetProcAddres_Exit
+
+mov     r9d,dword [rcx+3Ch]
+cmp     dword [r9+rcx],4550h
+jne     GetProcAddres_Exit
+
+movzx   r8d,word [r9+rcx+4]
+mov     edx,14Ch
+cmp     r8w,dx
+je      GetProcAddress_LoopStart
+
+mov     eax,8664h
+cmp     r8w,ax
+jne     GetProcAddres_Exit
+
+GetProcAddress_LoopStart:
+mov     qword [rsp+18h],rbp
+cmp     r8w,dx
+mov     qword [rsp+20h],rsi
+mov     qword [rsp],rdi
+mov     eax,70h
+mov     ecx,60h
+cmove   eax,ecx
+xor     r8d,r8d
+add     rax,r9
+mov     r9d,dword [rax+r11+18h]
+add     r9,r11
+mov     edi,dword [r9+20h]
+mov     esi,dword [r9+24h]
+mov     ebp,dword [r9+1Ch]
+add     rdi,r11
+add     rsi,r11
+add     rbp,r11
+cmp     dword [r9+18h],r8d
+jbe     GetProcAddres_LoopEnd
+
+mov     qword [rsp+10h],rbx
+mov     rbx,qword [r10+0A18h]
+nop     dword [rax]
+nop     word [rax+rax]
+
+GetProcAddress_Loop:
+movzx   ecx,word [rsi+r8*2]
+mov     eax,dword [rdi+r8*4]
+mov     edx,dword [rbp+rcx*4]
+add     rax,r11
+add     rdx,r11
+test    rbx,rbx
+jne     label_FreeLibrary
+
+cmp     dword [rax],64616F4Ch
+jne     label_FreeLibrary
+
+cmp     dword [rax+4],7262694Ch
+jne     label_FreeLibrary
+
+cmp     dword [rax+8],57797261h
+jne     label_FreeLibrary
+
+cmp     byte [rax+0Ch],bl
+jne     label_FreeLibrary
+
+mov     rbx,rdx
+mov     qword [r10+0A18h],rdx
+jmp     GetProcAddress_Continue
+
+label_FreeLibrary:
+cmp     qword [r10+0A20h],0
+jne     label_GetProcAddress
+
+cmp     dword [rax],65657246h
+jne     label_GetProcAddress
+
+cmp     dword [rax+4],7262694Ch
+jne     label_GetProcAddress
+
+cmp     dword [rax+8],797261h
+jne     label_GetProcAddress
+
+mov     qword [r10+0A20h],rdx
+jmp     GetProcAddress_Continue
+
+label_GetProcAddress:
+cmp     qword [r10+0A28h],0
+jne     GetProcAddress_Continue
+
+cmp     dword [rax],50746547h
+jne     GetProcAddress_Continue
+
+cmp     dword [rax+4],41636F72h
+jne     GetProcAddress_Continue
+
+cmp     dword [rax+8],65726464h
+jne     GetProcAddress_Continue
+
+mov     ecx,dword [rax+0Ch]
+and     ecx,0FFFFFFh
+cmp     ecx,7373h
+jne     GetProcAddress_Continue
+
+mov     qword [r10+0A28h],rdx
+
+GetProcAddress_Continue:
+inc     r8d
+cmp     r8d,dword [r9+18h]
+jb      GetProcAddress_Loop
+
+mov     rbx,qword [rsp+10h]
+
+GetProcAddres_LoopEnd:
+mov     rsi,qword [rsp+20h]
+mov     rbp,qword [rsp+18h]
+mov     rdi,qword [rsp]
+
+GetProcAddres_Exit:
+add     rsp,8
+ret
+
 int3

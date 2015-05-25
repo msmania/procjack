@@ -24,6 +24,8 @@
 #define LOGDEBUG
 #endif
 
+#include "../common.h"
+
 struct image_export_directory {
     unsigned int   Characteristics;
     unsigned int   TimeDateStamp;
@@ -40,114 +42,6 @@ struct image_export_directory {
 
 #define image_file_machine_i386  0x014c
 #define image_file_machine_amd64 0x8664
-
-// https://msdn.microsoft.com/en-us/library/windows/desktop/aa813708(v=vs.85).aspx
-struct list_entry {
-   struct list_entry *Flink;
-   struct list_entry *Blink;
-};
-
-typedef struct _PEB_LDR_DATA {
-  unsigned char  Reserved1[8];
-  void          *Reserved2[3];
-  list_entry     InMemoryOrderModuleList;
-} PEB_LDR_DATA, *PPEB_LDR_DATA;
-
-typedef struct _LSA_UNICODE_STRING {
-  unsigned short  Length;
-  unsigned short  MaximumLength;
-  unsigned short *Buffer;
-} LSA_UNICODE_STRING, *PLSA_UNICODE_STRING, UNICODE_STRING, *PUNICODE_STRING;
-
-typedef struct _LDR_DATA_TABLE_ENTRY {
-    void           *Reserved1[2];
-    list_entry      InMemoryOrderLinks;
-    void           *Reserved2[2];
-    void           *DllBase;
-    void           *EntryPoint;
-    void           *Reserved3;
-    UNICODE_STRING  FullDllName;
-    UNICODE_STRING  BaseDllName;
-    /* not used */
-} LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;
-
-// https://msdn.microsoft.com/en-us/library/windows/desktop/aa813706(v=vs.85).aspx
-typedef struct _PEB {
-  unsigned char  Reserved1[2];
-  unsigned char  BeingDebugged;
-  unsigned char  Reserved2[1];
-  void          *Reserved3[2];
-  PPEB_LDR_DATA  Ldr;
-  void          *ProcessParameters;
-  unsigned char  Reserved4[104];
-  void          *Reserved5[52];
-  void          *PostProcessInitRoutine;
-  unsigned char  Reserved6[128];
-  void          *Reserved7[1];
-  unsigned long  SessionId;
-} PEB, *PPEB;
-
-struct Package {
-    unsigned char InitialCode[2048];
-    unsigned short DllPath[260];
-    PPEB  peb;
-    void *ntdll;
-    void *kernel32;
-    void *LoadLibrary;
-    void *FreeLibrary;
-    void *GetProcAddress;
-    void *CreateThread;
-    void *ExitThread;
-    void *WaitForSingleObject;
-    void *CloseHandle;
-    void *VirtualFree;
-    unsigned char Context[1];
-};
-
-typedef void *(WINAPI *LOADLIBRARY)(
-  _In_  void *lpFileName
-);
-
-typedef void *(WINAPI *GETPROCADDRESS)(
-  _In_  void *hModule,
-  _In_  void *lpProcName
-);
-
-typedef void *(WINAPI *CREATETHREAD)(
-  void *lpThreadAttributes,
-  size_t dwStackSize,
-  void *lpStartAddress,
-  void *lpParameter,
-  unsigned int dwCreationFlags,
-  void *lpThreadId
-);
-
-typedef unsigned int (WINAPI *WAITFORSINGLEOBJECT)(
-  void *hHandle,
-  unsigned int dwMilliseconds
-);
-
-typedef unsigned int (WINAPI *CLOSEHANDLE)(
-  void *hObject
-);
-
-typedef unsigned int (WINAPI *FREELIBRARY)(
-  void *hModule
-);
-
-typedef void (WINAPI *EXITTHREAD)(
-  unsigned int dwExitCode
-);
-
-typedef unsigned int (WINAPI *THREADPROC)(
-  void *lpParameter
-);
-
-typedef unsigned int (WINAPI *VIRTUALFREE)(
-  void *lpAddress,
-  size_t dwSize,
-  unsigned int dwFreeType
-);
 
 // copied from ntdef.h
 #define containing_record(address, type, field) ((type *)((unsigned char *)(address) - (long)(&((type *)0)->field)))
@@ -177,29 +71,14 @@ void GetProcAddress(void *ImageBase, Package *package) {
                 unsigned int * Name = (unsigned int *)(p + Names[i]);
                 void *Function = p + Functions[Ordinals[i]];
 
-                if ( !package->LoadLibrary && Name[0]==0x64616f4c && Name[1]==0x7262694c && Name[2]==0x57797261 && (Name[3]&0xff)==0 ) {
-                    package->LoadLibrary = Function;
+                if ( !package->xxxLoadLibrary && Name[0]==0x64616f4c && Name[1]==0x7262694c && Name[2]==0x57797261 && (Name[3]&0xff)==0 ) {
+                    package->xxxLoadLibrary = Function;
                 }
-                else if ( !package->FreeLibrary && Name[0]==0x65657246 && Name[1]==0x7262694c && Name[2]==0x00797261 ) {
-                    package->FreeLibrary = Function;
+                else if ( !package->xxxFreeLibrary && Name[0]==0x65657246 && Name[1]==0x7262694c && Name[2]==0x00797261 ) {
+                    package->xxxFreeLibrary = Function;
                 }
-                else if ( !package->GetProcAddress && Name[0]==0x50746547 && Name[1]==0x41636f72 && Name[2]==0x65726464 && (Name[3]&0xffffff)==0x007373 ) {
-                    package->GetProcAddress = Function;
-                }
-                else if ( !package->CreateThread && Name[0]==0x61657243 && Name[1]==0x68546574 && Name[2]==0x64616572 && (Name[3]&0xff)==0 ) {
-                    package->CreateThread = Function;
-                }
-                else if ( !package->ExitThread && Name[0]==0x456c7452 && Name[1]==0x55746978 && Name[2]==0x54726573 && Name[3]==0x61657268 && (Name[4]&0xffff)==0x0064 ) {
-                    package->ExitThread = Function;
-                }
-                else if ( !package->WaitForSingleObject && Name[0]==0x74696157 && Name[1]==0x53726f46 && Name[2]==0x6c676e69 && Name[3]==0x6a624f65 && Name[4]==0x00746365 ) {
-                    package->WaitForSingleObject = Function;
-                }
-                else if ( !package->CloseHandle && Name[0]==0x736f6c43 && Name[1]==0x6e614865 && Name[2]==0x00656c64 ) {
-                    package->CloseHandle = Function;
-                }
-                else if ( !package->VirtualFree && Name[0]==0x74726956 && Name[1]==0x466c6175 && Name[2]==0x00656572 ) {
-                    package->VirtualFree = Function;
+                else if ( !package->xxxGetProcAddress && Name[0]==0x50746547 && Name[1]==0x41636f72 && Name[2]==0x65726464 && (Name[3]&0xffffff)==0x007373 ) {
+                    package->xxxGetProcAddress = Function;
                 }
                 else {
                     continue;
@@ -214,17 +93,12 @@ void GetProcAddress(void *ImageBase, Package *package) {
 }
 
 void GetImageBase(Package *package) {
-    list_entry *begin = &package->peb->Ldr->InMemoryOrderModuleList;
-    for ( list_entry *p = begin->Flink ; p!=begin ; p=p->Flink ) {
+    pj_list_entry *begin = &package->peb->Ldr->InMemoryOrderModuleList;
+    for ( pj_list_entry *p = begin->Flink ; p!=begin ; p=p->Flink ) {
         PLDR_DATA_TABLE_ENTRY entry = containing_record(p, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
 
         unsigned int *Name = (unsigned int *)entry->BaseDllName.Buffer;
-        if ( !package->ntdll &&
-             (Name[0]==0x0074006e && Name[1]==0x006c0064 && Name[2]==0x002e006c) ||
-             (Name[0]==0x0054004e && Name[1]==0x004c0044 && Name[2]==0x002e004c) ) {
-            package->ntdll = entry->DllBase;
-        }
-        else if ( !package->kernel32 &&
+        if ( !package->kernel32 &&
                   (Name[0]==0x0045004b && Name[1]==0x004e0052 && Name[2]==0x004c0045 && Name[3]==0x00320033 && (Name[4]&0xffff)==0x002e) ||
                   (Name[0]==0x0065006b && Name[1]==0x006e0072 && Name[2]==0x006c0065 && Name[3]==0x00320033 && (Name[4]&0xffff)==0x002e) ) {
             package->kernel32 = entry->DllBase;
@@ -261,25 +135,34 @@ PPEB GetPeb() {
 }
 
 unsigned int WINAPI ShellCode(Package *p) {
+    unsigned long long ll1 = 0x123;
+    unsigned long long ll2 = 0x456;
     unsigned int Ret = 0;
+    void *f;
 
     p->peb = GetPeb();
     GetImageBase(p);
-    GetProcAddress(p->ntdll, p);
     GetProcAddress(p->kernel32, p);
 
-    void *hm = LOADLIBRARY(p->LoadLibrary)(p->DllPath);
+    void *hm = LOADLIBRARY(p->xxxLoadLibrary)(p->DllPath);
     if ( hm ) {
-        THREADPROC f = (THREADPROC)GETPROCADDRESS(p->GetProcAddress)(hm, MAKEINTRESOURCEA(0xdead));
+        f = GETPROCADDRESS(p->xxxGetProcAddress)(hm, MAKEINTRESOURCEA(0xdead));
         if ( f ) {
-            Ret = f(p);
+            Ret = THREADPROC(f)(p);
         }
-        FREELIBRARY(p->FreeLibrary)(hm);
+        FREELIBRARY(p->xxxFreeLibrary)(hm);
     }
 
-    VIRTUALFREE(p->VirtualFree)(p, 0, MEM_RELEASE);
+    f = GETPROCADDRESS(p->xxxGetProcAddress)(p->kernel32, &ll1);
+    if ( f ) {
+        Ret = VIRTUALFREE(f)(p, 0, MEM_RELEASE);
+    }
 
-    EXITTHREAD(p->ExitThread)(Ret);
+    f = GETPROCADDRESS(p->xxxGetProcAddress)(p->kernel32, &ll2);
+    if ( f ) {
+        (EXITTHREAD(f))(Ret);
+    }
+
     return Ret;
 }
 
