@@ -1,15 +1,9 @@
 all:
-	cd "$(MAKEDIR)\expeb"
-	@$(MAKE) /NOLOGO
-	cd "$(MAKEDIR)\pj"
-	@$(MAKE) /NOLOGO
-	cd "$(MAKEDIR)\spy"
-	@$(MAKE) /NOLOGO
+	@pushd expeb & nmake /nologo & popd
+	@pushd spy & nmake /nologo & popd
+	@pushd pj & nmake /nologo & popd
 
 clean:
-	cd "$(MAKEDIR)\expeb"
-	@$(MAKE) /NOLOGO clean
-	cd "$(MAKEDIR)\pj"
-	@$(MAKE) /NOLOGO clean
-	cd "$(MAKEDIR)\spy"
-	@$(MAKE) /NOLOGO clean
+	@pushd expeb & nmake /nologo clean & popd
+	@pushd spy & nmake /nologo clean & popd
+	@pushd pj & nmake /nologo clean & popd

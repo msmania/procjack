@@ -2,43 +2,42 @@
 
 TARGET=expeb.exe
 OBJS=\
-    $(OBJDIR)\main.obj
+	$(OBJDIR)\main.obj
 
 LIBS=
 
 CFLAGS=\
-    /nologo\
-    /Zi\
-    /c\
-    /Fo"$(OBJDIR)\\"\
-    /Fd"$(OBJDIR)\\"\
-    /DUNICODE\
-    /O2\
-    /EHsc\
-    /W4
+	/nologo\
+	/Zi\
+	/c\
+	/Fo"$(OBJDIR)\\"\
+	/Fd"$(OBJDIR)\\"\
+	/DUNICODE\
+	/O2\
+	/EHsc\
+	/W4\
 
 LFLAGS=\
-    /NOLOGO\
-    /DEBUG\
-    /INCREMENTAL:NO\
-!IF "$(PLATFORM)"=="X64"
-    /SUBSYSTEM:CONSOLE,"5.02"
+	/NOLOGO\
+	/DEBUG\
+!IF "$(PLATFORM)"=="X64" || "$(PLATFORM)"=="x64"
+	/SUBSYSTEM:CONSOLE,"5.02"\
 !ELSE
-    /SUBSYSTEM:CONSOLE,"5.01"
+	/SUBSYSTEM:CONSOLE,"5.01"\
 !ENDIF
 
-all: clean dirs $(OUTDIR)\$(TARGET)
-
-clean:
-    -@if not exist $(OBJDIR) md $(OBJDIR)
-    @$(RM) /Q $(OBJDIR)\* 2>nul
-
-dirs:
-    @if not exist $(OBJDIR) mkdir $(OBJDIR)
-    @if not exist $(OUTDIR) mkdir $(OUTDIR)
+all: $(OUTDIR)\$(TARGET)
 
 $(OUTDIR)\$(TARGET): $(OBJS)
-    $(LINKER) $(LFLAGS) $(LIBS) /PDB:"$(@R).pdb" /OUT:$@ $**
+	@if not exist $(OUTDIR) mkdir $(OUTDIR)
+	$(LINKER) $(LFLAGS) $(LIBS) /PDB:"$(@R).pdb" /OUT:$@ $**
 
 .cpp{$(OBJDIR)}.obj:
-    $(CC) $(CFLAGS) $<
+	@if not exist $(OBJDIR) mkdir $(OBJDIR)
+	$(CC) $(CFLAGS) $<
+
+clean:
+	@if exist $(OBJDIR) $(RD) $(OBJDIR)
+	@if exist $(OUTDIR)\$(TARGET) $(RM) $(OUTDIR)\$(TARGET)
+	@if exist $(OUTDIR)\$(TARGET:exe=ilk) $(RM) $(OUTDIR)\$(TARGET:exe=ilk)
+	@if exist $(OUTDIR)\$(TARGET:exe=pdb) $(RM) $(OUTDIR)\$(TARGET:exe=pdb)

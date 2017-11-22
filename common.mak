@@ -1,4 +1,4 @@
-!IF "$(PLATFORM)"=="X64"
+!IF "$(PLATFORM)"=="X64" || "$(PLATFORM)"=="x64"
 OUTDIR=..\bin64
 OBJDIR=obj64
 !ELSE
@@ -9,3 +9,4 @@ OBJDIR=obj
 CC=cl
 LINKER=link
 RM=del /q
+RD=rd /s /q

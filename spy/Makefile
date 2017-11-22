@@ -3,41 +3,42 @@
 TARGET=spy.dll
 DEF=spy.def
 OBJS=\
-    $(OBJDIR)\dllmain.obj
+	$(OBJDIR)\dllmain.obj\
 
 # warning C4100: unreferenced formal parameter
 CFLAGS=\
-    /nologo\
-    /Zi\
-    /c\
-    /Fo"$(OBJDIR)\\"\
-    /Fd"$(OBJDIR)\\"\
-    /DUNICODE\
-    /O2\
-    /EHsc\
-    /W4\
-    /wd4100
+	/nologo\
+	/Zi\
+	/c\
+	/Fo"$(OBJDIR)\\"\
+	/Fd"$(OBJDIR)\\"\
+	/DUNICODE\
+	/O2\
+	/EHsc\
+	/W4\
+	/wd4100\
 
 LFLAGS=\
-    /NOLOGO\
-    /DEBUG\
-    /SUBSYSTEM:WINDOWS\
-    /DLL\
-    /DEF:$(DEF)\
-    /INCREMENTAL:NO
+	/NOLOGO\
+	/DEBUG\
+	/SUBSYSTEM:WINDOWS\
+	/DLL\
+	/DEF:$(DEF)\
 
-all: clean dirs $(OUTDIR)\$(TARGET)
-
-clean:
-    -@if not exist $(OBJDIR) md $(OBJDIR)
-    @$(RM) /Q $(OBJDIR)\* 2>nul
-
-dirs:
-    @if not exist $(OBJDIR) mkdir $(OBJDIR)
-    @if not exist $(OUTDIR) mkdir $(OUTDIR)
+all: $(OUTDIR)\$(TARGET)
 
 $(OUTDIR)\$(TARGET): $(OBJS)
-    $(LINKER) $(LFLAGS) $(LIBS) /PDB:"$(@R).pdb" /OUT:$@ $**
+	@if not exist $(OUTDIR) mkdir $(OUTDIR)
+	$(LINKER) $(LFLAGS) $(LIBS) /PDB:"$(@R).pdb" /OUT:$@ $**
 
 .cpp{$(OBJDIR)}.obj:
-    $(CC) $(CFLAGS) $<
+	@if not exist $(OBJDIR) mkdir $(OBJDIR)
+	$(CC) $(CFLAGS) $<
+
+clean:
+	@if exist $(OBJDIR) $(RD) $(OBJDIR)
+	@if exist $(OUTDIR)\$(TARGET) $(RM) $(OUTDIR)\$(TARGET)
+	@if exist $(OUTDIR)\$(TARGET:dll=ilk) $(RM) $(OUTDIR)\$(TARGET:dll=ilk)
+	@if exist $(OUTDIR)\$(TARGET:dll=pdb) $(RM) $(OUTDIR)\$(TARGET:dll=pdb)
+	@if exist $(OUTDIR)\$(TARGET:dll=exp) $(RM) $(OUTDIR)\$(TARGET:dll=exp)
+	@if exist $(OUTDIR)\$(TARGET:dll=lib) $(RM) $(OUTDIR)\$(TARGET:dll=lib)
