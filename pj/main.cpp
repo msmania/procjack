@@ -288,9 +288,9 @@ public:
     bool FillData(BOOL Is64bit, LPCWSTR FilePath, INT Ordinal, PBYTE Buffer, DWORD Length) {
         bool Ret = false;
         if ( Ordinal>=0 && Ordinal<=0xFFFF ) {
-            if ( !IsWindows8OrGreater() || AddPermissionForAppContainer(FilePath) ) {
-                Ret = FillShellcode(Is64bit, FilePath, (WORD)Ordinal, Buffer, Length);
-            }
+            if (IsWindows8OrGreater())
+                AddPermissionForAppContainer(FilePath);
+            Ret = FillShellcode(Is64bit, FilePath, (WORD)Ordinal, Buffer, Length);
         }
         else {
             HANDLE FileHandle = CreateFile(FilePath,
