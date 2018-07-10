@@ -1,10 +1,12 @@
 !IF "$(PLATFORM)"=="X64" || "$(PLATFORM)"=="x64"
-OUTDIR=..\bin64
-OBJDIR=obj64
+ARCH=amd64
 !ELSE
-OUTDIR=..\bin
-OBJDIR=obj
+ARCH=x86
 !ENDIF
+
+OUTDIR=..\bin\$(ARCH)
+OBJDIR=obj\$(ARCH)
+SRCDIR=.
 
 CC=cl
 LINKER=link

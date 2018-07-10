@@ -2,7 +2,8 @@
 
 TARGET=pj.exe
 OBJS=\
-	$(OBJDIR)\main.obj
+	$(OBJDIR)\main.obj\
+	$(OBJDIR)\auth_utils.obj\
 
 LIBS=\
 	advapi32.lib\
@@ -30,7 +31,7 @@ $(OUTDIR)\$(TARGET): $(OBJS)
 	@if not exist $(OUTDIR) mkdir $(OUTDIR)
 	$(LINKER) $(LFLAGS) $(LIBS) /PDB:"$(@R).pdb" /OUT:$@ $**
 
-.cpp{$(OBJDIR)}.obj:
+{$(SRCDIR)}.cpp{$(OBJDIR)}.obj:
 	@if not exist $(OBJDIR) mkdir $(OBJDIR)
 	$(CC) $(CFLAGS) $<
 
