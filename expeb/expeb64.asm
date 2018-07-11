@@ -1,260 +1,260 @@
-[org 0]
-[bits 64]
+BITS 64
 
-; 0:000> dt expeb!Package
-;    +0x000 InitialCode      : [2048] UChar
-;    +0x800 DllPath          : [260] Uint2B
-;    +0xa08 peb              : Ptr64 _PEB
-;    +0xa10 kernel32         : Ptr64 Void
-;    +0xa18 xxxLoadLibrary   : Ptr64 Void
-;    +0xa20 xxxFreeLibrary   : Ptr64 Void
-;    +0xa28 xxxGetProcAddress : Ptr64 Void
-;    +0xa30 Context          : [1] UChar
-;
 ShellCode:
-mov     qword [rsp+8],rbx
-mov     qword [rsp+10h],rsi
-push    rdi
-sub     rsp,30h
+  push    rbx
+  sub     rsp,30h
+  mov   rax,qword [gs:30h]
+  mov     rbx,rcx
+  mov     rdx,qword [rax+60h]
+  mov     qword [rcx+0A08h],rdx
+  mov     r9,qword [rdx+18h]
+  mov     rdx,qword [r9+20h]
+  add     r9,20h
+  cmp     rdx,r9
+  je      label_0xa5
 
-mov     rax,qword [gs:30h]
-mov     rbx,rcx
-xor     edi,edi
-mov     rdx,qword [rax+60h]
-mov     qword [rcx+0A08h],rdx
-call    GetImageBase
-mov     rcx,qword [rbx+0A10h]
-mov     rdx,rbx
-call    GetProcAddress
-lea     rcx,[rbx+800h]
-call    qword [rbx+0A18h] ; LoadLibrary
-mov     rsi,rax
-test    rax,rax
-je      Cleanup_ShellCode
+label_0x2e:
+  mov     r8,qword [rcx+0A10h]
 
-mov     edx,0DEADh        ; Ordinal
-mov     rcx,rax
-call    qword [rbx+0A28h] ; GetProcAddress
-test    rax,rax
-je      labelFreeLibrary
+label_0x35:
+  mov     rax,qword [rdx+50h]
+  test    r8,r8
+  jne     label_0x68
 
-mov     rcx,rbx
-call    rax
-mov     edi,eax
+label_0x3e:
+  cmp     dword [rax],45004Bh
+  jne     label_0x68
 
-labelFreeLibrary:
-mov     rcx,rsi
-call    qword [rbx+0A20h] ; FreeLibrary
+label_0x46:
+  cmp     dword [rax+4],4E0052h
+  jne     label_0x68
 
-Cleanup_ShellCode:
-mov     dword [rsp+20h], 74697845h
-mov     dword [rsp+24h], 65726854h
-mov     qword [rsp+28h], 00006461h
+label_0x4f:
+  cmp     dword [rax+8],4C0045h
+  jne     label_0x68
 
-mov     rcx,qword [rbx+0A10h]
-lea     rdx, [rsp+20h]
-call    qword [rbx+0A28h] ; GetProcAddress("ExitThread")
-mov     rdi, rax
+label_0x58:
+  cmp     dword [rax+0Ch],320033h
+  jne     label_0x68
 
-mov     dword [rsp+28h], 74726956h
-mov     dword [rsp+2Ch], 466c6175h
-mov     dword [rsp+30h], 00656572h
-mov     rcx,qword [rbx+0A10h]
-lea     rdx, [rsp+28h]
-call    qword [rbx+0A28h] ; GetProcAddress("VirtualFree")
+label_0x61:
+  cmp     word [rax+10h],2Eh
+  je      label_0x92
 
-xor     edx,edx
-mov     r8d,8000h
-mov     rcx,rbx
-push    rdi
-jmp     rax
+label_0x68:
+  cmp     dword [rax],65006Bh
+  jne     label_0x9d
 
-int3
+label_0x70:
+  cmp     dword [rax+4],6E0072h
+  jne     label_0x9d
 
-GetImageBase:
-mov     rax,qword [rcx+0A08h]   ; rax = PEB
-mov     r8,qword [rax+18h]      ; PEB::Ldr
-mov     rdx,qword [r8+20h]      ; PEB::Ldr->InMemoryOrderModuleList
-add     r8,20h
-cmp     rdx,r8
-je      Exit_GetImageBase
+label_0x79:
+  cmp     dword [rax+8],6C0065h
+  jne     label_0x9d
 
-mov     r9,qword [rcx+0A10h]
-nop
+label_0x82:
+  cmp     dword [rax+0Ch],320033h
+  jne     label_0x9d
 
-GetImageBase_Loop:
-mov     rax,qword [rdx+50h]
-test    r9,r9
-jne     GetImageBase_Lower
+label_0x8b:
+  cmp     word [rax+10h],2Eh
+  jne     label_0x9d
 
-cmp     dword [rax],45004Bh
-jne     GetImageBase_Lower
+label_0x92:
+  mov     r8,qword [rdx+20h]
+  mov     qword [rcx+0A10h],r8
 
-cmp     dword [rax+4],4E0052h
-jne     GetImageBase_Lower
+label_0x9d:
+  mov     rdx,qword [rdx]
+  cmp     rdx,r9
+  jne     label_0x35
 
-cmp     dword [rax+8],4C0045h
-jne     GetImageBase_Lower
+label_0xa5:
+  mov     r8,qword [rcx+0A10h]
+  mov     eax,5A4Dh
+  cmp     word [r8],ax
+  jne     label_0x291
 
-cmp     dword [rax+0Ch],320033h
-jne     GetImageBase_Lower
+label_0xbb:
+  mov     edx,dword [r8+3Ch]
+  cmp     dword [rdx+r8],4550h
+  jne     label_0x291
 
-cmp     word [rax+10h],2Eh
-je      GetImageBase_Found
+label_0xcd:
+  add     edx,4
+  mov     ecx,10Bh
+  lea     eax,[rdx+14h]
+  movzx   eax,word [rax+r8]
+  cmp     ax,cx
+  jne     label_0xe9
 
-GetImageBase_Lower:
-cmp     dword [rax],65006Bh
-jne     GetImageBase_Continue
+label_0xe2:
+  mov     eax,74h
+  jmp     label_0xfc
 
-cmp     dword [rax+4],6E0072h
-jne     GetImageBase_Continue
+label_0xe9:
+  mov     ecx,20Bh
+  cmp     ax,cx
+  jne     label_0x291
 
-cmp     dword [rax+8],6C0065h
-jne     GetImageBase_Continue
+label_0xf7:
+  mov     eax,84h
 
-cmp     dword [rax+0Ch],320033h
-jne     GetImageBase_Continue
+label_0xfc:
+  mov     qword [rsp+50h],rbp
+  add     eax,edx
+  mov     qword [rsp+28h],rsi
+  xor     r9d,r9d
+  mov     qword [rsp+20h],rdi
+  mov     r10d,dword [rax+r8]
+  add     r10,r8
+  mov     edi,dword [r10+20h]
+  mov     esi,dword [r10+24h]
+  add     rdi,r8
+  mov     ebp,dword [r10+1Ch]
+  add     rsi,r8
+  add     rbp,r8
+  cmp     dword [r10+18h],r9d
+  jbe     label_0x1f8
 
-cmp     word [rax+10h],2Eh
-jne     GetImageBase_Continue
+label_0x136:
+  mov     r11,qword [rbx+0A18h]
+  nop     dword [rax]
 
-GetImageBase_Found:
-mov     r9,qword [rdx+20h]
-mov     qword [rcx+0A10h],r9
-jmp     Exit_GetImageBase
+label_0x140:
+  movzx   eax,word [rsi+r9*2]
+  mov     ecx,dword [rdi+r9*4]
+  add     rcx,r8
+  mov     edx,dword [rbp+rax*4]
+  add     rdx,r8
+  test    r11,r11
+  jne     label_0x184
 
-GetImageBase_Continue:
-mov     rdx,qword [rdx]
-cmp     rdx,r8
-jne     GetImageBase_Loop
+label_0x158:
+  cmp     dword [rcx],64616F4Ch
+  jne     label_0x184
 
-Exit_GetImageBase:
-ret
+label_0x160:
+  cmp     dword [rcx+4],7262694Ch
+  jne     label_0x184
 
-int3
+label_0x169:
+  cmp     dword [rcx+8],57797261h
+  jne     label_0x184
 
-GetProcAddress:
-sub     rsp,8
-mov     eax,5A4Dh
-mov     r10,rdx
-mov     r11,rcx
-cmp     word [rcx],ax
-jne     GetProcAddres_Exit
+label_0x172:
+  cmp     byte [rcx+0Ch],r11b
+  jne     label_0x184
 
-mov     r9d,dword [rcx+3Ch]
-cmp     dword [r9+rcx],4550h
-jne     GetProcAddres_Exit
+label_0x178:
+  mov     r11,rdx
+  mov     qword [rbx+0A18h],rdx
+  jmp     label_0x1eb
 
-movzx   r8d,word [r9+rcx+4]
-mov     edx,14Ch
-cmp     r8w,dx
-je      GetProcAddress_LoopStart
+label_0x184:
+  cmp     qword [rbx+0A20h],0
+  jne     label_0x1b1
 
-mov     eax,8664h
-cmp     r8w,ax
-jne     GetProcAddres_Exit
+label_0x18e:
+  cmp     dword [rcx],65657246h
+  jne     label_0x1b1
 
-GetProcAddress_LoopStart:
-mov     qword [rsp+18h],rbp
-cmp     r8w,dx
-mov     qword [rsp+20h],rsi
-mov     qword [rsp],rdi
-mov     eax,70h
-mov     ecx,60h
-cmove   eax,ecx
-xor     r8d,r8d
-add     rax,r9
-mov     r9d,dword [rax+r11+18h]
-add     r9,r11
-mov     edi,dword [r9+20h]
-mov     esi,dword [r9+24h]
-mov     ebp,dword [r9+1Ch]
-add     rdi,r11
-add     rsi,r11
-add     rbp,r11
-cmp     dword [r9+18h],r8d
-jbe     GetProcAddres_LoopEnd
+label_0x196:
+  cmp     dword [rcx+4],7262694Ch
+  jne     label_0x1b1
 
-mov     qword [rsp+10h],rbx
-mov     rbx,qword [r10+0A18h]
-nop     dword [rax]
-nop     word [rax+rax]
+label_0x19f:
+  cmp     dword [rcx+8],797261h
+  jne     label_0x1b1
 
-GetProcAddress_Loop:
-movzx   ecx,word [rsi+r8*2]
-mov     eax,dword [rdi+r8*4]
-mov     edx,dword [rbp+rcx*4]
-add     rax,r11
-add     rdx,r11
-test    rbx,rbx
-jne     label_FreeLibrary
+label_0x1a8:
+  mov     qword [rbx+0A20h],rdx
+  jmp     label_0x1eb
 
-cmp     dword [rax],64616F4Ch
-jne     label_FreeLibrary
+label_0x1b1:
+  cmp     qword [rbx+0A28h],0
+  jne     label_0x1eb
 
-cmp     dword [rax+4],7262694Ch
-jne     label_FreeLibrary
+label_0x1bb:
+  cmp     dword [rcx],50746547h
+  jne     label_0x1eb
 
-cmp     dword [rax+8],57797261h
-jne     label_FreeLibrary
+label_0x1c3:
+  cmp     dword [rcx+4],41636F72h
+  jne     label_0x1eb
 
-cmp     byte [rax+0Ch],bl
-jne     label_FreeLibrary
+label_0x1cc:
+  cmp     dword [rcx+8],65726464h
+  jne     label_0x1eb
 
-mov     rbx,rdx
-mov     qword [r10+0A18h],rdx
-jmp     GetProcAddress_Continue
+label_0x1d5:
+  mov     eax,dword [rcx+0Ch]
+  and     eax,0FFFFFFh
+  cmp     eax,7373h
+  jne     label_0x1eb
 
-label_FreeLibrary:
-cmp     qword [r10+0A20h],0
-jne     label_GetProcAddress
+label_0x1e4:
+  mov     qword [rbx+0A28h],rdx
 
-cmp     dword [rax],65657246h
-jne     label_GetProcAddress
+label_0x1eb:
+  inc     r9d
+  cmp     r9d,dword [r10+18h]
+  jb      label_0x140
 
-cmp     dword [rax+4],7262694Ch
-jne     label_GetProcAddress
+label_0x1f8:
+  lea     rcx,[rbx+800h]
+  call    qword [rbx+0A18h]
+  mov     rsi,qword [rsp+28h]
+  mov     rdi,rax
+  mov     rbp,qword [rsp+50h]
+  test    rax,rax
+  je      label_0x24a
 
-cmp     dword [rax+8],797261h
-jne     label_GetProcAddress
+label_0x229:
+  mov     edx,0DEADh
+  mov     rcx,rax
+  call    qword [rbx+0A28h]
+  test    rax,rax
+  je      label_0x241
 
-mov     qword [r10+0A20h],rdx
-jmp     GetProcAddress_Continue
+label_0x23c:
+  mov     rcx,rbx
+  call    rax
 
-label_GetProcAddress:
-cmp     qword [r10+0A28h],0
-jne     GetProcAddress_Continue
+label_0x241:
+  mov     rcx,rdi
+  call    qword [rbx+0A20h]
 
-cmp     dword [rax],50746547h
-jne     GetProcAddress_Continue
+label_0x24a:
+  mov     rcx,qword [rbx+0A10h]
+  lea     rdx,[rbx + string_ExitThread]
+  call    qword [rbx+0A28h]
+  mov     rcx,qword [rbx+0A10h]
+  lea     rdx,[rbx + string_VirtualFree]
+  mov     rdi,rax
+  call    qword [rbx+0A28h]
+  test    rax,rax
+  je      label_0x28c
 
-cmp     dword [rax+4],41636F72h
-jne     GetProcAddress_Continue
+label_0x276:
+  test    rdi,rdi
+  je      label_0x28c
 
-cmp     dword [rax+8],65726464h
-jne     GetProcAddress_Continue
+label_0x27b:
+  xor     edx,edx
+  mov     r8d,8000h
+  mov     rcx,rbx
+  push    rdi
+  jmp     rax
 
-mov     ecx,dword [rax+0Ch]
-and     ecx,0FFFFFFh
-cmp     ecx,7373h
-jne     GetProcAddress_Continue
+label_0x28c:
+  mov     rdi,qword [rsp+20h]
 
-mov     qword [r10+0A28h],rdx
+label_0x291:
+  add     rsp,30h
+  pop     rbx
+  ret
 
-GetProcAddress_Continue:
-inc     r8d
-cmp     r8d,dword [r9+18h]
-jb      GetProcAddress_Loop
-
-mov     rbx,qword [rsp+10h]
-
-GetProcAddres_LoopEnd:
-mov     rsi,qword [rsp+20h]
-mov     rbp,qword [rsp+18h]
-mov     rdi,qword [rsp]
-
-GetProcAddres_Exit:
-add     rsp,8
-ret
-
-int3
+string_VirtualFree db "VirtualFree",0
+string_ExitThread db "ExitThread",0

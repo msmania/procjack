@@ -24,7 +24,7 @@ typedef struct _LDR_DATA_TABLE_ENTRY {
 } LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;
 
 // https://docs.microsoft.com/en-us/windows/desktop/api/winternl/ns-winternl-_peb
-typedef struct _PEB {
+struct PEB {
   unsigned char  Reserved1[2];
   unsigned char  BeingDebugged;
   unsigned char  Reserved2[1];
@@ -37,15 +37,15 @@ typedef struct _PEB {
   unsigned char  Reserved6[128];
   void          *Reserved7[1];
   unsigned long  SessionId;
-} PEB, *PPEB;
+};
 
 struct Package {
   unsigned char InitialCode[2048];
   unsigned short DllPath[260];
-  PPEB  peb;
+  PEB *peb;
   void *kernel32;
-  void *xxxLoadLibrary;
-  void *xxxFreeLibrary;
-  void *xxxGetProcAddress;
+  void *(WINAPI *xxxLoadLibrary)(void*);
+  uint32_t (WINAPI *xxxFreeLibrary)(void*);
+  void *(WINAPI *xxxGetProcAddress)(void*, void*);
   unsigned char Context[1];
 };

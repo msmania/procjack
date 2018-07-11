@@ -1,9 +1,2 @@
-/bin/
-/bin64/
+bin/
 obj/
-obj64/
-expeb/Makefile
-*.o
-*.dSYM
-expeb/expeb32
-expeb/expeb64

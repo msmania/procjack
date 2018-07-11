@@ -1,21 +1,9 @@
-//
-// main.cpp
-//
-// https://msdn.microsoft.com/en-us/magazine/cc301808.aspx
-//
-
-#ifdef _WIN32
-#define MSVC
-#endif
-
-#ifdef MSVC
 #include <windows.h>
 #include <intrin.h>
+#include <cstdint>
+#include "../common.h"
 
-#define MEM_RELEASE 0x8000
-#else
-#define WINAPI
-#endif
+//#define DEBUG
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -24,151 +12,163 @@
 #define LOGDEBUG
 #endif
 
-#include "../common.h"
+template<typename T>
+T *rva(void *base, uint32_t offset) {
+  return reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(base) + offset);
+}
 
-struct image_export_directory {
-    unsigned int   Characteristics;
-    unsigned int   TimeDateStamp;
-    unsigned short MajorVersion;
-    unsigned short MinorVersion;
-    unsigned int   Name;
-    unsigned int   Base;
-    unsigned int   NumberOfFunctions;
-    unsigned int   NumberOfNames;
-    unsigned int   AddressOfFunctions;
-    unsigned int   AddressOfNames;
-    unsigned int   AddressOfNameOrdinals;
-};
+bool GetProcAddresses(void *base, Package *package) {
+  constexpr uint16_t MZ_SIGNATURE = 0x5a4d;
+  constexpr uint32_t PE_SIGNATURE = 0x4550;
+  constexpr uint32_t OFFSET_TO_PEHEADER = 0x3c; // IMAGE_DOS_HEADER::e_lfanew
 
-#define image_file_machine_i386  0x014c
-#define image_file_machine_amd64 0x8664
+  if (*rva<uint16_t>(base, 0) != MZ_SIGNATURE)
+    return false;
 
-// copied from ntdef.h
-#define containing_record(address, type, field) ((type *)((unsigned char *)(address) - (long)(&((type *)0)->field)))
+  auto offset_to_header = *rva<uint32_t>(base, OFFSET_TO_PEHEADER);
+  if (*rva<uint32_t>(base, offset_to_header) != PE_SIGNATURE)
+    return false;
+  offset_to_header += sizeof(PE_SIGNATURE);
+#ifdef DEBUG
+  auto machine = rva<IMAGE_FILE_HEADER>(base, offset_to_header)->Machine;
+  if (machine != IMAGE_FILE_MACHINE_I386
+      && machine != IMAGE_FILE_MACHINE_AMD64)
+    return false;
+#endif
+  auto magic = *rva<uint16_t>(base,
+    offset_to_header + sizeof(IMAGE_FILE_HEADER));
+  auto offset_to_export_table = 0;
+  // https://docs.microsoft.com/en-us/windows/desktop/api/winnt/ns-winnt-_image_data_directory
+  if (magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC)
+    offset_to_export_table = 0x60;
+  else if (magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC)
+    offset_to_export_table = 0x70;
+  else
+    return false;
 
-void GetProcAddress(void *ImageBase, Package *package) {
-    const unsigned short MZ_SIGNATURE = 0x5a4d;
-    const unsigned int PE_SIGNATURE = 0x4550;
-
-    unsigned char *p = (unsigned char *)ImageBase;
-    if ( *(unsigned short *)p == MZ_SIGNATURE ) {
-        // 0x3c = _IMAGE_DOS_HEADER::e_lfanew
-        unsigned int Offset = *(unsigned int *)(p + 0x3c);
-        if ( *(unsigned int *)(p + Offset)==PE_SIGNATURE ) {
-            // 0x04 = ntdll!_IMAGE_NT_HEADERS::FileHeader::Machine
-            unsigned short Platform = *(unsigned short *)(p + Offset + 0x04);
-            if ( Platform!=image_file_machine_i386 && Platform!=image_file_machine_amd64 ) {
-                return;
-            }
-            // 0x18 = ntdll!_IMAGE_NT_HEADERS::OptionalHeader
-            unsigned int Rva_Exports = *(unsigned int *)(p + Offset + 0x18 + (Platform==image_file_machine_i386 ? 0x60 : 0x70));
-            image_export_directory *ExportDirectory = (image_export_directory*)(p + Rva_Exports);
-
-            unsigned int * Names = (unsigned int *)(p + ExportDirectory->AddressOfNames);
-            unsigned short * Ordinals = (unsigned short *)(p + ExportDirectory->AddressOfNameOrdinals);
-            unsigned int * Functions = (unsigned int *)(p + ExportDirectory->AddressOfFunctions);
-            for ( unsigned int i=0 ; i<ExportDirectory->NumberOfNames ; ++i ) {
-                unsigned int * Name = (unsigned int *)(p + Names[i]);
-                void *Function = p + Functions[Ordinals[i]];
-
-                if ( !package->xxxLoadLibrary && Name[0]==0x64616f4c && Name[1]==0x7262694c && Name[2]==0x57797261 && (Name[3]&0xff)==0 ) {
-                    package->xxxLoadLibrary = Function;
-                }
-                else if ( !package->xxxFreeLibrary && Name[0]==0x65657246 && Name[1]==0x7262694c && Name[2]==0x00797261 ) {
-                    package->xxxFreeLibrary = Function;
-                }
-                else if ( !package->xxxGetProcAddress && Name[0]==0x50746547 && Name[1]==0x41636f72 && Name[2]==0x65726464 && (Name[3]&0xffffff)==0x007373 ) {
-                    package->xxxGetProcAddress = Function;
-                }
-                else {
-                    continue;
-                }
-
-                LOGDEBUG("%4d->%4d %p %p {0x%08x, 0x%08x, ..} %s\n",
-                    i, Ordinals[i], Name, Function,
-                    Name[0], Name[1], (const char *)Name);
-            }
-        }
+  auto export_table_directory = rva<IMAGE_DATA_DIRECTORY>(base,
+    offset_to_header + sizeof(IMAGE_FILE_HEADER) + offset_to_export_table);
+  auto export_table = rva<IMAGE_EXPORT_DIRECTORY>(base,
+    export_table_directory->VirtualAddress);
+  auto names = rva<uint32_t>(base, export_table->AddressOfNames);
+  auto ordinals = rva<uint16_t>(base, export_table->AddressOfNameOrdinals);
+  auto functions = rva<uint32_t>(base, export_table->AddressOfFunctions);
+  for (uint32_t i = 0; i<export_table->NumberOfNames; ++i) {
+    auto name = rva<uint32_t>(base, names[i]);
+    auto function = rva<void>(base, functions[ordinals[i]]);
+    if (!package->xxxLoadLibrary
+        && name[0] == 0x64616f4c
+        && name[1] == 0x7262694c
+        && name[2] == 0x57797261
+        && (name[3] & 0xff) == 0) {
+      package->xxxLoadLibrary = reinterpret_cast<void*(WINAPI*)(void*)>(function);
     }
+    else if (!package->xxxFreeLibrary
+             && name[0] == 0x65657246
+             && name[1] == 0x7262694c
+             && name[2] == 0x00797261) {
+      package->xxxFreeLibrary = reinterpret_cast<uint32_t(WINAPI*)(void*)>(function);
+    }
+    else if (!package->xxxGetProcAddress
+             && name[0] == 0x50746547
+             && name[1] == 0x41636f72
+             && name[2] == 0x65726464
+             && (name[3] & 0xffffff) == 0x007373) {
+      package->xxxGetProcAddress = reinterpret_cast<void*(WINAPI*)(void*, void*)>(function);
+    }
+    else {
+      continue;
+    }
+    LOGDEBUG("%4d->%4d %p %p {0x%08x, 0x%08x, ..} %s\n",
+             i,
+             ordinals[i],
+             name,
+             function,
+             name[0],
+             name[1],
+             reinterpret_cast<LPCSTR>(name));
+  }
+  return true;
 }
 
 void GetImageBase(Package *package) {
-    pj_list_entry *begin = &package->peb->Ldr->InMemoryOrderModuleList;
-    for ( pj_list_entry *p = begin->Flink ; p!=begin ; p=p->Flink ) {
-        PLDR_DATA_TABLE_ENTRY entry = containing_record(p, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
-
-        unsigned int *Name = (unsigned int *)entry->BaseDllName.Buffer;
-        if ( !package->kernel32 &&
-                  (Name[0]==0x0045004b && Name[1]==0x004e0052 && Name[2]==0x004c0045 && Name[3]==0x00320033 && (Name[4]&0xffff)==0x002e) ||
-                  (Name[0]==0x0065006b && Name[1]==0x006e0072 && Name[2]==0x006c0065 && Name[3]==0x00320033 && (Name[4]&0xffff)==0x002e) ) {
-            package->kernel32 = entry->DllBase;
-        }
-        else {
-            continue;
-        }
-
-        LOGDEBUG("%p %S\n", entry->DllBase, entry->BaseDllName.Buffer);
+  auto begin = &package->peb->Ldr->InMemoryOrderModuleList;
+  for (auto p = begin->Flink; p != begin; p = p->Flink) {
+    auto entry = CONTAINING_RECORD(p, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
+    auto name = reinterpret_cast<uint32_t*>(entry->BaseDllName.Buffer);
+    if (!package->kernel32
+        && (name[0] == 0x0045004b
+            && name[1] == 0x004e0052
+            && name[2] == 0x004c0045
+            && name[3] == 0x00320033
+            && (name[4] & 0xffff) == 0x002e)
+        || (name[0] == 0x0065006b
+            && name[1] == 0x006e0072
+            && name[2] == 0x006c0065
+            && name[3] == 0x00320033
+            && (name[4] & 0xffff) == 0x002e)) {
+      package->kernel32 = entry->DllBase;
     }
+    else {
+      continue;
+    }
+    LOGDEBUG("%p %S\n",
+             entry->DllBase,
+             reinterpret_cast<LPCWSTR>(entry->BaseDllName.Buffer));
+  }
 }
 
 // http://en.wikipedia.org/wiki/Win32_Thread_Information_Block
-//
 // [fs:0030h] --> x86 PEB
 // [gs:0030h] --> x64 TEB
-PPEB GetPeb() {
-    void *Peb = 0;
+PEB *GetPeb() {
+  PEB *Peb = 0;
 
-#ifdef MSVC
 #ifdef _WIN64
-    void *Teb = (void *)__readgsqword(0x30);
-    LOGDEBUG("TEB = %p\n", Teb);
+  size_t Teb = __readgsqword(0x30);
+  LOGDEBUG("TEB = %016zx\n", Teb);
 
-    // 0x60 = ntdll!_TEB::ProcessEnvironmentBlock
-    Peb = *(void**)((unsigned char *)Teb + 0x60);
+  // 0x60 = ntdll!_TEB::ProcessEnvironmentBlock
+  Peb = *reinterpret_cast<PEB**>(Teb + 0x60);
 #else
-    Peb = (void *)__readfsdword(0x30);
-#endif
+  Peb = reinterpret_cast<PEB*>(__readfsdword(0x30));
 #endif
 
-    LOGDEBUG("PEB = %p\n", Peb);
-    return (PPEB)Peb;
+  LOGDEBUG("PEB = %p\n", Peb);
+  return Peb;
 }
 
-unsigned int WINAPI ShellCode(Package *p) {
-    unsigned long long ll1 = 0x123;
-    unsigned long long ll2 = 0x456;
-    unsigned int Ret = 0;
-    void *f;
+void WINAPI ShellCode(Package *p) {
+  p->peb = GetPeb();
+  GetImageBase(p);
+  if (!GetProcAddresses(p->kernel32, p)) return;
+#ifndef DEBUG
+  size_t string_VirtualFree = 0x123;
+  size_t string_ExitThread = 0x456;
+  constexpr uint16_t ordinal = 0xdead;
+  void *hm = p->xxxLoadLibrary(p->DllPath);
+  if (hm) {
+    auto f = p->xxxGetProcAddress(hm, MAKEINTRESOURCEA(ordinal));
+    if (f) reinterpret_cast<LPTHREAD_START_ROUTINE>(f)(p);
+    p->xxxFreeLibrary(hm);
+  }
 
-    p->peb = GetPeb();
-    GetImageBase(p);
-    GetProcAddress(p->kernel32, p);
-
-    void *hm = LOADLIBRARY(p->xxxLoadLibrary)(p->DllPath);
-    if ( hm ) {
-        f = GETPROCADDRESS(p->xxxGetProcAddress)(hm, MAKEINTRESOURCEA(0xdead));
-        if ( f ) {
-            Ret = THREADPROC(f)(p);
-        }
-        FREELIBRARY(p->xxxFreeLibrary)(hm);
-    }
-
-    f = GETPROCADDRESS(p->xxxGetProcAddress)(p->kernel32, &ll1);
-    if ( f ) {
-        Ret = VIRTUALFREE(f)(p, 0, MEM_RELEASE);
-    }
-
-    f = GETPROCADDRESS(p->xxxGetProcAddress)(p->kernel32, &ll2);
-    if ( f ) {
-        (EXITTHREAD(f))(Ret);
-    }
-
-    return Ret;
+  // In assembly, push ExitThread and jump to VirtualFree.
+  // For easier assembly modification, get ExitThread's address first,
+  // and call VirtualFree first.
+  auto xxxExitThread = p->xxxGetProcAddress(p->kernel32, &string_ExitThread);
+  auto xxxVirtualFree = p->xxxGetProcAddress(p->kernel32, &string_VirtualFree);
+  if (xxxVirtualFree && xxxExitThread) {
+    reinterpret_cast<uint32_t(WINAPI*)(void*, size_t, uint32_t)>(xxxVirtualFree)(
+      p, 0, MEM_RELEASE);
+    reinterpret_cast<void(WINAPI*)(uint32_t)>(xxxExitThread)(0);
+  }
+#endif
 }
 
 int main() {
-    Package p = {0};
-    LOGDEBUG("sizeof(Package) = %lu\n", sizeof(Package));
-    ShellCode(&p);
-    return 0;
+  Package p{};
+  LOGDEBUG("sizeof(Package) = %zu\n", sizeof(Package));
+  ShellCode(&p);
+  return 0;
 }
