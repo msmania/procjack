@@ -5,7 +5,9 @@ ARCH=x86
 !ENDIF
 
 OUTDIR=..\bin\$(ARCH)
+OUTDIR_NOARCH=..\bin
 OBJDIR=obj\$(ARCH)
+OBJDIR_NOARCH=obj
 SRCDIR=.
 
 CC=cl
