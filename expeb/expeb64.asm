@@ -2,257 +2,258 @@ BITS 64
 
 ShellCode:
   push    rbx
-  sub     rsp,30h
+  sub     rsp,20h
   mov   rax,qword [gs:30h]
   mov     rbx,rcx
   mov     rdx,qword [rax+60h]
   mov     qword [rcx+0A08h],rdx
-  mov     r9,qword [rdx+18h]
-  mov     rdx,qword [r9+20h]
-  add     r9,20h
-  cmp     rdx,r9
-  je      label_0xa5
+  mov     r10,qword [rdx+18h]
+  mov     rdx,qword [rcx+0A10h]
+  add     r10,20h
+  mov     r9,qword [r10]
+  cmp     r9,r10
+  je      label_0xac
 
-label_0x2e:
-  mov     r8,qword [rcx+0A10h]
+label_0x34:
+  mov     rax,qword [r9+50h]
+  test    rdx,rdx
+  jne     label_0x67
 
-label_0x35:
-  mov     rax,qword [rdx+50h]
-  test    r8,r8
-  jne     label_0x68
-
-label_0x3e:
+label_0x3d:
   cmp     dword [rax],45004Bh
-  jne     label_0x68
+  jne     label_0x67
 
-label_0x46:
+label_0x45:
   cmp     dword [rax+4],4E0052h
-  jne     label_0x68
+  jne     label_0x67
 
-label_0x4f:
+label_0x4e:
   cmp     dword [rax+8],4C0045h
-  jne     label_0x68
+  jne     label_0x67
 
-label_0x58:
+label_0x57:
   cmp     dword [rax+0Ch],320033h
-  jne     label_0x68
+  jne     label_0x67
 
-label_0x61:
+label_0x60:
   cmp     word [rax+10h],2Eh
-  je      label_0x92
+  je      label_0x94
 
-label_0x68:
+label_0x67:
   cmp     dword [rax],65006Bh
-  jne     label_0x9d
+  mov     r8,rdx
+  jne     label_0xa2
 
-label_0x70:
+label_0x72:
   cmp     dword [rax+4],6E0072h
-  jne     label_0x9d
+  jne     label_0xa2
 
-label_0x79:
+label_0x7b:
   cmp     dword [rax+8],6C0065h
-  jne     label_0x9d
+  jne     label_0xa2
 
-label_0x82:
+label_0x84:
   cmp     dword [rax+0Ch],320033h
-  jne     label_0x9d
+  jne     label_0xa2
 
-label_0x8b:
+label_0x8d:
   cmp     word [rax+10h],2Eh
-  jne     label_0x9d
+  jne     label_0xa2
 
-label_0x92:
-  mov     r8,qword [rdx+20h]
-  mov     qword [rcx+0A10h],r8
+label_0x94:
+  mov     rdx,qword [r9+20h]
+  mov     qword [rcx+0A10h],rdx
+  mov     r8,rdx
 
-label_0x9d:
-  mov     rdx,qword [rdx]
-  cmp     rdx,r9
-  jne     label_0x35
+label_0xa2:
+  mov     r9,qword [r9]
+  cmp     r9,r10
+  jne     label_0x34
 
-label_0xa5:
-  mov     r8,qword [rcx+0A10h]
+label_0xaa:
+  jmp     label_0xaf
+
+label_0xac:
+  mov     r8,rdx
+
+label_0xaf:
   mov     eax,5A4Dh
   cmp     word [r8],ax
-  jne     label_0x291
+  jne     label_0x28c
 
-label_0xbb:
+label_0xbe:
   mov     edx,dword [r8+3Ch]
   cmp     dword [rdx+r8],4550h
-  jne     label_0x291
+  jne     label_0x28c
 
-label_0xcd:
-  add     edx,4
+label_0xd0:
+  lea     eax,[rdx+18h]
   mov     ecx,10Bh
-  lea     eax,[rdx+14h]
   movzx   eax,word [rax+r8]
   cmp     ax,cx
   jne     label_0xe9
 
 label_0xe2:
-  mov     eax,74h
+  mov     eax,78h
   jmp     label_0xfc
 
 label_0xe9:
   mov     ecx,20Bh
   cmp     ax,cx
-  jne     label_0x291
+  jne     label_0x28c
 
 label_0xf7:
-  mov     eax,84h
+  mov     eax,88h
 
 label_0xfc:
-  mov     qword [rsp+50h],rbp
+  mov     qword [rsp+40h],rsi
   add     eax,edx
-  mov     qword [rsp+28h],rsi
+  mov     qword [rsp+48h],rdi
   xor     r9d,r9d
-  mov     qword [rsp+20h],rdi
   mov     r10d,dword [rax+r8]
   add     r10,r8
-  mov     edi,dword [r10+20h]
-  mov     esi,dword [r10+24h]
+  mov     r11d,dword [r10+20h]
+  mov     edi,dword [r10+24h]
+  add     r11,r8
+  mov     esi,dword [r10+1Ch]
   add     rdi,r8
-  mov     ebp,dword [r10+1Ch]
   add     rsi,r8
-  add     rbp,r8
   cmp     dword [r10+18h],r9d
-  jbe     label_0x1f8
+  jbe     label_0x1ea
 
-label_0x136:
-  mov     r11,qword [rbx+0A18h]
-  nop     dword [rax]
-
-label_0x140:
-  movzx   eax,word [rsi+r9*2]
-  mov     ecx,dword [rdi+r9*4]
+label_0x131:
+  movzx   eax,word [rdi+r9*2]
+  mov     ecx,dword [r11+r9*4]
   add     rcx,r8
-  mov     edx,dword [rbp+rax*4]
+  mov     edx,dword [rsi+rax*4]
   add     rdx,r8
-  test    r11,r11
-  jne     label_0x184
+  cmp     qword [rbx+0A18h],0
+  jne     label_0x176
 
-label_0x158:
+label_0x14d:
   cmp     dword [rcx],64616F4Ch
-  jne     label_0x184
+  jne     label_0x176
 
-label_0x160:
+label_0x155:
   cmp     dword [rcx+4],7262694Ch
-  jne     label_0x184
+  jne     label_0x176
 
-label_0x169:
+label_0x15e:
   cmp     dword [rcx+8],57797261h
-  jne     label_0x184
+  jne     label_0x176
 
-label_0x172:
-  cmp     byte [rcx+0Ch],r11b
-  jne     label_0x184
+label_0x167:
+  cmp     byte [rcx+0Ch],0
+  jne     label_0x176
 
-label_0x178:
-  mov     r11,rdx
+label_0x16d:
   mov     qword [rbx+0A18h],rdx
-  jmp     label_0x1eb
+  jmp     label_0x1dd
 
-label_0x184:
+label_0x176:
   cmp     qword [rbx+0A20h],0
-  jne     label_0x1b1
+  jne     label_0x1a3
 
-label_0x18e:
+label_0x180:
   cmp     dword [rcx],65657246h
-  jne     label_0x1b1
+  jne     label_0x1a3
 
-label_0x196:
+label_0x188:
   cmp     dword [rcx+4],7262694Ch
-  jne     label_0x1b1
+  jne     label_0x1a3
 
-label_0x19f:
+label_0x191:
   cmp     dword [rcx+8],797261h
-  jne     label_0x1b1
+  jne     label_0x1a3
 
-label_0x1a8:
+label_0x19a:
   mov     qword [rbx+0A20h],rdx
-  jmp     label_0x1eb
+  jmp     label_0x1dd
 
-label_0x1b1:
+label_0x1a3:
   cmp     qword [rbx+0A28h],0
-  jne     label_0x1eb
+  jne     label_0x1dd
 
-label_0x1bb:
+label_0x1ad:
   cmp     dword [rcx],50746547h
-  jne     label_0x1eb
+  jne     label_0x1dd
 
-label_0x1c3:
+label_0x1b5:
   cmp     dword [rcx+4],41636F72h
-  jne     label_0x1eb
+  jne     label_0x1dd
 
-label_0x1cc:
+label_0x1be:
   cmp     dword [rcx+8],65726464h
-  jne     label_0x1eb
+  jne     label_0x1dd
 
-label_0x1d5:
+label_0x1c7:
   mov     eax,dword [rcx+0Ch]
   and     eax,0FFFFFFh
   cmp     eax,7373h
-  jne     label_0x1eb
+  jne     label_0x1dd
 
-label_0x1e4:
+label_0x1d6:
   mov     qword [rbx+0A28h],rdx
 
-label_0x1eb:
+label_0x1dd:
   inc     r9d
   cmp     r9d,dword [r10+18h]
-  jb      label_0x140
+  jb      label_0x131
 
-label_0x1f8:
+label_0x1ea:
+  mov     rax,qword [rbx+0A18h]
   lea     rcx,[rbx+800h]
-  call    qword [rbx+0A18h]
-  mov     rsi,qword [rsp+28h]
+  call    rax
+  mov     rsi,qword [rsp+40h]
   mov     rdi,rax
-  mov     rbp,qword [rsp+50h]
   test    rax,rax
-  je      label_0x24a
+  je      label_0x23e
 
-label_0x229:
+label_0x219:
+  mov     r8,qword [rbx+0A28h]
   mov     edx,0DEADh
   mov     rcx,rax
-  call    qword [rbx+0A28h]
+  call    r8
   test    rax,rax
-  je      label_0x241
+  je      label_0x235
 
-label_0x23c:
+label_0x230:
   mov     rcx,rbx
   call    rax
 
-label_0x241:
+label_0x235:
   mov     rcx,rdi
   call    qword [rbx+0A20h]
 
-label_0x24a:
-  mov     rcx,qword [rbx+0A10h]
+label_0x23e:
+  mov     rax,qword [rbx+0A28h]
   lea     rdx,[rbx + string_ExitThread]
-  call    qword [rbx+0A28h]
   mov     rcx,qword [rbx+0A10h]
+  call    rax
+  mov     r8,qword [rbx+0A28h]
   lea     rdx,[rbx + string_VirtualFree]
+  mov     rcx,qword [rbx+0A10h]
   mov     rdi,rax
-  call    qword [rbx+0A28h]
+  call    r8
   test    rax,rax
-  je      label_0x28c
+  je      label_0x287
+
+label_0x271:
+  test    rdi,rdi
+  je      label_0x287
 
 label_0x276:
-  test    rdi,rdi
-  je      label_0x28c
-
-label_0x27b:
   xor     edx,edx
   mov     r8d,8000h
   mov     rcx,rbx
   push    rdi
   jmp     rax
 
-label_0x28c:
-  mov     rdi,qword [rsp+20h]
+label_0x287:
+  mov     rdi,qword [rsp+48h]
 
-label_0x291:
-  add     rsp,30h
+label_0x28c:
+  add     rsp,20h
   pop     rbx
   ret
 

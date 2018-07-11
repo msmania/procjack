@@ -4,6 +4,7 @@ TARGET=pj.exe
 OBJS=\
 	$(OBJDIR)\main.obj\
 	$(OBJDIR)\auth_utils.obj\
+	$(OBJDIR)\pkg_creator.obj\
 
 LIBS=\
 	advapi32.lib\

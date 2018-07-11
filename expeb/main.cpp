@@ -61,20 +61,20 @@ bool GetProcAddresses(void *base, Package *package) {
         && name[1] == 0x7262694c
         && name[2] == 0x57797261
         && (name[3] & 0xff) == 0) {
-      package->xxxLoadLibrary = reinterpret_cast<void*(WINAPI*)(void*)>(function);
+      package->xxxLoadLibrary = function;
     }
     else if (!package->xxxFreeLibrary
              && name[0] == 0x65657246
              && name[1] == 0x7262694c
              && name[2] == 0x00797261) {
-      package->xxxFreeLibrary = reinterpret_cast<uint32_t(WINAPI*)(void*)>(function);
+      package->xxxFreeLibrary = function;
     }
     else if (!package->xxxGetProcAddress
              && name[0] == 0x50746547
              && name[1] == 0x41636f72
              && name[2] == 0x65726464
              && (name[3] & 0xffffff) == 0x007373) {
-      package->xxxGetProcAddress = reinterpret_cast<void*(WINAPI*)(void*, void*)>(function);
+      package->xxxGetProcAddress = function;
     }
     else {
       continue;
@@ -146,7 +146,7 @@ void WINAPI ShellCode(Package *p) {
   size_t string_VirtualFree = 0x123;
   size_t string_ExitThread = 0x456;
   constexpr uint16_t ordinal = 0xdead;
-  void *hm = p->xxxLoadLibrary(p->DllPath);
+  void *hm = p->xxxLoadLibrary(p->dllpath);
   if (hm) {
     auto f = p->xxxGetProcAddress(hm, MAKEINTRESOURCEA(ordinal));
     if (f) reinterpret_cast<LPTHREAD_START_ROUTINE>(f)(p);

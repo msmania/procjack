@@ -39,13 +39,37 @@ struct PEB {
   unsigned long  SessionId;
 };
 
-struct Package {
-  unsigned char InitialCode[2048];
-  unsigned short DllPath[260];
-  PEB *peb;
-  void *kernel32;
-  void *(WINAPI *xxxLoadLibrary)(void*);
-  uint32_t (WINAPI *xxxFreeLibrary)(void*);
-  void *(WINAPI *xxxGetProcAddress)(void*, void*);
-  unsigned char Context[1];
+constexpr uint32_t SHELLCODE_CAPACITY = 2048;
+
+// HybridPointer makes sure a pointer consumes 64bit on 32bit platform, so that
+// the offset to the `args` is not affected by compiler target platform.  This
+// enables 64bit pj.exe to inject 32bit DLL.
+template<typename T>
+union HybridPointer {
+  T *p;
+  uint64_t dummy;
+  T* &operator=(void *value) {
+    return p = reinterpret_cast<T*>(value);
+  }
+  operator T*() {
+    return p;
+  }
+  T* operator->() const {
+    return p;
+  }
 };
+
+struct Package {
+  uint8_t shellcode[SHELLCODE_CAPACITY];
+  wchar_t dllpath[260];
+  HybridPointer<PEB> peb;
+  HybridPointer<void> kernel32;
+  HybridPointer<void*(WINAPI)(void*)> xxxLoadLibrary;
+  HybridPointer<uint32_t(WINAPI)(void*)> xxxFreeLibrary;
+  HybridPointer<void*(WINAPI)(void*, void*)> xxxGetProcAddress;
+  char args[1];
+};
+
+constexpr uint32_t PACKAGE_SIZE = 4096;
+static_assert(PACKAGE_SIZE >= sizeof(Package), "Increase PackageSize");
+constexpr uint32_t ARGS_CAPACITY = PACKAGE_SIZE - offsetof(Package, args);
