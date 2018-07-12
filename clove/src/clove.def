@@ -1,0 +1,4 @@
+; https://msdn.microsoft.com/en-us/library/hyx1zcd3.aspx
+EXPORTS
+  StartShim @100 NONAME PRIVATE
+  EndShim @101 NONAME PRIVATE
