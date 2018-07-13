@@ -1,15 +1,20 @@
-class ExecutablePage;
+template<typename T>
+static T *at(void *base, int32_t offset) {
+  return reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(base) + offset);
+}
+
+class ExecutablePages;
 
 class CodePack {
-  template<bool (CodePack::*F)(ExecutablePage&)>
-  bool DetourTransaction(ExecutablePage &exec_page) {
+  template<bool (CodePack::*F)(ExecutablePages&)>
+  bool DetourTransaction(ExecutablePages &exec_pages) {
     LONG status = DetourTransactionBegin();
     if (status != NO_ERROR) {
       Log(L"DetourTransactionBegin failed with %08x\n", status);
       return status;
     }
 
-    if ((this->*F)(exec_page)) {
+    if ((this->*F)(exec_pages)) {
       status = DetourTransactionCommit();
       if (status != NO_ERROR) {
         Log(L"DetourTransactionCommit failed with %08x\n", status);
@@ -27,8 +32,8 @@ class CodePack {
     return status == NO_ERROR;
   }
 
-  virtual bool ActivateDetourInternal(ExecutablePage &exec_page) = 0;
-  virtual bool DeactivateDetourInternal(ExecutablePage &exec_page) = 0;
+  virtual bool ActivateDetourInternal(ExecutablePages &exec_pages) = 0;
+  virtual bool DeactivateDetourInternal(ExecutablePages &exec_pages) = 0;
 
 protected:
   static bool DetourAttachHelper(void *&detour_target,
@@ -41,17 +46,16 @@ public:
   virtual size_t Size() const = 0;
   virtual void Print() const = 0;
   virtual void CopyTo(uint8_t *destination) const = 0;
-  bool ActivateDetour(ExecutablePage &exec_page);
-  bool DeactivateDetour(ExecutablePage &exec_page);
+  bool ActivateDetour(ExecutablePages &exec_pages);
+  bool DeactivateDetour(ExecutablePages &exec_pages);
 };
 
-class ExecutablePage final {
-  uint32_t capacity_;
-  uint8_t *base_;
-  uint8_t *empty_head_;
+struct ExecutablePage;
+
+class ExecutablePages final {
+  ExecutablePage *active_head_;
 
 public:
-  ExecutablePage(uint32_t capacity);
-  ~ExecutablePage();
-  void *Push(const CodePack &pack);
+  void *Push(const CodePack &pack, const void *source);
+
 };

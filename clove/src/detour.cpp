@@ -11,14 +11,14 @@ std::unique_ptr<CodePack>
   Create_MeasurementPack(void *MeasurementStart,
                          void *MeasurementEnd);
 
-ExecutablePage g_exec_page(4096);
+ExecutablePages g_exec_pages;
 std::vector<std::unique_ptr<CodePack>> g_packs;
 SRWLOCK g_shim_lock = SRWLOCK_INIT;
 Event g_instance_control;
 
 void StartShim(Package *package) {
   auto range = address_range(package->args);
-  if (range.first == 0) {
+  if (range.first == 0 || range.second - range.first < 5) {
     Log(L"Invalid range specified!\n");
     return;
   }
@@ -27,7 +27,7 @@ void StartShim(Package *package) {
         reinterpret_cast<void*>(range.first),
         reinterpret_cast<void*>(range.second))) {
     AcquireSRWLockExclusive(&g_shim_lock);
-    if (new_pack->ActivateDetour(g_exec_page)) {
+    if (new_pack->ActivateDetour(g_exec_pages)) {
       g_packs.emplace_back(std::move(new_pack));
     }
     ReleaseSRWLockExclusive(&g_shim_lock);
@@ -44,7 +44,7 @@ void StartShim(Package *package) {
     g_instance_control.Wait(INFINITE);
 
     for (auto &pack : g_packs) {
-      pack->DeactivateDetour(g_exec_page);
+      pack->DeactivateDetour(g_exec_pages);
     }
     Log(L"Cleanup is done.  Goodbye!\n");
   }

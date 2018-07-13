@@ -4,11 +4,6 @@
 
 void Log(LPCWSTR format, ...);
 
-template<typename T>
-static T *at(void *base, uint32_t offset) {
-  return reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(base) + offset);
-}
-
 struct MeasurementPack final : public CodePack {
   static constexpr uint8_t Template_MeasurementStart[] = {
     0x52, 0x0f, 0x31, 0x48, 0xc1, 0xe2, 0x20, 0x48,
@@ -53,8 +48,8 @@ struct MeasurementPack final : public CodePack {
       MeasurementEnd_Detour(nullptr)
   {}
 
-  bool ActivateDetourInternal(ExecutablePage &exec_page) {
-    MeasurementStart_Detour = exec_page.Push(*this);
+  bool ActivateDetourInternal(ExecutablePages &exec_pages) {
+    MeasurementStart_Detour = exec_pages.Push(*this, MeasurementStart_Target);
     MeasurementEnd_Detour = at<void>(MeasurementStart_Detour,
                                      sizeof(Template_MeasurementStart)
                                      + 1);
@@ -64,7 +59,7 @@ struct MeasurementPack final : public CodePack {
                                  MeasurementEnd_Detour);
   }
 
-  bool DeactivateDetourInternal(ExecutablePage&) {
+  bool DeactivateDetourInternal(ExecutablePages&) {
     return DetourDetachHelper(MeasurementStart_Trampoline,
                               MeasurementStart_Detour)
            && DetourDetachHelper(MeasurementEnd_Trampoline,
