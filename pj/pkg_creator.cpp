@@ -11,6 +11,11 @@
 
 bool AddPermissionForAppContainer(LPCWSTR Filename);
 
+template<typename T>
+static T &at(void *base, uint32_t offset) {
+  return *reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(base) + offset);
+}
+
 void PackageCreator::FillShellCode(bool is_64bit, uint16_t ordinal) {
   static uint8_t CODE64[] = {
     0x53, 0x48, 0x83, 0xec, 0x20, 0x65, 0x48, 0x8b, 0x04, 0x25, 0x30, 0x00, 0x00, 0x00, 0x48, 0x89,

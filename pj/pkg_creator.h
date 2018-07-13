@@ -5,11 +5,6 @@ class PackageCreator final {
     Package *package_;
   };
 
-  template<typename T>
-  static T &at(void *base, uint32_t offset) {
-    return *reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(base) + offset);
-  }
-
   void FillShellCode(bool is_64bit, uint16_t ordinal);
 
 public:

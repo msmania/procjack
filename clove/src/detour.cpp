@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <detours.h>
 #include <vector>
 #include <memory>
 #include "../../common.h"
@@ -9,84 +8,13 @@
 void Log(LPCWSTR format, ...);
 std::pair<uint64_t, uint64_t> address_range(char *str);
 
-struct MeasurementPack {
-  uint64_t Couter_Total;
-  uint64_t Couter_Local;
-  void *MeasurementStart_Trampoline;
-  void *MeasurementStart_Detour;
-  void *MeasurementEnd_Trampoline;
-  void *MeasurementEnd_Detour;
-};
-
-CodeTemplate Template_MeasurementStart({
-  // Counter_Local:        +0c
-  // InjectionPoint_Start: +1a
-  0x52, 0x0f, 0x31, 0x48, 0xc1, 0xe2, 0x20, 0x48,
-  0x09, 0xd0, 0x48, 0xba, 0x00, 0xa0, 0xa2, 0x4e,
-  0xfe, 0x7f, 0x00, 0x00, 0x48, 0x89, 0x02, 0x5a,
-  0x48, 0xb8, 0x50, 0xb1, 0xa2, 0x4e, 0xfe, 0x7f,
-  0x00, 0x00, 0xff, 0x20,
-});
-
-CodeTemplate Template_MeasurementEnd({
-  // Counter_Local:      +0c
-  // Counter_Total:      +19
-  // InjectionPoint_End: +29
-  0x52, 0x0f, 0x31, 0x48, 0xc1, 0xe2, 0x20, 0x48,
-  0x09, 0xd0, 0x48, 0xba, 0x00, 0xa0, 0xa2, 0x4e,
-  0xfe, 0x7f, 0x00, 0x00, 0x48, 0x2b, 0x02, 0x48,
-  0xba, 0x48, 0xb1, 0xa2, 0x4e, 0xfe, 0x7f, 0x00,
-  0x00, 0xf0, 0x48, 0x0f, 0xc1, 0x02, 0x5a, 0x48,
-  0xb8, 0x58, 0xb1, 0xa2, 0x4e, 0xfe, 0x7f, 0x00,
-  0x00, 0xff, 0x20,
-});
+std::unique_ptr<CodePack>
+  Create_MeasurementPack(void *Target_MeasurementStart,
+                         void *Target_MeasurementEnd);
 
 const WCHAR event_instance_control[] = L"clove_event_instance_control";
-ExecutablePage exec_page(4096);
-std::vector<std::unique_ptr<MeasurementPack>> packs;
-
-bool DetourAttachHelper(const CodeTemplate &code,
-                        void *&detour_target,
-                        void *&detour_destination) {
-  detour_destination = exec_page.Push(code);
-  if (!detour_target) {
-    Log(L"No enough space to store the code!");
-    return false;
-  }
-
-  PDETOUR_TRAMPOLINE trampoline;
-  PVOID target, detour;
-  LONG status = DetourAttachEx(&detour_target,
-                               detour_destination,
-                               &trampoline,
-                               &target,
-                               &detour);
-  if (status == NO_ERROR) {
-    Log(L"Detouring: %p --> %p (trampoline:%p)\n",
-        target,
-        detour,
-        trampoline);
-  }
-  else {
-    Log(L"DetourAttach(%p, %p) failed with %08x\n",
-        &detour_target,
-        detour_destination,
-        status);
-  }
-  return status == NO_ERROR;
-}
-
-bool DetourDetachHelper(void *&detour_target,
-                        void *&detour_destination) {
-  LONG status = DetourDetach(&detour_target, detour_destination);
-  if (status != NO_ERROR) {
-    Log(L"DetourDetach(%p, %p) failed with %08x\n",
-        &detour_target,
-        detour_destination,
-        status);
-  }
-  return status == NO_ERROR;
-}
+ExecutablePage g_exec_page(4096);
+std::vector<std::unique_ptr<CodePack>> g_packs;
 
 void StartShim(Package *package) {
   static uint32_t s_RunningInstance = 0;
@@ -104,65 +32,22 @@ void StartShim(Package *package) {
     return;
   }
 
-  auto new_pack = std::make_unique<MeasurementPack>();
+  auto new_pack = Create_MeasurementPack(
+    reinterpret_cast<void*>(range.first),
+    reinterpret_cast<void*>(range.second));
 
-  // Save the target addresses in the pack
-  new_pack->MeasurementStart_Trampoline = reinterpret_cast<void*>(range.first);
-  new_pack->MeasurementEnd_Trampoline = reinterpret_cast<void*>(range.second);
-
-  // embed the parameters in the code template
-  Template_MeasurementStart.Put<void*>(0x0c, &new_pack->Couter_Local);
-  Template_MeasurementStart.Put<void*>(0x1a, &new_pack->MeasurementStart_Trampoline);
-  Template_MeasurementEnd.Put<void*>(0x0c, &new_pack->Couter_Local);
-  Template_MeasurementEnd.Put<void*>(0x19, &new_pack->Couter_Total);
-  Template_MeasurementEnd.Put<void*>(0x29, &new_pack->MeasurementEnd_Trampoline);
-
-  LONG status = DetourTransactionBegin();
-  if (status != NO_ERROR) {
-    Log(L"DetourTransactionBegin failed with %08x\n", status);
-    goto exit;
-  }
-  if (DetourAttachHelper(Template_MeasurementStart,
-                         new_pack->MeasurementStart_Trampoline,
-                         new_pack->MeasurementStart_Detour)
-      && DetourAttachHelper(Template_MeasurementEnd,
-                            new_pack->MeasurementEnd_Trampoline,
-                            new_pack->MeasurementEnd_Detour)) {
-    packs.emplace_back(std::move(new_pack));
-    status = DetourTransactionCommit();
-    if (status != NO_ERROR) {
-      Log(L"DetourTransactionCommit failed with %08x\n", status);
-      goto exit;
-    }
-  }
-  else {
-    DetourTransactionAbort();
-    Log(L"Aborted transaction.\n");
-    goto exit;
+  if (new_pack->ActivateDetour(g_exec_page)) {
+    g_packs.emplace_back(std::move(new_pack));
   }
 
   // Keep the injected DLL loaded while shim is active.
   Log(L"[%04x] Detour transaction is done.  Waiting..\n", GetCurrentThreadId());
   instance_control.Wait(INFINITE);
 
-  status = DetourTransactionBegin();
-  if (status != NO_ERROR) {
-    Log(L"DetourTransactionBegin failed with %08x\n", status);
-    goto exit;
-  }
-  for (auto &pack : packs) {
-    DetourDetachHelper(pack->MeasurementStart_Trampoline,
-                       pack->MeasurementStart_Detour);
-    DetourDetachHelper(pack->MeasurementEnd_Trampoline,
-                       pack->MeasurementEnd_Detour);
-  }
-  status = DetourTransactionCommit();
-  if (status != NO_ERROR) {
-    Log(L"DetourTransactionCommit failed with %08x\n", status);
-    goto exit;
+  for (auto &pack : g_packs) {
+    pack->DeactivateDetour(g_exec_page);
   }
 
-exit:
   InterlockedDecrement(&s_RunningInstance);
   Log(L"Goodbye!\n");
 }
@@ -178,11 +63,7 @@ void EndShim(Package*) {
 }
 
 void ListShims(Package*) {
-  for (int i = 0; i < packs.size(); ++i) {
-    Log(L"[%02d] %llu MeasureStart: %p MeasureEnd: %p\n",
-        i,
-        packs[i]->Couter_Total,
-        packs[i]->MeasurementStart_Detour,
-        packs[i]->MeasurementEnd_Detour);
+  for (auto &pack : g_packs) {
+    pack->Print();
   }
 }

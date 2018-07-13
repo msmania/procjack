@@ -1,18 +1,47 @@
-class CodeTemplate {
-  std::vector<uint8_t> blob_;
+class ExecutablePage;
 
-public:
-  template<typename T>
-  void Put(uint32_t offset, T value) {
-    if (offset + sizeof(T) < blob_.size()) {
-      uint8_t *p = blob_.data() + offset;
-      *reinterpret_cast<T*>(p) = value;
+class CodePack {
+  template<bool (CodePack::*F)(ExecutablePage&)>
+  bool DetourTransaction(ExecutablePage &exec_page) {
+    LONG status = DetourTransactionBegin();
+    if (status != NO_ERROR) {
+      Log(L"DetourTransactionBegin failed with %08x\n", status);
+      return status;
     }
+
+    if ((this->*F)(exec_page)) {
+      status = DetourTransactionCommit();
+      if (status != NO_ERROR) {
+        Log(L"DetourTransactionCommit failed with %08x\n", status);
+      }
+    }
+    else {
+      status = DetourTransactionAbort();
+      if (status == NO_ERROR) {
+        Log(L"Aborted transaction.\n");
+      }
+      else {
+        Log(L"DetourTransactionAbort failed with %08x\n", status);
+      }
+    }
+    return status == NO_ERROR;
   }
 
-  CodeTemplate(std::vector<uint8_t> &&blob);
-  size_t Size() const;
-  void CopyTo(uint8_t *destination) const;
+  virtual bool ActivateDetourInternal(ExecutablePage &exec_page) = 0;
+  virtual bool DeactivateDetourInternal(ExecutablePage &exec_page) = 0;
+
+protected:
+  static bool DetourAttachHelper(void *&detour_target,
+                                 void *detour_destination);
+  static bool DetourDetachHelper(void *&detour_target,
+                                 void *detour_destination);
+
+public:
+  virtual size_t Size() const = 0;
+  virtual void Print() const = 0;
+  virtual void CopyTo(uint8_t *destination) const = 0;
+  bool ActivateDetour(ExecutablePage &exec_page);
+  bool DeactivateDetour(ExecutablePage &exec_page);
 };
 
 class ExecutablePage final {
@@ -23,5 +52,5 @@ class ExecutablePage final {
 public:
   ExecutablePage(uint32_t capacity);
   ~ExecutablePage();
-  void *Push(const CodeTemplate &chunk);
+  void *Push(const CodePack &pack);
 };

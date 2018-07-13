@@ -9,8 +9,6 @@ void Log(LPCWSTR format, ...) {
   OutputDebugString(linebuf);
 }
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL,
-                    DWORD fdwReason,
-                    LPVOID) {
+BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID) {
   return TRUE;
 }

@@ -1,18 +1,53 @@
 #include <windows.h>
+#include <detours.h>
 #include <vector>
 #include <memory>
 #include "page.h"
 
-CodeTemplate::CodeTemplate(std::vector<uint8_t> &&blob)
-  : blob_(blob)
-{}
+void Log(LPCWSTR format, ...);
 
-size_t CodeTemplate::Size() const {
-  return blob_.size();
+bool CodePack::DetourAttachHelper(void *&detour_target,
+                                  void *detour_destination) {
+  PDETOUR_TRAMPOLINE trampoline;
+  PVOID target, detour;
+  LONG status = DetourAttachEx(&detour_target,
+                               detour_destination,
+                               &trampoline,
+                               &target,
+                               &detour);
+  if (status == NO_ERROR) {
+    Log(L"Detouring: %p --> %p (trampoline:%p)\n",
+        target,
+        detour,
+        trampoline);
+  }
+  else {
+    Log(L"DetourAttach(%p, %p) failed with %08x\n",
+        &detour_target,
+        detour_destination,
+        status);
+  }
+  return status == NO_ERROR;
 }
 
-void CodeTemplate::CopyTo(uint8_t *destination) const {
-  std::memcpy(destination, blob_.data(), blob_.size());
+bool CodePack::DetourDetachHelper(void *&detour_target,
+                                  void *detour_destination) {
+  LONG status = DetourDetach(&detour_target, detour_destination);
+  if (status != NO_ERROR) {
+    Log(L"DetourDetach(%p, %p) failed with %08x\n",
+        &detour_target,
+        detour_destination,
+        status);
+  }
+  return status == NO_ERROR;
+}
+
+bool CodePack::ActivateDetour(ExecutablePage &exec_page) {
+  return DetourTransaction<&CodePack::ActivateDetourInternal>(exec_page);
+}
+
+bool CodePack::DeactivateDetour(ExecutablePage &exec_page) {
+  return DetourTransaction<&CodePack::DeactivateDetourInternal>(exec_page);
 }
 
 ExecutablePage::ExecutablePage(uint32_t capacity)
@@ -31,15 +66,18 @@ ExecutablePage::~ExecutablePage() {
   }
 }
 
-void *ExecutablePage::Push(const CodeTemplate &chunk) {
+void *ExecutablePage::Push(const CodePack &pack) {
   void *ret = nullptr;
   if (base_
-      && empty_head_ + chunk.Size() + 1 < base_ + capacity_) {
+      && empty_head_ + pack.Size() + 1 < base_ + capacity_) {
     ret = empty_head_;
-    chunk.CopyTo(empty_head_);
-    empty_head_ += chunk.Size();
+    pack.CopyTo(empty_head_);
+    empty_head_ += pack.Size();
     *empty_head_ = 0xCC;
     ++empty_head_;
+  }
+  else {
+    Log(L"No enough space in ExecutablePage\n");
   }
   return ret;
 }

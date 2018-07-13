@@ -17,6 +17,7 @@ OBJS=\
 #	$(OBJDIR)\detour64.obj\
 !ENDIF
 	$(OBJDIR)\event.obj\
+	$(OBJDIR)\measurement.obj\
 	$(OBJDIR)\page.obj\
 	$(OBJDIR)\utils.obj\
 
