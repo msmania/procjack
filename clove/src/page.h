@@ -37,6 +37,7 @@ protected:
                                  void *detour_destination);
 
 public:
+  virtual ~CodePack();
   virtual size_t Size() const = 0;
   virtual void Print() const = 0;
   virtual void CopyTo(uint8_t *destination) const = 0;

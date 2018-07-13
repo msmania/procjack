@@ -1,14 +1,13 @@
 BITS 64
 
-extern Counter_Total
-extern InjectionPoint_Start
-extern InjectionPoint_End
-
-global Clove_Start
-global Clove_End
+;global Clove_Start
+;global Clove_End
 
 section .data
-Counter_Local: dq 0
+Counter_Local dq 0
+Counter_Total dq 0
+InjectionPoint_Start dq 0
+InjectionPoint_End dq 0
 
 section .text
 

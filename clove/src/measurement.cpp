@@ -18,7 +18,7 @@ struct MeasurementPack final : public CodePack {
     0x00, 0x00, 0xff, 0x20,
   };
   static constexpr uint32_t offset_MeasurementStart_Counter_Local = 0x0c;
-  static constexpr uint32_t offset_MeasurementStart_InjectionPoint_Start = 0x1a;
+  static constexpr uint32_t offset_MeasurementStart_FinalJump = 0x1a;
   static constexpr uint8_t Template_MeasurementEnd[] = {
     0x52, 0x0f, 0x31, 0x48, 0xc1, 0xe2, 0x20, 0x48,
     0x09, 0xd0, 0x48, 0xba, 0x00, 0xa0, 0xa2, 0x4e,
@@ -30,22 +30,26 @@ struct MeasurementPack final : public CodePack {
   };
   static constexpr uint32_t offset_MeasurementEnd_Counter_Local = 0x0c;
   static constexpr uint32_t offset_MeasurementEnd_Counter_Total = 0x19;
-  static constexpr uint32_t offset_MeasurementEnd_InjectionPoint_End = 0x29;
+  static constexpr uint32_t offset_MeasurementEnd_FinalJump = 0x29;
 
   uint64_t Couter_Total;
   uint64_t Couter_Local;
+  const void *MeasurementStart_Target;
   void *MeasurementStart_Trampoline;
   void *MeasurementStart_Detour;
+  const void *MeasurementEnd_Target;
   void *MeasurementEnd_Trampoline;
   void *MeasurementEnd_Detour;
 
-  MeasurementPack(void *Target_MeasurementStart,
-                  void *Target_MeasurementEnd)
+  MeasurementPack(void *MeasurementStart,
+                  void *MeasurementEnd)
     : Couter_Total(0),
       Couter_Local(0),
-      MeasurementStart_Trampoline(Target_MeasurementStart),
+      MeasurementStart_Target(MeasurementStart),
+      MeasurementStart_Trampoline(MeasurementStart),
       MeasurementStart_Detour(nullptr),
-      MeasurementEnd_Trampoline(Target_MeasurementEnd),
+      MeasurementEnd_Target(MeasurementEnd),
+      MeasurementEnd_Trampoline(MeasurementEnd),
       MeasurementEnd_Detour(nullptr)
   {}
 
@@ -74,18 +78,19 @@ struct MeasurementPack final : public CodePack {
   }
 
   void Print() const {
-    Log(L"%llu MeasureStart: %p MeasureEnd: %p\n",
-        Couter_Total,
-        MeasurementStart_Detour,
-        MeasurementEnd_Detour);
+    Log(L"[Measurement %p-%p] %llu\n",
+        MeasurementStart_Target,
+        MeasurementEnd_Target,
+        Couter_Total);
   }
 
   void CopyTo(uint8_t *destination) const {
     std::memcpy(destination,
                 Template_MeasurementStart,
                 sizeof(Template_MeasurementStart));
-    *at<const void*>(destination, offset_MeasurementStart_Counter_Local) = &Couter_Local;
-    *at<const void*>(destination, offset_MeasurementStart_InjectionPoint_Start)
+    *at<const void*>(destination, offset_MeasurementStart_Counter_Local)
+      = &Couter_Local;
+    *at<const void*>(destination, offset_MeasurementStart_FinalJump)
       = &MeasurementStart_Trampoline;
 
     *at<uint8_t>(destination, sizeof(Template_MeasurementStart)) = 0xCC;
@@ -94,16 +99,18 @@ struct MeasurementPack final : public CodePack {
     std::memcpy(destination,
                 Template_MeasurementEnd,
                 sizeof(Template_MeasurementEnd));
-    *at<const void*>(destination, offset_MeasurementEnd_Counter_Local) = &Couter_Local;
-    *at<const void*>(destination, offset_MeasurementEnd_Counter_Total) = &Couter_Total;
-    *at<const void*>(destination, offset_MeasurementEnd_InjectionPoint_End)
+    *at<const void*>(destination, offset_MeasurementEnd_Counter_Local)
+      = &Couter_Local;
+    *at<const void*>(destination, offset_MeasurementEnd_Counter_Total)
+      = &Couter_Total;
+    *at<const void*>(destination, offset_MeasurementEnd_FinalJump)
       = &MeasurementEnd_Trampoline;
   }
 };
 
 std::unique_ptr<CodePack>
-  Create_MeasurementPack(void *Target_MeasurementStart,
-                         void *Target_MeasurementEnd) {
-  return std::make_unique<MeasurementPack>(Target_MeasurementStart,
-                                           Target_MeasurementEnd);
+  Create_MeasurementPack(void *MeasurementStart,
+                         void *MeasurementEnd) {
+  return std::make_unique<MeasurementPack>(MeasurementStart,
+                                           MeasurementEnd);
 }

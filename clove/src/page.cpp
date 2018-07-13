@@ -6,6 +6,9 @@
 
 void Log(LPCWSTR format, ...);
 
+CodePack::~CodePack()
+{}
+
 bool CodePack::DetourAttachHelper(void *&detour_target,
                                   void *detour_destination) {
   PDETOUR_TRAMPOLINE trampoline;

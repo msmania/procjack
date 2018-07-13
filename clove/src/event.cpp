@@ -1,12 +1,8 @@
 #include <windows.h>
 #include "event.h"
 
-Event::Event(BOOL manualReset, BOOL true_to_set_signaled_initially, LPCWSTR name)
-  : h_(CreateEvent(/*lpEventAttributes*/nullptr,
-                   /*bManualReset*/manualReset,
-                   /*bInitialState*/true_to_set_signaled_initially,
-                   /*lpName*/name)),
-    was_newly_created_(h_ && GetLastError() != ERROR_ALREADY_EXISTS)
+Event::Event()
+  : h_(nullptr)
 {}
 
 Event::~Event() {
@@ -15,8 +11,21 @@ Event::~Event() {
   }
 }
 
-bool Event::WasNewlyCreated() const {
-  return was_newly_created_;
+bool Event::CreateIfNotCreatedYet(BOOL manualReset,
+                                  BOOL true_to_set_signaled_initially,
+                                  LPCWSTR name) {
+  auto h_new = CreateEvent(/*lpEventAttributes*/nullptr,
+                           /*bManualReset*/manualReset,
+                           /*bInitialState*/true_to_set_signaled_initially,
+                           /*lpName*/name);
+  if (InterlockedCompareExchangePointer(&h_, h_new, nullptr)) {
+    // h_ already has a value.  Keep using the current, discarding the new one.
+    CloseHandle(h_new);
+    return false;
+  }
+
+  // h_ is now h_new.  Replacement is done.
+  return true;
 }
 
 BOOL Event::Signal() const {

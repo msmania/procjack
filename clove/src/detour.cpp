@@ -7,59 +7,52 @@
 
 void Log(LPCWSTR format, ...);
 std::pair<uint64_t, uint64_t> address_range(char *str);
-
 std::unique_ptr<CodePack>
-  Create_MeasurementPack(void *Target_MeasurementStart,
-                         void *Target_MeasurementEnd);
+  Create_MeasurementPack(void *MeasurementStart,
+                         void *MeasurementEnd);
 
-const WCHAR event_instance_control[] = L"clove_event_instance_control";
 ExecutablePage g_exec_page(4096);
 std::vector<std::unique_ptr<CodePack>> g_packs;
+SRWLOCK g_shim_lock = SRWLOCK_INIT;
+Event g_instance_control;
 
 void StartShim(Package *package) {
-  static uint32_t s_RunningInstance = 0;
-  auto incremented = InterlockedIncrement(&s_RunningInstance);
-  // Not allow StartShim to be run in more than one thread
-  if (incremented > 1) return;
-
-  Event instance_control(/*manualReset*/FALSE,
-                         /*true_to_set_signaled_initially*/FALSE,
-                         event_instance_control);
-
   auto range = address_range(package->args);
   if (range.first == 0) {
     Log(L"Invalid range specified!\n");
     return;
   }
 
-  auto new_pack = Create_MeasurementPack(
-    reinterpret_cast<void*>(range.first),
-    reinterpret_cast<void*>(range.second));
-
-  if (new_pack->ActivateDetour(g_exec_page)) {
-    g_packs.emplace_back(std::move(new_pack));
+  if (auto new_pack = Create_MeasurementPack(
+        reinterpret_cast<void*>(range.first),
+        reinterpret_cast<void*>(range.second))) {
+    AcquireSRWLockExclusive(&g_shim_lock);
+    if (new_pack->ActivateDetour(g_exec_page)) {
+      g_packs.emplace_back(std::move(new_pack));
+    }
+    ReleaseSRWLockExclusive(&g_shim_lock);
   }
 
-  // Keep the injected DLL loaded while shim is active.
-  Log(L"[%04x] Detour transaction is done.  Waiting..\n", GetCurrentThreadId());
-  instance_control.Wait(INFINITE);
+  // A thread who created the event is responsible to disarm Detour.
+  // Other threads run through and exit this function.
+  if (g_instance_control.CreateIfNotCreatedYet(
+        /*manualReset*/FALSE,
+        /*true_to_set_signaled_initially*/FALSE,
+        /*name*/nullptr)) {
+    // Keep the injected DLL loaded while shim is active.
+    Log(L"[%04x] Waiting..\n", GetCurrentThreadId());
+    g_instance_control.Wait(INFINITE);
 
-  for (auto &pack : g_packs) {
-    pack->DeactivateDetour(g_exec_page);
+    for (auto &pack : g_packs) {
+      pack->DeactivateDetour(g_exec_page);
+    }
+    Log(L"Cleanup is done.  Goodbye!\n");
   }
-
-  InterlockedDecrement(&s_RunningInstance);
-  Log(L"Goodbye!\n");
 }
 
 void EndShim(Package*) {
-  Event instance_control(/*manualReset*/FALSE,
-                         /*true_to_set_signaled_initially*/FALSE,
-                         event_instance_control);
-  if (!instance_control.WasNewlyCreated()) {
-    Log(L"Sending a signal to terminate shimming..\n");
-    instance_control.Signal();
-  }
+  Log(L"Sending a signal to terminate shimming..\n");
+  g_instance_control.Signal();
 }
 
 void ListShims(Package*) {
