@@ -53,48 +53,47 @@ bool CodePack::DeactivateDetour(ExecutablePages &exec_pages) {
   return DetourTransaction<&CodePack::DeactivateDetourInternal>(exec_pages);
 }
 
-struct ExecutablePage final {
-  ExecutablePage *next_;
-  uint32_t capacity_;
-  uint8_t *base_;
-  uint8_t *empty_head_;
+ExecutablePages::ExecutablePage::ExecutablePage(uint32_t capacity, void *buffer)
+  : next_(nullptr),
+    capacity_(capacity),
+    base_(reinterpret_cast<uint8_t*>(buffer)),
+    empty_head_(base_)
+{}
 
-  ExecutablePage(uint32_t capacity, void *buffer)
-    : next_(nullptr),
-      capacity_(capacity),
-      base_(reinterpret_cast<uint8_t*>(buffer)),
-      empty_head_(base_)
-  {}
+ExecutablePages::ExecutablePage::~ExecutablePage() {
+  if (base_)
+    VirtualFree(base_, 0, MEM_RELEASE);
 
-  ~ExecutablePage() {
-    if (base_) {
-      VirtualFree(base_, 0, MEM_RELEASE);
-    }
+  for (ExecutablePage *p = next_; p;) {
+    auto next = p->next_;
+    p->next_ = nullptr;
+    delete p;
+    p = next;
   }
+}
 
-  void *Push(const CodePack &pack) {
-    void *ret = nullptr;
-    if (base_
-        && empty_head_ + pack.Size() + 1 < base_ + capacity_) {
-      ret = empty_head_;
-      pack.CopyTo(empty_head_);
-      empty_head_ += pack.Size();
-      *empty_head_ = 0xCC;
-      ++empty_head_;
-    }
-    else {
-      Log(L"No enough space in ExecutablePage\n");
-    }
-    return ret;
+void *ExecutablePages::ExecutablePage::Push(const CodePack &pack) {
+  void *ret = nullptr;
+  if (base_
+      && empty_head_ + pack.Size() + 1 < base_ + capacity_) {
+    ret = empty_head_;
+    pack.CopyTo(empty_head_);
+    empty_head_ += pack.Size();
+    *empty_head_ = 0xCC;
+    ++empty_head_;
   }
+  else {
+    Log(L"No enough space in ExecutablePage\n");
+  }
+  return ret;
+}
 
-  const void *TryPush(const CodePack &pack) const {
-    return (base_
-            && empty_head_ + pack.Size() + 1 < base_ + capacity_)
-           ? empty_head_
-           : nullptr;
-  }
-};
+const void *ExecutablePages::ExecutablePage::TryPush(const CodePack &pack) const {
+  return (base_
+          && empty_head_ + pack.Size() + 1 < base_ + capacity_)
+         ? empty_head_
+         : nullptr;
+}
 
 bool IsJumpable(const void *from, const void *to) {
   int64_t a = reinterpret_cast<int64_t>(from);
@@ -103,8 +102,7 @@ bool IsJumpable(const void *from, const void *to) {
 }
 
 void *ExecutablePages::Push(const CodePack &pack, const void *source) {
-  ExecutablePage *page;
-  for (page = active_head_; page; page = page->next_) {
+  for (auto page = active_head_.get(); page; page = page->next_) {
     auto candidate = page->TryPush(pack);
     if (candidate && IsJumpable(candidate, source)) {
       return page->Push(pack);
@@ -119,8 +117,8 @@ void *ExecutablePages::Push(const CodePack &pack, const void *source) {
                                                          new_region_address)) {
       auto candidate = new_page->TryPush(pack);
       if (candidate && IsJumpable(candidate, source)) {
-        new_page->next_ = active_head_;
-        active_head_ = new_page.release();
+        new_page->next_ = active_head_.release();
+        active_head_ = std::move(new_page);
         return active_head_->Push(pack);
       }
     }

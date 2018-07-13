@@ -50,12 +50,20 @@ public:
   bool DeactivateDetour(ExecutablePages &exec_pages);
 };
 
-struct ExecutablePage;
-
 class ExecutablePages final {
-  ExecutablePage *active_head_;
+  struct ExecutablePage final {
+    ExecutablePage *next_;
+    uint32_t capacity_;
+    uint8_t *base_;
+    uint8_t *empty_head_;
+    ExecutablePage(uint32_t capacity, void *buffer);
+    ~ExecutablePage();
+    void *Push(const CodePack &pack);
+    const void *TryPush(const CodePack &pack) const;
+  };
+
+  std::unique_ptr<ExecutablePage> active_head_;
 
 public:
   void *Push(const CodePack &pack, const void *source);
-
 };
