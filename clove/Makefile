@@ -19,6 +19,7 @@ OBJS=\
 	$(OBJDIR)\event.obj\
 	$(OBJDIR)\measurement.obj\
 	$(OBJDIR)\page.obj\
+	$(OBJDIR)\pack.obj\
 	$(OBJDIR)\utils.obj\
 
 LIBS=\

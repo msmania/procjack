@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <memory>
+#include "pack.h"
 #include "page.h"
 
 void Log(LPCWSTR format, ...);

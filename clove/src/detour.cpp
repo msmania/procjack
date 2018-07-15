@@ -3,6 +3,7 @@
 #include <memory>
 #include "../../common.h"
 #include "event.h"
+#include "pack.h"
 #include "page.h"
 
 void Log(LPCWSTR format, ...);
