@@ -3,6 +3,12 @@ static T *at(void *base, int32_t offset) {
   return reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(base) + offset);
 }
 
+template<typename T>
+static const T *at(const void *base, int32_t offset) {
+  return reinterpret_cast<const T*>(
+    reinterpret_cast<const uint8_t*>(base) + offset);
+}
+
 class ExecutablePages;
 
 class CodePack {
@@ -40,6 +46,8 @@ protected:
                                  void *detour_destination);
   static bool DetourDetachHelper(void *&detour_target,
                                  void *detour_destination);
+  static const void *PutImmediateNearJump(void *jump_from,
+                                          const void *jump_to);
 
 public:
   virtual ~CodePack();

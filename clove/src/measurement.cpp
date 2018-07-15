@@ -9,23 +9,21 @@ struct MeasurementPack final : public CodePack {
     0x52, 0x0f, 0x31, 0x48, 0xc1, 0xe2, 0x20, 0x48,
     0x09, 0xd0, 0x48, 0xba, 0x00, 0xa0, 0xa2, 0x4e,
     0xfe, 0x7f, 0x00, 0x00, 0x48, 0x89, 0x02, 0x5a,
-    0x48, 0xb8, 0x50, 0xb1, 0xa2, 0x4e, 0xfe, 0x7f,
-    0x00, 0x00, 0xff, 0x20,
+    0xcc, 0xcc, 0xcc, 0xcc, 0xcc, // placeholder for jmp rel32
   };
   static constexpr uint32_t offset_MeasurementStart_Counter_Local = 0x0c;
-  static constexpr uint32_t offset_MeasurementStart_FinalJump = 0x1a;
+  static constexpr uint32_t offset_MeasurementStart_FinalJump = 0x18;
   static constexpr uint8_t Template_MeasurementEnd[] = {
     0x52, 0x0f, 0x31, 0x48, 0xc1, 0xe2, 0x20, 0x48,
     0x09, 0xd0, 0x48, 0xba, 0x00, 0xa0, 0xa2, 0x4e,
     0xfe, 0x7f, 0x00, 0x00, 0x48, 0x2b, 0x02, 0x48,
     0xba, 0x48, 0xb1, 0xa2, 0x4e, 0xfe, 0x7f, 0x00,
-    0x00, 0xf0, 0x48, 0x0f, 0xc1, 0x02, 0x5a, 0x48,
-    0xb8, 0x58, 0xb1, 0xa2, 0x4e, 0xfe, 0x7f, 0x00,
-    0x00, 0xff, 0x20,
+    0x00, 0xf0, 0x48, 0x0f, 0xc1, 0x02, 0x5a,
+    0xcc, 0xcc, 0xcc, 0xcc, 0xcc,  // placeholder for jmp rel32
   };
   static constexpr uint32_t offset_MeasurementEnd_Counter_Local = 0x0c;
   static constexpr uint32_t offset_MeasurementEnd_Counter_Total = 0x19;
-  static constexpr uint32_t offset_MeasurementEnd_FinalJump = 0x29;
+  static constexpr uint32_t offset_MeasurementEnd_FinalJump = 0x27;
 
   uint64_t Couter_Total;
   uint64_t Couter_Local;
@@ -53,10 +51,19 @@ struct MeasurementPack final : public CodePack {
     MeasurementEnd_Detour = at<void>(MeasurementStart_Detour,
                                      sizeof(Template_MeasurementStart)
                                      + 1);
-    return DetourAttachHelper(MeasurementStart_Trampoline,
-                              MeasurementStart_Detour)
-           && DetourAttachHelper(MeasurementEnd_Trampoline,
-                                 MeasurementEnd_Detour);
+    bool ret = DetourAttachHelper(MeasurementStart_Trampoline,
+                                  MeasurementStart_Detour)
+               && DetourAttachHelper(MeasurementEnd_Trampoline,
+                                     MeasurementEnd_Detour);
+    if (ret) {
+      ret = PutImmediateNearJump(at<void>(MeasurementStart_Detour,
+                                          offset_MeasurementStart_FinalJump),
+                                 MeasurementStart_Trampoline)
+            && PutImmediateNearJump(at<void>(MeasurementEnd_Detour,
+                                             offset_MeasurementEnd_FinalJump),
+                                    MeasurementEnd_Trampoline);
+    }
+    return ret;
   }
 
   bool DeactivateDetourInternal(ExecutablePages&) {
@@ -85,8 +92,6 @@ struct MeasurementPack final : public CodePack {
                 sizeof(Template_MeasurementStart));
     *at<const void*>(destination, offset_MeasurementStart_Counter_Local)
       = &Couter_Local;
-    *at<const void*>(destination, offset_MeasurementStart_FinalJump)
-      = &MeasurementStart_Trampoline;
 
     *at<uint8_t>(destination, sizeof(Template_MeasurementStart)) = 0xCC;
 
@@ -98,8 +103,6 @@ struct MeasurementPack final : public CodePack {
       = &Couter_Local;
     *at<const void*>(destination, offset_MeasurementEnd_Counter_Total)
       = &Couter_Total;
-    *at<const void*>(destination, offset_MeasurementEnd_FinalJump)
-      = &MeasurementEnd_Trampoline;
   }
 };
 

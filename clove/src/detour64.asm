@@ -1,7 +1,7 @@
 BITS 64
 
-;global Clove_Start
-;global Clove_End
+global Clove_Start
+global Clove_End
 
 section .data
 Counter_Local dq 0
@@ -20,6 +20,7 @@ Clove_Start:
   mov [rdx], rax
   pop rdx
 
+  jmp $ + 0x12345678
   mov rax, InjectionPoint_Start
   jmp [rax]
 
@@ -34,5 +35,6 @@ Clove_End:
   lock xadd qword [rdx], rax
   pop rdx
 
+  jmp $ + 0x12345678
   mov rax, InjectionPoint_End
   jmp [rax]
