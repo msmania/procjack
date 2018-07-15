@@ -9,7 +9,9 @@ OUTDIR_NOARCH=..\bin
 OBJDIR=obj\$(ARCH)
 OBJDIR_NOARCH=obj
 SRCDIR=.
-DETOUR_DIR=G:\10_Git\Detours
+DETOUR_DIR=D:\git\detours
+GTEST_SRC_DIR=D:\git\googletest
+GTEST_BUILD_DIR=D:\git\googletest\build\$(ARCH)
 
 CC=cl
 LINKER=link

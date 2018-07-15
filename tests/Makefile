@@ -1,31 +1,41 @@
 !include ..\common.mak
 
-TARGET=pj.exe
+SRCDIR=src
+
+TARGET=t.exe
+
 OBJS=\
 	$(OBJDIR)\main.obj\
-	$(OBJDIR)\auth_utils.obj\
-	$(OBJDIR)\pkg_creator.obj\
-	$(OBJDIR)\utils.obj\
+	$(OBJDIR)\utils_test.obj\
+	..\clove\obj\$(ARCH)\page.obj\
+	..\clove\obj\$(ARCH)\utils.obj\
+	..\pj\obj\$(ARCH)\utils.obj\
 
 LIBS=\
-	advapi32.lib\
-	authz.lib\
+	gmock_main.lib\
+	detours.lib\
 
 CFLAGS=\
 	/nologo\
-	/Zi\
 	/c\
+	/Od\
+	/W4\
+	/Zi\
+	/EHsc\
+	/DUNICODE\
+	/D_CRT_SECURE_NO_WARNINGS\
 	/Fo"$(OBJDIR)\\"\
 	/Fd"$(OBJDIR)\\"\
-	/DUNICODE\
-	/O2\
-	/EHsc\
-	/W4\
+	/I"$(GTEST_SRC_DIR)\googletest\include"\
+	/I"$(GTEST_SRC_DIR)\googlemock\include"\
 
 LFLAGS=\
 	/NOLOGO\
 	/DEBUG\
 	/SUBSYSTEM:CONSOLE\
+	/LIBPATH:"$(GTEST_BUILD_DIR)\googlemock\Release"\
+	/LIBPATH:"$(GTEST_BUILD_DIR)\googlemock\gtest\Release"\
+	/LIBPATH:"$(DETOUR_DIR)\lib.$(PLATFORM)"\
 
 all: $(OUTDIR)\$(TARGET)
 

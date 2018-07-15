@@ -2,12 +2,6 @@
 
 SRCDIR=src
 
-CC=cl
-ASM=D:\nasm\latest\nasm.exe
-LINKER=link
-RM=del/q
-RD=rd/s/q
-
 TARGET=clove.dll
 DEF=$(SRCDIR)\clove.def
 OBJS=\

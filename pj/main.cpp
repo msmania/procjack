@@ -1,12 +1,14 @@
-#include <cstdint>
 #include <string>
 #include <windows.h>
-#include <stdio.h>
 #include "../common.h"
+#include "utils.h"
 #include "pkg_creator.h"
 
 #define LOGERROR wprintf
 #define LOGINFO LOGERROR
+
+std::string to_utf8(const wchar_t *utf16);
+std::string build_optional_args(int argc, wchar_t *argv[]);
 
 void Inject(DWORD RemoteProcessId,
             LPCWSTR FilenameToInject,
@@ -113,90 +115,6 @@ cleanup:
     VirtualFreeEx(TargetProcess, RemoteAddress, 0, MEM_RELEASE);
   }
   if (TargetProcess) CloseHandle(TargetProcess);
-}
-
-template<typename WideCharVersion>
-struct xtoi {
-  int operator()(const wchar_t *s) {
-    return _wtoi(s);
-  }
-};
-
-template<>
-struct xtoi<std::false_type> {
-  int operator()(const char *s) {
-    return atoi(s);
-  }
-};
-
-template<typename T>
-std::pair<std::basic_string<T>, int> split(const std::basic_string<T> &s,
-                                           T delim) {
-  std::pair<std::basic_string<T>, int> ret;
-  auto pos = s.find(delim);
-  if (pos != std::basic_string<T>::npos) {
-    ret.first = s.substr(0, pos);
-    // xtoi should be faster than stoi
-    ret.second = xtoi<std::is_same<wchar_t, T>::type>()(
-      s.c_str() + pos + 1);
-  }
-  else {
-    ret.first = s;
-    ret.second = -1;
-  }
-  return ret;
-}
-
-#ifdef GTEST
-template<typename T>
-void pair_checker(const T *input,
-                  const T *expected_first,
-                  int expected_second) {
-  auto pair = split<T>(input, static_cast<T>('?'));
-  EXPECT_EQ(pair.first, expected_first);
-  EXPECT_EQ(pair.second, expected_second);
-};
-
-TEST(string, split) {
-  pair_checker<wchar_t>(L"W:\\01.dll?101", L"W:\\01.dll", 101);
-  pair_checker<char>("D:\\01.dll?101", "D:\\01.dll", 101);
-  pair_checker<char>("D:\\02.dll?102?9", "D:\\02.dll", 102);
-  pair_checker<char>("D:\\03.dll?103q9", "D:\\03.dll", 103);
-  pair_checker<char>("D:\\04.dll??", "D:\\04.dll", 0);
-  pair_checker<char>("D:\\05.dll?abc", "D:\\05.dll", 0);
-  pair_checker<char>("D:\\06.dll", "D:\\06.dll", -1);
-}
-#endif
-
-std::string to_utf8(const wchar_t *utf16) {
-  auto required = WideCharToMultiByte(CP_UTF8,
-                                     /*dwFlags*/0,
-                                     utf16,
-                                     /*cchWideChar*/-1,
-                                     /*lpMultiByteStr*/nullptr,
-                                     0,
-                                     /*lpDefaultChar*/nullptr,
-                                     /*lpUsedDefaultChar*/nullptr);
-  char *utf8 = new char[required + 1];
-  WideCharToMultiByte(CP_UTF8,
-                      /*dwFlags*/0,
-                      utf16,
-                      /*cchWideChar*/-1,
-                      utf8,
-                      required,
-                      /*lpDefaultChar*/nullptr,
-                      /*lpUsedDefaultChar*/nullptr);
-  utf8[required] = 0;
-  return utf8;
-}
-
-std::string build_optional_args(int argc, wchar_t *argv[]) {
-  std::string s;
-  for (int i = 0; i < argc; ++i) {
-    s += to_utf8(argv[i]);
-    s += '\0';
-  }
-  return s;
 }
 
 int wmain(int argc, wchar_t *argv[]) {

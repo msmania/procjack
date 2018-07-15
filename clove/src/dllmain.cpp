@@ -6,6 +6,7 @@ void Log(LPCWSTR format, ...) {
   va_list v;
   va_start(v, format);
   StringCbVPrintf(linebuf, sizeof(linebuf), format, v);
+  va_end(v);
   OutputDebugString(linebuf);
 }
 
