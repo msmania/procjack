@@ -14,7 +14,7 @@ OBJS=\
 	$(OBJDIR)\dllmain.obj\
 	$(OBJDIR)\detour.obj\
 !IF "$(ARCH)"=="amd64"
-#	$(OBJDIR)\detour64.obj\
+	$(OBJDIR)\detour64.obj\
 !ENDIF
 	$(OBJDIR)\event.obj\
 	$(OBJDIR)\measurement.obj\

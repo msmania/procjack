@@ -12,6 +12,7 @@ InjectionPoint_End dq 0
 section .text
 
 Clove_Start:
+  push rax
   push rdx
   rdtsc
   shl rdx,20h
@@ -19,12 +20,14 @@ Clove_Start:
   mov rdx, Counter_Local
   mov [rdx], rax
   pop rdx
+  pop rax
 
   jmp $ + 0x12345678
   mov rax, InjectionPoint_Start
   jmp [rax]
 
 Clove_End:
+  push rax
   push rdx
   rdtsc
   shl rdx,20h
@@ -34,6 +37,7 @@ Clove_End:
   mov rdx, Counter_Total
   lock xadd qword [rdx], rax
   pop rdx
+  pop rax
 
   jmp $ + 0x12345678
   mov rax, InjectionPoint_End

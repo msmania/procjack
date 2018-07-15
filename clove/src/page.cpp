@@ -60,7 +60,7 @@ const void *CodePack::PutImmediateNearJump(void *jump_from,
                                            const void *jump_to) {
   const auto next_instruction = at<uint8_t>(jump_from, 5);
   const int64_t delta64 = at<const uint8_t>(jump_to, 0) - next_instruction;
-  if (delta64 >= 0x7fffffff || delta64 < 0xffffffff80000000i64) {
+  if (delta64 > 0x7fffffff || delta64 < 0xffffffff80000000i64) {
     Log(L"Cannot make a near jump.\n");
     return nullptr;
   }
@@ -91,20 +91,35 @@ ExecutablePages::ExecutablePage::~ExecutablePage() {
   }
 }
 
+ExecutablePages::Slot::Slot(Slot *next, uint8_t *start)
+  : next_(next), start_(start)
+{}
+
+ExecutablePages::Slot::~Slot() {
+  for (Slot *p = next_; p;) {
+    auto next = p->next_;
+    p->next_ = nullptr;
+    delete p;
+    p = next;
+  }
+}
+
 void *ExecutablePages::ExecutablePage::Push(const CodePack &pack) {
-  void *ret = nullptr;
+  uint8_t *previous_head = nullptr;
   if (base_
       && empty_head_ + pack.Size() + 1 < base_ + capacity_) {
-    ret = empty_head_;
+    previous_head = empty_head_;
     pack.CopyTo(empty_head_);
     empty_head_ += pack.Size();
     *empty_head_ = 0xCC;
     ++empty_head_;
+    active_slots_ = std::make_unique<Slot>(active_slots_.release(),
+                                           previous_head);
   }
   else {
     Log(L"No enough space in ExecutablePage\n");
   }
-  return ret;
+  return previous_head;
 }
 
 const void *ExecutablePages::ExecutablePage::TryPush(const CodePack &pack) const {
@@ -114,10 +129,21 @@ const void *ExecutablePages::ExecutablePage::TryPush(const CodePack &pack) const
          : nullptr;
 }
 
+bool ExecutablePages::ExecutablePage::Revert(const void *last_pushed) {
+  if (active_slots_
+      && active_slots_->start_ == last_pushed) {
+    empty_head_ = active_slots_->start_;
+    auto dismissed = std::move(active_slots_);
+    active_slots_.reset(std::move(dismissed->next_));
+    return true;
+  }
+  return false;
+}
+
 bool IsJumpable(const void *from, const void *to) {
   int64_t a = reinterpret_cast<int64_t>(from);
   int64_t b = reinterpret_cast<int64_t>(to);
-  return abs(a - b) < 0x7fffffff;
+  return abs(a - b) <= 0x7fffffff;
 }
 
 void *ExecutablePages::Push(const CodePack &pack, const void *source) {
@@ -144,4 +170,12 @@ void *ExecutablePages::Push(const CodePack &pack, const void *source) {
   }
   Log(L"Failed to allocate a region near %p\n", source);
   return nullptr;
+}
+
+bool ExecutablePages::Revert(const void *last_pushed) {
+  for (auto page = active_head_.get(); page; page = page->next_) {
+    if (page->Revert(last_pushed))
+      return true;
+  }
+  return false;
 }
