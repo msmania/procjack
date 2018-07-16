@@ -11,14 +11,33 @@ The supported architecture of a target process is Native x86/x64 and WoW64.  No 
 
 ## How to build
 
+1. Install Visual Studio Community<br />https://www.visualstudio.com/downloads/
+
+2. Download The Netwide Assembler<br />http://www.nasm.us/
+
+3. Clone and build Google Test<br />https://github.com/google/googletest
+
+4. Clone and build my private branch of Microsoft Detours<br />https://github.com/msmania/detours/tree/publish-alloc_trampoline
+
+5. Update the following labels in `common.mak`
+
+```
+DETOUR_DIR=<your local repo of Microsoft Detours repository>
+GTEST_SRC_DIR=<your local repo of Google Test>
+GTEST_BUILD_DIR=<your CMake build directory of Google Test>
+NASM=<the path to nasm.exe>
+```
+
+6. Build
+
 Open "Native Tools Command Prompt" of Visual Studio and run `NMAKE` under the root of this repository.
 
 The following binaries will be generated under bin/[x86|amd64]:
 
 - pj.exe: Injector program
-- spy.dll: Sample DLL to inject
+- spy.dll: Sample injectee DLL
 
-Other binaries such as expeb.exe or expeb[32|64].bin are for development purpose only.
+Other binaries such as expeb.exe are for development purpose only.
 
 ## How to play
 

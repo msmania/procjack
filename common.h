@@ -43,7 +43,7 @@ constexpr uint32_t SHELLCODE_CAPACITY = 2048;
 
 // HybridPointer makes sure a pointer consumes 64bit on 32bit platform, so that
 // the offset to the `args` is not affected by compiler target platform.  This
-// enables 64bit pj.exe to inject 32bit DLL.
+// enables 64bit pj.exe to inject 32bit DLL into a WoW64 process.
 template<typename T>
 union HybridPointer {
   T *p;
