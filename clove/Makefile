@@ -9,6 +9,8 @@ OBJS=\
 	$(OBJDIR)\detour.obj\
 !IF "$(ARCH)"=="amd64"
 	$(OBJDIR)\detour64.obj\
+!ELSE
+	$(OBJDIR)\detour32.obj\
 !ENDIF
 	$(OBJDIR)\event.obj\
 	$(OBJDIR)\measurement.obj\
