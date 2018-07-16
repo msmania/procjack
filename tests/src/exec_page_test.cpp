@@ -35,7 +35,8 @@ struct FixedSizePack : CodePack {
 };
 
 void TestExecutablePagePerImageBase(ExecutablePages &exec_pages,
-                                    HMODULE image_base) {
+                                    HMODULE image_base,
+                                    std::vector<const void*> &chunks) {
   constexpr uint64_t body = 0xc0ffee00beef1234;
   FixedSizePack<sizeof(body)> pack(reinterpret_cast<const uint8_t*>(&body));
 
@@ -43,6 +44,7 @@ void TestExecutablePagePerImageBase(ExecutablePages &exec_pages,
   auto base = reinterpret_cast<uint8_t*>(image_base);
   for (int i = 0; i < 5; ++i) {
     auto chunk = reinterpret_cast<uint8_t*>(exec_pages.Push(pack, base));
+    chunks.push_back(chunk);
     Log(L"%p\n", chunk);
     EXPECT_LT(abs(chunk - base), 0x7fffffff);
     EXPECT_EQ(*at<uint64_t>(chunk, 0), body);
@@ -55,22 +57,29 @@ void TestExecutablePagePerImageBase(ExecutablePages &exec_pages,
 }
 
 TEST(exec_pages, push) {
+  std::vector<const void*> chunks;
   {
     ExecutablePages epages;
-    TestExecutablePagePerImageBase(epages, GetModuleHandle(nullptr));
-    TestExecutablePagePerImageBase(epages, GetModuleHandle(L"ntdll.dll"));
+    TestExecutablePagePerImageBase(epages, GetModuleHandle(nullptr), chunks);
+    TestExecutablePagePerImageBase(epages, GetModuleHandle(L"ntdll.dll"), chunks);
   }
-  // __debugbreak();
+
+  MEMORY_BASIC_INFORMATION meminfo;
+  for (auto chunk : chunks) {
+    auto p = reinterpret_cast<const void*>(
+      reinterpret_cast<size_t>(chunk) & (-0x1000));
+    ASSERT_EQ(VirtualQuery(p, &meminfo, sizeof(meminfo)), sizeof(meminfo));
+    EXPECT_EQ(meminfo.State, static_cast<DWORD>(MEM_FREE));
+  }
 }
 
 TEST(exec_pages, revert) {
-  constexpr int N = 5;
   constexpr uint64_t body = 0xdeadbeef;
   FixedSizePack<sizeof(body)> pack(reinterpret_cast<const uint8_t*>(&body));
 
   std::vector<void*> chunks;
   ExecutablePages epages;
-  for (int i = 0; i < N; ++i) {
+  for (int i = 0; i < 5; ++i) {
     auto chunk = epages.Push(pack, GetModuleHandle(nullptr));
     Log(L"%p\n", chunk);
     chunks.push_back(chunk);
