@@ -6,8 +6,10 @@ TARGET=t.exe
 
 OBJS=\
 	$(OBJDIR)\main.obj\
+	$(OBJDIR)\exec_page_test.obj\
 	$(OBJDIR)\utils_test.obj\
 	..\clove\obj\$(ARCH)\page.obj\
+	..\clove\obj\$(ARCH)\pack.obj\
 	..\clove\obj\$(ARCH)\utils.obj\
 	..\pj\obj\$(ARCH)\utils.obj\
 

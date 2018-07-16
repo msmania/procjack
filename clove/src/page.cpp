@@ -68,7 +68,8 @@ bool ExecutablePages::ExecutablePage::Revert(const void *last_pushed) {
       && active_slots_->start_ == last_pushed) {
     empty_head_ = active_slots_->start_;
     auto dismissed = std::move(active_slots_);
-    active_slots_.reset(std::move(dismissed->next_));
+    active_slots_.reset(dismissed->next_);
+    dismissed->next_ = nullptr;
     return true;
   }
   return false;
