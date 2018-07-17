@@ -89,10 +89,10 @@ void *ExecutablePages::Push(const CodePack &pack, const void *source) {
     }
   }
 
-  DWORD new_region_size = 0;
+  constexpr uint32_t new_region_size = 0x1000;
   if (auto new_region_address =
              DetourAllocateRegionWithinJumpBounds(source,
-                                                  &new_region_size)) {
+                                                  new_region_size)) {
     if (auto new_page = std::make_unique<ExecutablePage>(new_region_size,
                                                          new_region_address)) {
       auto candidate = new_page->TryPush(pack);

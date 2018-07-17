@@ -60,8 +60,8 @@ void TestExecutablePagePerImageBase(ExecutablePages &exec_pages,
 void TestExecutablePagePerImageBase_Heavy(ExecutablePages &exec_pages,
                                           HMODULE image_base,
                                           std::vector<const void*> &chunks) {
-  constexpr uint32_t target_bytes_to_consume = 1 << 24;
-  static const uint8_t large_chunk[0x4242];
+  constexpr uint32_t target_bytes_to_consume = 1 << 20;
+  static const uint8_t large_chunk[0xf00];
   FixedSizePack<sizeof(large_chunk)> pack(large_chunk);
   const void *chunk = exec_pages.Push(pack, image_base);
   for (int i = 0; i < target_bytes_to_consume / sizeof(large_chunk); ++i) {
