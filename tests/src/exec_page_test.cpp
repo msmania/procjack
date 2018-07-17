@@ -44,6 +44,7 @@ void TestExecutablePagePerImageBase(ExecutablePages &exec_pages,
   auto base = reinterpret_cast<uint8_t*>(image_base);
   for (int i = 0; i < 5; ++i) {
     auto chunk = reinterpret_cast<uint8_t*>(exec_pages.Push(pack, base));
+    EXPECT_NE(chunk, nullptr);
     chunks.push_back(chunk);
     Log(L"%p\n", chunk);
     EXPECT_LT(abs(chunk - base), 0x7fffffff);
@@ -56,12 +57,27 @@ void TestExecutablePagePerImageBase(ExecutablePages &exec_pages,
   }
 }
 
-TEST(exec_pages, push) {
+void TestExecutablePagePerImageBase_Heavy(ExecutablePages &exec_pages,
+                                          HMODULE image_base,
+                                          std::vector<const void*> &chunks) {
+  constexpr uint32_t target_bytes_to_consume = 1 << 24;
+  static const uint8_t large_chunk[0x4242];
+  FixedSizePack<sizeof(large_chunk)> pack(large_chunk);
+  const void *chunk = exec_pages.Push(pack, image_base);
+  for (int i = 0; i < target_bytes_to_consume / sizeof(large_chunk); ++i) {
+    EXPECT_NE(chunk, nullptr);
+    chunks.push_back(chunk);
+    chunk = exec_pages.Push(pack, image_base);
+  }
+}
+
+template<void F(ExecutablePages&, HMODULE, std::vector<const void*>&)>
+void PushTest() {
   std::vector<const void*> chunks;
   {
     ExecutablePages epages;
-    TestExecutablePagePerImageBase(epages, GetModuleHandle(nullptr), chunks);
-    TestExecutablePagePerImageBase(epages, GetModuleHandle(L"ntdll.dll"), chunks);
+    F(epages, GetModuleHandle(nullptr), chunks);
+    F(epages, GetModuleHandle(L"ntdll.dll"), chunks);
   }
 
   MEMORY_BASIC_INFORMATION meminfo;
@@ -71,6 +87,14 @@ TEST(exec_pages, push) {
     ASSERT_EQ(VirtualQuery(p, &meminfo, sizeof(meminfo)), sizeof(meminfo));
     EXPECT_EQ(meminfo.State, static_cast<DWORD>(MEM_FREE));
   }
+}
+
+TEST(exec_pages, push) {
+  PushTest<TestExecutablePagePerImageBase>();
+}
+
+TEST(exec_pages, push_heavy) {
+  PushTest<TestExecutablePagePerImageBase_Heavy>();
 }
 
 TEST(exec_pages, revert) {
