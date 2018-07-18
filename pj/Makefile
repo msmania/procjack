@@ -6,6 +6,7 @@ OBJS=\
 	$(OBJDIR)\auth_utils.obj\
 	$(OBJDIR)\pkg_creator.obj\
 	$(OBJDIR)\utils.obj\
+	$(OBJDIR)\policy.obj\
 
 LIBS=\
 	advapi32.lib\

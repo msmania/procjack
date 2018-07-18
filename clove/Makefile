@@ -17,6 +17,7 @@ OBJS=\
 	$(OBJDIR)\page.obj\
 	$(OBJDIR)\pack.obj\
 	$(OBJDIR)\utils.obj\
+	$(OBJDIR)\policy.obj\
 
 LIBS=\
 	user32.lib\

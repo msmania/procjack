@@ -9,16 +9,19 @@
 
 std::string to_utf8(const wchar_t *utf16);
 std::string build_optional_args(int argc, wchar_t *argv[]);
+bool DisablePolicy(HANDLE target);
 
 void Inject(DWORD RemoteProcessId,
             LPCWSTR FilenameToInject,
             INT Ordinal,
             const std::string &args,
-            bool Wait) {
+            bool Wait,
+            bool TryToDisablePolicy) {
   constexpr DWORD DesiredAccess = PROCESS_VM_OPERATION        // VirtualAllocEx
                                   | PROCESS_QUERY_INFORMATION // IsWow64Process
                                   | PROCESS_VM_WRITE          // WriteProcessMemory
-                                  | PROCESS_CREATE_THREAD;    // CreateThread
+                                  | PROCESS_CREATE_THREAD     // CreateThread
+                                  | PROCESS_SET_INFORMATION;  // NtSetInformationProcess
   constexpr WCHAR PLATFORM_LABEL[][10] = { L"WIN32", L"WIN64", L"WOW64" };
 
   PackageCreator package;
@@ -55,6 +58,11 @@ void Inject(DWORD RemoteProcessId,
   else {
     LOGERROR(L"Unsupported platform.\n");
     goto cleanup;
+  }
+
+  if (TryToDisablePolicy
+      && DisablePolicy(TargetProcess)) {
+    LOGINFO(L"ProcessMitigationPolicy has been successfully disabled!\n");
   }
 
   if (!package.Fill(Platform == win64, FilenameToInject, Ordinal, args)) {
@@ -119,7 +127,8 @@ cleanup:
 
 int wmain(int argc, wchar_t *argv[]) {
   if (argc < 3) {
-    LOGINFO(L"\nUSAGE: pj.exe [-w] <PID> <FILE>[?ORDINAL] [ARGS]\n"
+    LOGINFO(L"\nUSAGE: pj.exe [-d] [-w] <PID> <FILE>[?ORDINAL] [ARGS]\n"
+            L"  -d         Try to disable ProcessMitigationPolicy before injection\n"
             L"  -w         Keep pj.exe running until the injected thread is signaled\n"
             L"  PID        PID of a target process to inject into\n"
             L"  FILE       DLL or a flat binary to inject\n"
@@ -129,8 +138,11 @@ int wmain(int argc, wchar_t *argv[]) {
             );
     return 1;
   }
-  bool wait = _wcsicmp(argv[1], L"-W") == 0;
-  int arg_index = wait ? 2 : 1;
+  int arg_index = 1;
+  bool disable_policy = _wcsicmp(argv[arg_index], L"-D") == 0;
+  if (disable_policy) ++arg_index;
+  bool wait = _wcsicmp(argv[arg_index], L"-W") == 0;
+  if (wait) ++arg_index;
   auto pair = split<wchar_t>(argv[arg_index + 1], L'?');
   auto optional_args = build_optional_args(argc - arg_index - 2,
                                            &argv[arg_index + 2]);
@@ -138,6 +150,7 @@ int wmain(int argc, wchar_t *argv[]) {
          pair.first.c_str(),
          pair.second,
          optional_args,
-         wait);
+         wait,
+         disable_policy);
   return 0;
 }
