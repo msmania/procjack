@@ -7,33 +7,13 @@
 #include "page.h"
 
 void Log(LPCWSTR format, ...);
-std::pair<uint64_t, uint64_t> address_range(char *str);
-std::unique_ptr<CodePack>
-  Create_MeasurementPack(void *MeasurementStart,
-                         void *MeasurementEnd);
 
 ExecutablePages g_exec_pages;
 std::vector<std::unique_ptr<CodePack>> g_packs;
 SRWLOCK g_shim_lock = SRWLOCK_INIT;
 Event g_instance_control;
 
-void StartShim(Package *package) {
-  auto range = address_range(package->args);
-  if (range.first == 0 || range.second - range.first < 5) {
-    Log(L"Invalid range specified!\n");
-    return;
-  }
-
-  if (auto new_pack = Create_MeasurementPack(
-        reinterpret_cast<void*>(range.first),
-        reinterpret_cast<void*>(range.second))) {
-    AcquireSRWLockExclusive(&g_shim_lock);
-    if (new_pack->ActivateDetour(g_exec_pages)) {
-      g_packs.emplace_back(std::move(new_pack));
-    }
-    ReleaseSRWLockExclusive(&g_shim_lock);
-  }
-
+void WaitAndThenCleanup() {
   // A thread who created the event is responsible to disarm Detour.
   // Other threads run through and exit this function.
   if (g_instance_control.CreateIfNotCreatedYet(
@@ -51,12 +31,12 @@ void StartShim(Package *package) {
   }
 }
 
-void EndShim(Package*) {
+void EndAllShims(Package*) {
   Log(L"Sending a signal to terminate shimming..\n");
   g_instance_control.Signal();
 }
 
-void ListShims(Package*) {
+void PrintAllShims(Package*) {
   for (auto &pack : g_packs) {
     pack->Print();
   }

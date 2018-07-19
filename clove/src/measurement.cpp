@@ -1,9 +1,17 @@
 #include <windows.h>
+#include <vector>
 #include <memory>
+#include "../../common.h"
 #include "pack.h"
 #include "page.h"
 
 void Log(LPCWSTR format, ...);
+std::pair<uint64_t, uint64_t> address_range(char *str);
+void WaitAndThenCleanup();
+
+extern ExecutablePages g_exec_pages;
+extern std::vector<std::unique_ptr<CodePack>> g_packs;
+extern SRWLOCK g_shim_lock;
 
 struct MeasurementPack final : public CodePack {
 #ifdef _WIN64
@@ -138,9 +146,22 @@ struct MeasurementPack final : public CodePack {
   }
 };
 
-std::unique_ptr<CodePack>
-  Create_MeasurementPack(void *MeasurementStart,
-                         void *MeasurementEnd) {
-  return std::make_unique<MeasurementPack>(MeasurementStart,
-                                           MeasurementEnd);
+void StartMeasurement(Package *package) {
+  auto range = address_range(package->args);
+  if (range.first == 0 || range.second - range.first < 5) {
+    Log(L"Invalid range specified!\n");
+    return;
+  }
+
+  if (auto new_pack = std::make_unique<MeasurementPack>(
+        reinterpret_cast<void*>(range.first),
+        reinterpret_cast<void*>(range.second))) {
+    AcquireSRWLockExclusive(&g_shim_lock);
+    if (new_pack->ActivateDetour(g_exec_pages)) {
+      g_packs.emplace_back(std::move(new_pack));
+    }
+    ReleaseSRWLockExclusive(&g_shim_lock);
+  }
+
+  WaitAndThenCleanup();
 }
