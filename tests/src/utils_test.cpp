@@ -2,27 +2,27 @@
 #include <gmock/gmock.h>
 #include "../../pj/utils.h"
 
-uint64_t htos(const char *s);
+uint64_t hex_to_uint64(const char *s);
 std::pair<uint64_t, uint64_t> address_range(char *str);
 
 TEST(string, hex) {
-  EXPECT_EQ(htos("a123ffff"), 0xa123ffff);
-  EXPECT_EQ(htos("0xa123ffff"), 0xa123ffff);
-  EXPECT_EQ(htos("0xa123ffff-"), 0);
-  EXPECT_EQ(htos("7ffe`72a38000"), 0x7ffe72a38000ull);
-  EXPECT_EQ(htos("0x7ffe`72a38000"), 0x7ffe72a38000ull);
-  EXPECT_EQ(htos("0x7ffe?72a38000"), 0);
+  EXPECT_EQ(hex_to_uint64("a123ffff"), 0xa123ffff);
+  EXPECT_EQ(hex_to_uint64("0xa123ffff"), 0xa123ffff);
+  EXPECT_EQ(hex_to_uint64("0xa123ffff-"), 0);
+  EXPECT_EQ(hex_to_uint64("7ffe`72a38000"), 0x7ffe72a38000ull);
+  EXPECT_EQ(hex_to_uint64("0x7ffe`72a38000"), 0x7ffe72a38000ull);
+  EXPECT_EQ(hex_to_uint64("0x7ffe?72a38000"), 0);
 
-  EXPECT_EQ(htos("0xffffffff`fffffffe"), 0xfffffffffffffffeull);
-  EXPECT_EQ(htos("0xFFFFFFFFFFFFFFFD"), 0xfffffffffffffffdull);
-  EXPECT_EQ(htos("ffffffff`fffffffc"), 0xfffffffffffffffcull);
-  EXPECT_EQ(htos("FFFFFFFFFFFFFFFB"), 0xfffffffffffffffbull);
-  EXPECT_EQ(htos("0xfffffffa"), 0xfffffffa);
-  EXPECT_EQ(htos("FFFFFFF9"), 0xfffffff9);
+  EXPECT_EQ(hex_to_uint64("0xffffffff`fffffffe"), 0xfffffffffffffffeull);
+  EXPECT_EQ(hex_to_uint64("0xFFFFFFFFFFFFFFFD"), 0xfffffffffffffffdull);
+  EXPECT_EQ(hex_to_uint64("ffffffff`fffffffc"), 0xfffffffffffffffcull);
+  EXPECT_EQ(hex_to_uint64("FFFFFFFFFFFFFFFB"), 0xfffffffffffffffbull);
+  EXPECT_EQ(hex_to_uint64("0xfffffffa"), 0xfffffffa);
+  EXPECT_EQ(hex_to_uint64("FFFFFFF9"), 0xfffffff9);
 
-  EXPECT_EQ(htos("0ffffffffffffffff"), 0xffffffffffffffffull);
-  EXPECT_EQ(htos("0x0000000000000000ffffffffffffffff"), 0xffffffffffffffffull);
-  EXPECT_EQ(htos("1ffffffffffffffff"), 0);
+  EXPECT_EQ(hex_to_uint64("0ffffffffffffffff"), 0xffffffffffffffffull);
+  EXPECT_EQ(hex_to_uint64("0x0000000000000000ffffffffffffffff"), 0xffffffffffffffffull);
+  EXPECT_EQ(hex_to_uint64("1ffffffffffffffff"), 0);
 }
 
 TEST(string, address_range) {

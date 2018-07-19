@@ -1,7 +1,7 @@
 #include <cstdint>
 #include <utility>
 
-uint64_t htos(const char *s) {
+uint64_t hex_to_uint64(const char *s) {
   auto htoc = [](char c) -> int {
     return
       (c >= '0' && c <= '9') ? c - '0'
@@ -33,8 +33,8 @@ std::pair<uint64_t, uint64_t> address_range(char *str) {
   auto hyphen = strchr(str, '-');
   if (hyphen) {
     *hyphen = '\0';
-    ret.first = htos(str);
-    ret.second = htos(hyphen + 1);
+    ret.first = hex_to_uint64(str);
+    ret.second = hex_to_uint64(hyphen + 1);
     if (ret.first > ret.second)
       std::swap(ret.first, ret.second);
   }
