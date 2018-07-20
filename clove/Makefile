@@ -18,6 +18,7 @@ OBJS=\
 	$(OBJDIR)\pack.obj\
 	$(OBJDIR)\utils.obj\
 	$(OBJDIR)\policy.obj\
+	$(OBJDIR)\record.obj\
 
 LIBS=\
 	user32.lib\

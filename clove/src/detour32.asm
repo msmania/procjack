@@ -1,15 +1,12 @@
 BITS 32
 
-;global Clove_Start
-;global Clove_End
-
 section .data
 Counter_Local dq 0x000042d68342622e
 Counter_Total dq 0x71000000ffffffff
 
 section .text
 
-Clove_Start:
+Measure_Start:
   push eax
   push edx
   push esi
@@ -23,7 +20,7 @@ Clove_Start:
   ; ret
   jmp $ + 0x12345678
 
-Clove_End:
+Measure_End:
   sub     esp,0Ch
   push    eax
   push    ebx
@@ -71,4 +68,23 @@ label_0x30:
   pop     eax
   add     esp,0Ch
   ; ret
+  jmp $ + 0x12345678
+
+FunctionCallPack_Start:
+  push eax
+  push ecx ; 1st argument (depending on a calling convention though)
+
+  mov eax, [esp + 8] ; return address
+  push eax
+  push esp
+
+  mov eax, 0x7fffffff ; FunctionCallPack instance
+  push eax
+  mov eax, 0x7ffffffe ; EntryPoint
+  call eax
+
+  add esp, 0Ch
+
+  pop ecx
+  pop eax
   jmp $ + 0x12345678

@@ -1,8 +1,5 @@
 BITS 64
 
-;global Clove_Start
-;global Clove_End
-
 section .data
 Counter_Local dq 0
 Counter_Total dq 0
@@ -11,7 +8,7 @@ InjectionPoint_End dq 0
 
 section .text
 
-Clove_Start:
+Measure_Start:
   push rax
   push rdx
   rdtsc
@@ -26,7 +23,7 @@ Clove_Start:
   ;mov rax, InjectionPoint_Start
   ;jmp [rax]
 
-Clove_End:
+Measure_End:
   push rax
   push rdx
   rdtsc
@@ -42,3 +39,25 @@ Clove_End:
   jmp $ + 0x12345678
   ;mov rax, InjectionPoint_End
   ;jmp [rax]
+
+FunctionCallPack_Start:
+  push rax
+  push rcx
+  push rdx
+
+  sub rsp, 10h
+  mov rax, [rsp + 28h] ; return address
+  mov [rsp], rax
+  mov [rsp + 8], rcx   ; 1st argument
+
+  mov rdx, rsp
+  mov rcx, 0x7ffffffffffffff  ; FunctionCallPack instance
+  mov rax, 0x7fffffffffffffe  ; EntryPoint
+  call rax
+
+  add rsp, 10h
+
+  pop rdx
+  pop rcx
+  pop rax
+  jmp $ + 0x12345678
