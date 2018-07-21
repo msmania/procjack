@@ -1,44 +1,42 @@
 BITS 64
 
-section .data
-Counter_Local dq 0
-Counter_Total dq 0
-InjectionPoint_Start dq 0
-InjectionPoint_End dq 0
-
 section .text
 
 Measure_Start:
   push rax
   push rdx
+
+  mov rax, 0x7fffffffffffffd  ; CallCount
+  inc dword [rax]
+
   rdtsc
   shl rdx,20h
   or  rax,rdx
-  mov rdx, Counter_Local
+  mov rdx, 0x7ffffffffffffff  ; tick_start_
   mov [rdx], rax
+
   pop rdx
   pop rax
-
   jmp $ + 0x12345678
-  ;mov rax, InjectionPoint_Start
-  ;jmp [rax]
 
 Measure_End:
   push rax
   push rdx
+
   rdtsc
   shl rdx,20h
   or  rax,rdx
-  mov rdx, Counter_Local
+  mov rdx, 0x7ffffffffffffff  ; tick_start_
   sub rax, [rdx]
-  mov rdx, Counter_Total
+  mov rdx, 0x7fffffffffffffe  ; total_ticks_
   lock xadd qword [rdx], rax
+
+  mov rax, 0x7fffffffffffffd  ; CallCount
+  inc dword [rax]
+
   pop rdx
   pop rax
-
   jmp $ + 0x12345678
-  ;mov rax, InjectionPoint_End
-  ;jmp [rax]
 
 FunctionCallPack_Start:
   push rax

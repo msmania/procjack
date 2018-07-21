@@ -1,16 +1,16 @@
 BITS 32
 
-section .data
-Counter_Local dq 0x000042d68342622e
-Counter_Total dq 0x71000000ffffffff
-
 section .text
 
 Measure_Start:
   push eax
   push edx
   push esi
-  mov esi, Counter_Local
+
+  mov eax, 0x7ffffffd   ; CallCount
+  inc dword [eax]
+
+  mov esi, 0x7fffffff   ; tick_start_
   rdtsc
   mov dword [esi],eax
   mov dword [esi+0x4],edx
@@ -31,8 +31,8 @@ Measure_End:
   push    edi
   rdtsc
   mov     ebp,eax
-  mov     dword [esp+20h], Counter_Total
-  mov     ecx, Counter_Local
+  mov     dword [esp+20h], 0x7ffffffe ; total_ticks_
+  mov     ecx, 0x7fffffff             ; tick_start_
   sub     ebp,dword [ecx]
   mov     eax,edx
   sbb     eax,dword [ecx+0x4]
@@ -40,7 +40,7 @@ Measure_End:
   mov     dword [esp+1Ch],eax
 
 label_0x30:
-  mov     ecx, Counter_Total
+  mov     ecx, 0x7ffffffe             ; total_ticks_
   mov     edi,dword [ecx]
   mov     ebx,edi
   mov     esi,dword [ecx+0x4]
@@ -49,7 +49,7 @@ label_0x30:
   mov     edx,esi
   adc     ecx,eax
   mov     eax,edi
-  mov     ebp,dword [esp+20h] ; Counter_Total
+  mov     ebp,dword [esp+20h]         ; total_ticks_
   lock cmpxchg8b [ebp]
   mov     ebp,dword [esp+24h]
   cmp     eax,edi
@@ -59,6 +59,9 @@ label_0x30:
   cmp     edx,esi
   jne     label_0x30
 
+  mov eax, 0x7ffffffd   ; CallCount
+  inc dword [eax]
+
   pop     edi
   pop     esi
   pop     ebp
@@ -67,7 +70,6 @@ label_0x30:
   pop     ebx
   pop     eax
   add     esp,0Ch
-  ; ret
   jmp $ + 0x12345678
 
 FunctionCallPack_Start:
