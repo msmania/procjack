@@ -62,7 +62,7 @@ struct FunctionCallPack final : public CodePack {
       records_.emplace_back(args[0], args[1]);
   }
 
-  static constexpr uint32_t max_records_ = 10000;
+  static constexpr uint32_t max_records_ = 1000000;
   std::vector<Record> records_;
   uint32_t call_count_;
   const void *function_target_;
@@ -99,11 +99,12 @@ struct FunctionCallPack final : public CodePack {
   }
 
   void Print() const {
-    Log(L"[FunctionCallPack %p] %d calls (%zd records stored at %p )\n",
+    Log(L"[FunctionCallPack %p] %d calls (%zd records stored at %p-%p)\n",
         function_target_,
         call_count_,
         records_.size(),
-        records_.data());
+        records_.begin(),
+        records_.end());
   }
 
   void CopyTo(uint8_t *destination) const {
