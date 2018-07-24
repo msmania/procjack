@@ -1,5 +1,5 @@
-#include <cstdint>
-#include <utility>
+#include <vector>
+#include <algorithm>
 
 uint64_t hex_to_uint64(const char *s) {
   auto htoc = [](char c) -> int {
@@ -38,5 +38,20 @@ std::pair<uint64_t, uint64_t> address_range(char *str) {
     if (ret.first > ret.second)
       std::swap(ret.first, ret.second);
   }
+  return ret;
+}
+
+std::vector<uint64_t> address_chain(char *str) {
+  std::vector<uint64_t> ret;
+  char *s = str;
+  for (char *p = str; *p; ++p) {
+    if (*p == '-') {
+      *p = '\0';
+      ret.push_back(hex_to_uint64(s));
+      s = p + 1;
+    }
+  }
+  ret.push_back(hex_to_uint64(s));
+  std::sort(ret.begin(), ret.end());
   return ret;
 }

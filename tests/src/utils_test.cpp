@@ -4,6 +4,7 @@
 
 uint64_t hex_to_uint64(const char *s);
 std::pair<uint64_t, uint64_t> address_range(char *str);
+std::vector<uint64_t> address_chain(char *str);
 
 TEST(string, hex) {
   EXPECT_EQ(hex_to_uint64("a123ffff"), 0xa123ffff);
@@ -38,6 +39,25 @@ TEST(string, address_range) {
   checker("-00007ff7`407f40e8", {0, 0x00007ff7407f40e8});
   checker("-", {0, 0});
   checker("", {0, 0});
+}
+
+TEST(string, address_chain) {
+  auto checker = [](const char *input, std::vector<uint64_t> expected) {
+    char mutable_string[64];
+    strcpy(mutable_string, input);
+    EXPECT_EQ(address_chain(mutable_string), expected);
+  };
+  checker("1-2", {1, 2});
+  checker("3-2-1", {1, 2, 3});
+  checker("5f40747f-5f407493-5f4074c1-5f4074ca",
+          {0x5f40747f, 0x5f407493, 0x5f4074c1, 0x5f4074ca});
+  checker("00007ff6`965a3fba-00007ff6`965a3ffd-00007ff6`965a4024",
+          {0x00007ff6965a3fba, 0x00007ff6965a3ffd, 0x00007ff6965a4024});
+  checker("", {0});
+  checker("-", {0, 0});
+  checker("--", {0, 0, 0});
+  checker("42-", {0, 0x42});
+  checker("-43", {0, 0x43});
 }
 
 template<typename T>
