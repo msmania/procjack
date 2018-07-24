@@ -48,7 +48,7 @@ TEST(string, address_chain) {
     EXPECT_EQ(address_chain(mutable_string), expected);
   };
   checker("1-2", {1, 2});
-  checker("3-2-1", {1, 2, 3});
+  checker("3-2-1", {3, 2, 1});
   checker("5f40747f-5f407493-5f4074c1-5f4074ca",
           {0x5f40747f, 0x5f407493, 0x5f4074c1, 0x5f4074ca});
   checker("00007ff6`965a3fba-00007ff6`965a3ffd-00007ff6`965a4024",
@@ -56,7 +56,7 @@ TEST(string, address_chain) {
   checker("", {0});
   checker("-", {0, 0});
   checker("--", {0, 0, 0});
-  checker("42-", {0, 0x42});
+  checker("42-", {0x42, 0});
   checker("-43", {0, 0x43});
 }
 

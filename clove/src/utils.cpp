@@ -52,6 +52,5 @@ std::vector<uint64_t> address_chain(char *str) {
     }
   }
   ret.push_back(hex_to_uint64(s));
-  std::sort(ret.begin(), ret.end());
   return ret;
 }
