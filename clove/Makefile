@@ -14,6 +14,7 @@ OBJS=\
 !ENDIF
 	$(OBJDIR)\event.obj\
 	$(OBJDIR)\measurement.obj\
+	$(OBJDIR)\measure_chain.obj\
 	$(OBJDIR)\page.obj\
 	$(OBJDIR)\pack.obj\
 	$(OBJDIR)\utils.obj\

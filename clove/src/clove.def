@@ -4,4 +4,5 @@ EXPORTS
   EndAllShims @2 NONAME PRIVATE
   PrintAllShims @3 NONAME PRIVATE
   StartMeasurement @100 NONAME PRIVATE
+  MeasurementChain @101 NONAME PRIVATE
   RecordCalls @200 NONAME PRIVATE
