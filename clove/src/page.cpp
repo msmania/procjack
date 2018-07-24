@@ -38,13 +38,13 @@ ExecutablePages::Slot::~Slot() {
   }
 }
 
-void *ExecutablePages::ExecutablePage::Push(const CodePack &pack) {
+void *ExecutablePages::ExecutablePage::Push(const CodeTemplate &code) {
   uint8_t *previous_head = nullptr;
   if (base_
-      && empty_head_ + pack.Size() + 1 < base_ + capacity_) {
+      && empty_head_ + code.Size() + 1 < base_ + capacity_) {
     previous_head = empty_head_;
-    pack.CopyTo(empty_head_);
-    empty_head_ += pack.Size();
+    code.CopyTo(empty_head_);
+    empty_head_ += code.Size();
     *empty_head_ = 0xCC;
     ++empty_head_;
     active_slots_ = std::make_unique<Slot>(active_slots_.release(),
@@ -56,9 +56,9 @@ void *ExecutablePages::ExecutablePage::Push(const CodePack &pack) {
   return previous_head;
 }
 
-const void *ExecutablePages::ExecutablePage::TryPush(const CodePack &pack) const {
+const void *ExecutablePages::ExecutablePage::TryPush(const CodeTemplate &code) const {
   return (base_
-          && empty_head_ + pack.Size() + 1 < base_ + capacity_)
+          && empty_head_ + code.Size() + 1 < base_ + capacity_)
          ? empty_head_
          : nullptr;
 }
@@ -81,11 +81,11 @@ bool IsJumpable(const void *from, const void *to) {
   return abs(a - b) <= 0x7fffffff;
 }
 
-void *ExecutablePages::Push(const CodePack &pack, const void *source) {
+void *ExecutablePages::Push(const CodeTemplate &code, const void *source) {
   for (auto page = active_head_.get(); page; page = page->next_) {
-    auto candidate = page->TryPush(pack);
+    auto candidate = page->TryPush(code);
     if (candidate && IsJumpable(candidate, source)) {
-      return page->Push(pack);
+      return page->Push(code);
     }
   }
 
@@ -95,11 +95,11 @@ void *ExecutablePages::Push(const CodePack &pack, const void *source) {
                                                   new_region_size)) {
     if (auto new_page = std::make_unique<ExecutablePage>(new_region_size,
                                                          new_region_address)) {
-      auto candidate = new_page->TryPush(pack);
+      auto candidate = new_page->TryPush(code);
       if (candidate && IsJumpable(candidate, source)) {
         new_page->next_ = active_head_.release();
         active_head_ = std::move(new_page);
-        return active_head_->Push(pack);
+        return active_head_->Push(code);
       }
     }
   }

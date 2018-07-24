@@ -55,8 +55,7 @@ bool CodePack::DeactivateDetour(ExecutablePages &exec_pages) {
   return DetourTransaction<&CodePack::DeactivateDetourInternal>(exec_pages);
 }
 
-const void *CodePack::PutImmediateNearJump(void *jump_from,
-                                           const void *jump_to) {
+const void *PutImmediateNearJump(void *jump_from, const void *jump_to) {
   const auto next_instruction = at<uint8_t>(jump_from, 5);
   const int64_t delta64 = at<const uint8_t>(jump_to, 0) - next_instruction;
   if (delta64 > 0x7fffffff || delta64 < 0xffffffff80000000i64) {

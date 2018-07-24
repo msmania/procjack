@@ -8,19 +8,11 @@
 void Log(const wchar_t *format, ...);
 
 template<int SIZE>
-struct FixedSizePack : CodePack {
+struct FixedSizePack : CodeTemplate {
   uint8_t data_[SIZE];
 
   FixedSizePack(const uint8_t *data) {
     std::memcpy(data_, data, SIZE);
-  }
-
-  bool ActivateDetourInternal(ExecutablePages&) {
-    return true;
-  }
-
-  bool DeactivateDetourInternal(ExecutablePages&) {
-    return true;
   }
 
   size_t Size() const {
@@ -29,7 +21,7 @@ struct FixedSizePack : CodePack {
 
   void Print() const {}
 
-  void CopyTo(uint8_t *destination) const {
+  void CopyTo(void *destination) const {
     std::memcpy(destination, data_, SIZE);
   }
 };

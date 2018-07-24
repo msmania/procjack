@@ -9,6 +9,13 @@ static const T *at(const void *base, int32_t offset) {
     reinterpret_cast<const uint8_t*>(base) + offset);
 }
 
+const void *PutImmediateNearJump(void *jump_from, const void *jump_to);
+
+struct CodeTemplate {
+  virtual size_t Size() const = 0;
+  virtual void CopyTo(void *destination) const = 0;
+};
+
 class ExecutablePages;
 
 class CodePack {
@@ -46,14 +53,10 @@ protected:
                                  void *detour_destination);
   static bool DetourDetachHelper(void *&detour_target,
                                  void *detour_destination);
-  static const void *PutImmediateNearJump(void *jump_from,
-                                          const void *jump_to);
 
 public:
   virtual ~CodePack();
-  virtual size_t Size() const = 0;
   virtual void Print() const = 0;
-  virtual void CopyTo(uint8_t *destination) const = 0;
   bool ActivateDetour(ExecutablePages &exec_pages);
   bool DeactivateDetour(ExecutablePages &exec_pages);
 };
