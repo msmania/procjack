@@ -2,42 +2,6 @@ BITS 64
 
 section .text
 
-Measure_Start:
-  push rax
-  push rdx
-
-  mov rax, 0x7fffffffffffffd  ; CallCount
-  inc dword [rax]
-
-  rdtsc
-  shl rdx,20h
-  or  rax,rdx
-  mov rdx, 0x7ffffffffffffff  ; tick_start_
-  mov [rdx], rax
-
-  pop rdx
-  pop rax
-  jmp $ + 0x12345678
-
-Measure_End:
-  push rax
-  push rdx
-
-  rdtsc
-  shl rdx,20h
-  or  rax,rdx
-  mov rdx, 0x7ffffffffffffff  ; tick_start_
-  sub rax, [rdx]
-  mov rdx, 0x7fffffffffffffe  ; total_ticks_
-  lock xadd qword [rdx], rax
-
-  mov rax, 0x7fffffffffffffd  ; CallCount
-  inc dword [rax]
-
-  pop rdx
-  pop rax
-  jmp $ + 0x12345678
-
 MeasurementChain_Start:
   push rax
   push rdx

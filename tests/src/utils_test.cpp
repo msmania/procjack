@@ -3,7 +3,6 @@
 #include "../../pj/utils.h"
 
 uint64_t hex_to_uint64(const char *s);
-std::pair<uint64_t, uint64_t> address_range(char *str);
 std::vector<uint64_t> address_chain(char *str);
 
 TEST(string, hex) {
@@ -24,21 +23,6 @@ TEST(string, hex) {
   EXPECT_EQ(hex_to_uint64("0ffffffffffffffff"), 0xffffffffffffffffull);
   EXPECT_EQ(hex_to_uint64("0x0000000000000000ffffffffffffffff"), 0xffffffffffffffffull);
   EXPECT_EQ(hex_to_uint64("1ffffffffffffffff"), 0);
-}
-
-TEST(string, address_range) {
-  auto checker = [](const char *input, std::pair<uint64_t, uint64_t> expected) {
-    char mutable_string[64];
-    strcpy(mutable_string, input);
-    EXPECT_EQ(address_range(mutable_string), expected);
-  };
-  checker("1-2", {1, 2});
-  checker("00007ff7`407f4096-00007ff7`407f40e8", {0x00007ff7407f4096, 0x00007ff7407f40e8});
-  checker("0xFFFFFFFFFFFFFFFF-7ffe72a38000", {0x7ffe72a38000, 0xFFFFFFFFFFFFFFFF});
-  checker("00007ff7`407f4096-", {0, 0x00007ff7407f4096});
-  checker("-00007ff7`407f40e8", {0, 0x00007ff7407f40e8});
-  checker("-", {0, 0});
-  checker("", {0, 0});
 }
 
 TEST(string, address_chain) {

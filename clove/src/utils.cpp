@@ -28,19 +28,6 @@ uint64_t hex_to_uint64(const char *s) {
   return valid_chars <= 16 ? ret : 0;
 }
 
-std::pair<uint64_t, uint64_t> address_range(char *str) {
-  std::pair<uint64_t, uint64_t> ret;
-  auto hyphen = strchr(str, '-');
-  if (hyphen) {
-    *hyphen = '\0';
-    ret.first = hex_to_uint64(str);
-    ret.second = hex_to_uint64(hyphen + 1);
-    if (ret.first > ret.second)
-      std::swap(ret.first, ret.second);
-  }
-  return ret;
-}
-
 std::vector<uint64_t> address_chain(char *str) {
   std::vector<uint64_t> ret;
   char *s = str;
