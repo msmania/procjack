@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <vector>
 #include <memory>
+#include <numeric>
 #include "../../common.h"
 #include "pack.h"
 #include "page.h"
@@ -64,7 +65,7 @@ struct MeasurementChainPack final : public CodePack {
     bool Fill(void *start_address,
               const void *call_count,
               const void *checkpoint,
-              const void *final_jump_to) {
+              const void *final_jump_to) const {
       *at<const void*>(start_address, offset_CallCount) = call_count;
 #ifdef _WIN64
       *at<const void*>(start_address, offset_Checkpoint) = checkpoint;
@@ -135,7 +136,7 @@ struct MeasurementChainPack final : public CodePack {
               const void *call_count,
               const void *checkpoint,
               const void *total_ticks,
-              const void *final_jump_to) {
+              const void *final_jump_to) const {
 #ifdef _WIN64
       *at<const void*>(start_address, offset_Total1)
         = *at<const void*>(start_address, offset_Total2)
@@ -163,10 +164,10 @@ struct MeasurementChainPack final : public CodePack {
     }
   };
 
-  Template_Start template_start_;
-  Template_Checkpoint template_checkpoint_;
+  const Template_Start template_start_;
+  const Template_Checkpoint template_checkpoint_;
   uint64_t checkpoint_;
-  uint32_t n_;
+  const uint32_t n_;
   std::vector<uint32_t> call_count_;
   std::vector<uint64_t> ticks_;
   std::vector<void*> function_target_;
@@ -238,7 +239,8 @@ struct MeasurementChainPack final : public CodePack {
   }
 
   void Print() const {
-    Log(L"[MeasurementChain]\n");
+    Log(L"[MeasurementChain] total ticks: %llu\n",
+        std::accumulate(ticks_.begin(), ticks_.end(), 0I64));
     for (uint32_t i = 1; i < n_; ++i) {
       Log(L"  %p-%p: %llu (callcount: %d %d)\n",
         function_target_[i - 1],

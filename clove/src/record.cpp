@@ -83,7 +83,7 @@ struct FunctionCallPack final : public CodePack {
       records_.emplace_back(args[0], args[1]);
   }
 
-  CallRecordTemplate function_template_;
+  const CallRecordTemplate function_template_;
   static constexpr uint32_t max_records_ = 1000000;
   std::vector<Record> records_;
   uint32_t call_count_;
