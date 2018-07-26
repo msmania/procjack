@@ -37,9 +37,11 @@ struct FunctionTracePack final : public CodePack {
         arg2,
         arg3);
 #endif
-    call_count_++;
+    InterlockedIncrement(&call_count_);
+    AcquireSRWLockExclusive(&record_lock_);
     if (records_.size() < max_records_)
       records_.emplace_back(ticks, *stack, arg1, arg2, arg3);
+    ReleaseSRWLockExclusive(&record_lock_);
   }
 
   class FunctionTraceTemplate : public CodeTemplate {
@@ -154,13 +156,15 @@ struct FunctionTracePack final : public CodePack {
   const FunctionTraceTemplate function_template_;
   static constexpr uint32_t max_records_ = 1000000;
   std::vector<Record> records_;
+  SRWLOCK record_lock_;
   uint32_t call_count_;
   const void *function_target_;
   void *function_trampoline_;
   void *function_detour_;
 
   FunctionTracePack(void *target)
-    : call_count_(0),
+    : record_lock_(SRWLOCK_INIT),
+      call_count_(0),
       function_target_(target),
       function_trampoline_(target),
       function_detour_(nullptr) {
