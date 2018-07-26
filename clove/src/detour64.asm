@@ -61,3 +61,73 @@ FunctionCallPack_Start:
   pop rcx
   pop rax
   jmp $ + 0x12345678
+
+FunctionTracePack_Start:
+  sub     rsp,20h
+  mov     qword [rsp+18h],rbx
+  mov     qword [rsp+10h],rdx
+  mov     qword [rsp+8],rcx
+  push    rbp
+  push    rsi
+  push    rdi
+  push    r12
+  push    r13
+  push    r14
+  push    r15
+  sub     rsp,60h
+  mov     r12,r9
+  mov     r13,r8
+  mov     r10,rdx
+  mov     r11,rcx
+
+  rdtscp
+  shl     rdx,20h
+  or      rax,rdx
+  mov     r14,rax
+
+  mov     r15,qword [rsp+0D8h]
+  mov     rbp,qword [rsp+0D0h]
+  mov     rdi,qword [rsp+0C8h]
+  mov     rbx,qword [rsp+0C0h]
+  mov     qword [rsp+38h],r15
+  mov     qword [rsp+30h],rbp
+  mov     qword [rsp+28h],rdi
+  mov     qword [rsp+20h],rbx
+  mov     r8,r13
+  mov     rdx,r10
+  mov     rcx,r11
+  mov rax,0DDBBCCAA44332211h ; tranmoline
+  call    rax
+  mov     rsi,rax
+
+  rdtscp
+  shl     rdx,20h
+  or      rdx,rax
+  sub     rdx,r14
+
+  mov     qword [rsp+50h],r15
+  mov     qword [rsp+48h],rbp
+  mov     qword [rsp+40h],rdi
+  mov     qword [rsp+38h],rbx
+  mov     qword [rsp+30h],r12
+  mov     qword [rsp+28h],r13
+  mov     qword [rsp+20h],rcx
+  mov     r9,qword [rsp+0A0h]
+  lea     r8, [rsp + 0x20 + 0x38 + 0x60] ; original frame
+  mov     rcx,qword [rsp+0A8h]
+  mov rcx,0AABBCCDD11223344h    ; pack
+  mov rax, 0xffffffffffff88     ; push
+  call    rax
+
+  mov     rbx,qword [rsp+0B0h]
+  mov     rax,rsi
+  add     rsp,60h
+  pop     r15
+  pop     r14
+  pop     r13
+  pop     r12
+  pop     rdi
+  pop     rsi
+  pop     rbp
+  add     rsp,20h
+  ret

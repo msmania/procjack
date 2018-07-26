@@ -19,6 +19,7 @@ OBJS=\
 	$(OBJDIR)\utils.obj\
 	$(OBJDIR)\policy.obj\
 	$(OBJDIR)\record.obj\
+	$(OBJDIR)\trace.obj\
 
 LIBS=\
 	user32.lib\

@@ -5,3 +5,4 @@ EXPORTS
   PrintAllShims @3 NONAME PRIVATE
   MeasurementChain @100 NONAME PRIVATE
   RecordCalls @200 NONAME PRIVATE
+  FunctionTrace @300 NONAME PRIVATE
