@@ -18,7 +18,6 @@ OBJS=\
 	$(OBJDIR)\pack.obj\
 	$(OBJDIR)\utils.obj\
 	$(OBJDIR)\policy.obj\
-	$(OBJDIR)\record.obj\
 	$(OBJDIR)\trace.obj\
 
 LIBS=\
