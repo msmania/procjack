@@ -38,25 +38,6 @@ MeasurementChain_Checkpoint:
   pop     eax
   jmp $ + 0x12345678
 
-FunctionCallPack_Start:
-  push eax
-  push ecx ; 1st argument (depending on a calling convention though)
-
-  mov eax, [esp + 8] ; return address
-  push eax
-  push esp
-
-  mov eax, 0x7fffffff ; FunctionCallPack instance
-  push eax
-  mov eax, 0x7ffffffe ; EntryPoint
-  call eax
-
-  add esp, 0Ch
-
-  pop ecx
-  pop eax
-  jmp $ + 0x12345678
-
 FunctionTracePack_Start:
   sub     esp,14h
   push    esi

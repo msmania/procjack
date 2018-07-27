@@ -40,28 +40,6 @@ MeasurementChain_Checkpoint:
   pop rax
   jmp $ + 0x12345678
 
-FunctionCallPack_Start:
-  push rax
-  push rcx
-  push rdx
-
-  sub rsp, 10h
-  mov rax, [rsp + 28h] ; return address
-  mov [rsp], rax
-  mov [rsp + 8], rcx   ; 1st argument
-
-  mov rdx, rsp
-  mov rcx, 0x7ffffffffffffff  ; FunctionCallPack instance
-  mov rax, 0x7fffffffffffffe  ; EntryPoint
-  call rax
-
-  add rsp, 10h
-
-  pop rdx
-  pop rcx
-  pop rax
-  jmp $ + 0x12345678
-
 FunctionTracePack_Start:
   sub     rsp,20h
   mov     qword [rsp+18h],rbx
