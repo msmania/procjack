@@ -1,5 +1,11 @@
 BITS 64
 
+global MeasurementChain_Start
+global MeasurementChain_Checkpoint
+global MeasurementChain_End
+global FunctionTracePack_Start
+global FunctionTracePack_End
+
 section .text
 
 MeasurementChain_Start:
@@ -39,6 +45,7 @@ MeasurementChain_Checkpoint:
   pop rcx
   pop rax
   jmp $ + 0x12345678
+MeasurementChain_End:
 
 FunctionTracePack_Start:
   sub     rsp,20h
@@ -109,3 +116,4 @@ FunctionTracePack_Start:
   pop     rbp
   add     rsp,20h
   ret
+FunctionTracePack_End:

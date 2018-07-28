@@ -1,8 +1,14 @@
 BITS 32
 
+global _MeasurementChain_Start
+global _MeasurementChain_Checkpoint
+global _MeasurementChain_End
+global _FunctionTracePack_Start
+global _FunctionTracePack_End
+
 section .text
 
-MeasurementChain_Start:
+_MeasurementChain_Start:
   push eax
   push edx
   mov  eax, 0xFFFFFFF0        ; callcount
@@ -14,7 +20,7 @@ MeasurementChain_Start:
   pop  eax
   jmp  $ + 0x12345678
 
-MeasurementChain_Checkpoint:
+_MeasurementChain_Checkpoint:
   push    eax
   push    ecx
   push    edx
@@ -37,8 +43,9 @@ MeasurementChain_Checkpoint:
   pop     ecx
   pop     eax
   jmp $ + 0x12345678
+_MeasurementChain_End:
 
-FunctionTracePack_Start:
+_FunctionTracePack_Start:
   sub     esp,14h
   push    esi
 
@@ -101,3 +108,4 @@ FunctionTracePack_Start:
   pop     esi
   add     esp,14h
   ret
+_FunctionTracePack_End:
