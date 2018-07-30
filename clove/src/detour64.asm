@@ -96,10 +96,10 @@ FunctionTracePack_Start:
   mov     qword [rsp+38h],rbx
   mov     qword [rsp+30h],r12
   mov     qword [rsp+28h],r13
-  mov     qword [rsp+20h],rcx
-  mov     r9,qword [rsp+0A0h]
+  mov     rax,qword [rsp+0A8h]  ; 2nd arg
+  mov     qword [rsp+20h],rax
+  mov     r9,qword [rsp+0A0h]   ; 1st arg
   lea     r8, [rsp + 0x20 + 0x38 + 0x60] ; original frame
-  mov     rcx,qword [rsp+0A8h]
   mov rcx,0AABBCCDD11223344h    ; pack
   mov rax, 0xffffffffffff88     ; push
   call    rax
