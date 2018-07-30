@@ -56,8 +56,9 @@ struct FunctionTracePack final : public CodePack {
     static constexpr uint32_t offset_FunctionTracePackPush = 0xe1;
 #else
     static constexpr uint32_t offset_Trampoline = 0x43;
-    static constexpr uint32_t offset_FunctionTracePack = 0x8e;
-    static constexpr uint32_t offset_FunctionTracePackPush = 0x93;
+    static constexpr uint32_t offset_ReturnUnwind = 0x52;
+    static constexpr uint32_t offset_FunctionTracePack = 0x9d;
+    static constexpr uint32_t offset_FunctionTracePackPush = 0xa2;
 #endif
 
   public:
@@ -77,6 +78,10 @@ struct FunctionTracePack final : public CodePack {
       *at<const void*>(start_address, offset_FunctionTracePack) = pack;
       *at<decltype(func_to_push)>(start_address, offset_FunctionTracePackPush)
         = func_to_push;
+#ifdef _X86_
+      *at<const void*>(start_address, offset_ReturnUnwind)
+        = at<const void>(start_address, Size() - 2);
+#endif
       return true;
     }
   };

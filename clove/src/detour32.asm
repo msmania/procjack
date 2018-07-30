@@ -67,7 +67,15 @@ _FunctionTracePack_Start:
   mov     ecx, dword [esp+20h+10h]
   mov     edx, dword [esp+20h+14h]
   mov     eax,44332211h     ; trampoline
+
+  mov     esi, esp
   call    eax
+  mov     ecx, esp
+  sub     ecx, esi
+  mov     word [44332211h], cx
+
+  mov     esp, esi
+
   add     esp,20h
   mov     dword [esp+0Ch],eax
 
@@ -107,5 +115,5 @@ _FunctionTracePack_Start:
 
   pop     esi
   add     esp,14h
-  ret
+  ret 0
 _FunctionTracePack_End:
