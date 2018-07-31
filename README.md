@@ -9,6 +9,20 @@ The key difference of ProcJack from other injection toolkits are:
 
 The supported architecture of a target process is Native x86/x64 and WoW64.  No ARM support.  No Linux support.
 
+## Modules
+
+This project consists of multiple modules.
+
+- `pj.exe` is a main injector program.  You run this executable to inject a DLL (or a flat binary file) into a process.
+
+- `spy.dll` is a sample injectee DLL which can be injected by pj.exe.  The injected code prints some information on debugger console (See the "How to play" section below).  This is a ProcJack version of "Hello world".
+
+- `expeb.exe` is used to design a shellcode in pj.exe.  This is for development purpose only.
+
+- `t.exe` is a test program.
+
+- `clove.dll` is an injectee DLL to run **Non-invasive (in-memory) Instrumentation**, with which you can instrument a running process without modifying or rebuilding its source code.  For more details, please check out [Intro.pdf](https://github.com/msmania/procjack/blob/master/clove/Intro.pdf).
+
 ## How to build
 
 1. Install Visual Studio Community<br />https://www.visualstudio.com/downloads/
@@ -28,16 +42,7 @@ GTEST_BUILD_DIR=<your CMake build directory of Google Test>
 NASM=<the path to nasm.exe>
 ```
 
-6. Build
-
-Open "Native Tools Command Prompt" of Visual Studio and run `NMAKE` under the root of this repository.
-
-The following binaries will be generated under bin/[x86|amd64]:
-
-- pj.exe: Injector program
-- spy.dll: Sample injectee DLL
-
-Other binaries such as expeb.exe are for development purpose only.
+6. Build<br />Open "Native Tools Command Prompt" of Visual Studio and run `NMAKE` under the root of this repository.  Binaries will be generated under bin/[x86|amd64].
 
 ## How to play
 
