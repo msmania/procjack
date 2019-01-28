@@ -35,8 +35,7 @@ LFLAGS=\
 	/NOLOGO\
 	/DEBUG\
 	/SUBSYSTEM:CONSOLE\
-	/LIBPATH:"$(GTEST_BUILD_DIR)\googlemock\Release"\
-	/LIBPATH:"$(GTEST_BUILD_DIR)\googlemock\gtest\Release"\
+	/LIBPATH:"$(GTEST_BUILD_DIR)\lib\Release"\
 	/LIBPATH:"$(DETOUR_DIR)\lib.$(PLATFORM)"\
 
 all: $(OUTDIR)\$(TARGET)
