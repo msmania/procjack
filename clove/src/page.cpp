@@ -89,10 +89,10 @@ void *ExecutablePages::Push(const CodeTemplate &code, const void *source) {
     }
   }
 
-  constexpr uint32_t new_region_size = 0x1000;
+  DWORD new_region_size;
   if (auto new_region_address =
              DetourAllocateRegionWithinJumpBounds(source,
-                                                  new_region_size)) {
+                                                  &new_region_size)) {
     if (auto new_page = std::make_unique<ExecutablePage>(new_region_size,
                                                          new_region_address)) {
       auto candidate = new_page->TryPush(code);
