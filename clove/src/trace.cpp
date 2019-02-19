@@ -20,45 +20,102 @@ extern ExecutablePages g_exec_pages;
 extern std::vector<std::unique_ptr<CodePack>> g_packs;
 extern SRWLOCK g_shim_lock;
 
+struct CPU_CONTEXT {
+#ifdef _WIN64
+  uint64_t rax,
+           rbx,
+           rcx,
+           rdx,
+           rsi,
+           rdi,
+           rsp,
+           rbp,
+           r8,
+           r9,
+           r10,
+           r11,
+           r12,
+           r13,
+           r14,
+           r15;
+#else
+  uint32_t edi,
+           esi,
+           ebp,
+           esp,
+           ebx,
+           edx,
+           ecx,
+           eax;
+#endif
+};
+
 struct FunctionTracePack final : public CodePack {
   __declspec(noinline)
-  void Push(uint64_t ticks,
-            void **stack,
-            void *arg1,
-            void *arg2,
-            void *arg3,
-            void*,
-            void*,
-            void*,
-            void*,
-            void*) {
-#if 0
-    Log(L"[%d] %llu: %S %p %p %p %p...\n",
-        call_count_,
-        ticks,
-        __FUNCTION__,
-        stack,
-        arg1,
-        arg2,
-        arg3);
-#endif
+  void Push(const CPU_CONTEXT &context) {
     InterlockedIncrement(&call_count_);
     AcquireSRWLockExclusive(&record_lock_);
-    if (records_.size() < max_records_)
-      records_.emplace_back(ticks, *stack, arg1, arg2, arg3);
+    if (records_.size() < max_records_) {
+#ifdef _WIN64
+      const void *ret = *reinterpret_cast<void**>(context.rsp);
+#else
+      const void *ret = *reinterpret_cast<void**>(context.esp);
+#endif
+      records_.emplace_back(ret);
+    }
     ReleaseSRWLockExclusive(&record_lock_);
+#if 0
+#ifdef _WIN64
+    Log(L"%S: %d\n"
+        L"rax=%016llx rbx=%016llx rcx=%016llx\n"
+        L"rdx=%016llx rsi=%016llx rdi=%016llx\n"
+        L"rsp=%016llx rbp=%016llx\n"
+        L" r8=%016llx  r9=%016llx r10=%016llx\n"
+        L"r11=%016llx r12=%016llx r13=%016llx\n"
+        L"r14=%016llx r15=%016llx\n",
+        __FUNCTION__,
+        call_count_,
+        context.rax,
+        context.rbx,
+        context.rcx,
+        context.rdx,
+        context.rsi,
+        context.rdi,
+        context.rsp,
+        context.rbp,
+        context.r8,
+        context.r9,
+        context.r10,
+        context.r11,
+        context.r12,
+        context.r13,
+        context.r14,
+        context.r15);
+#else
+    Log(L"%S: %d\n"
+        "eax=%08x ebx=%08x ecx=%08x edx=%08x esi=%08x edi=%08x\n"
+        "esp=%08x ebp=%08x\n",
+        __FUNCTION__,
+        call_count_,
+        context.eax,
+        context.ebx,
+        context.ecx,
+        context.edx,
+        context.esi,
+        context.edi,
+        context.esp,
+        context.ebp);
+#endif
+#endif
   }
 
   class FunctionTraceTemplate : public CodeTemplate {
 #ifdef _WIN64
-    static constexpr uint32_t offset_Trampoline = 0x80;
-    static constexpr uint32_t offset_FunctionTracePack = 0xd7;
-    static constexpr uint32_t offset_FunctionTracePackPush = 0xe1;
+    static constexpr uint32_t offset_FunctionTracePack = 0x63;
+    static constexpr uint32_t offset_FunctionTracePackPush = 0x6d;
 #else
-    static constexpr uint32_t offset_Trampoline = 0x43;
-    static constexpr uint32_t offset_ReturnUnwind = 0x52;
-    static constexpr uint32_t offset_FunctionTracePack = 0x9d;
-    static constexpr uint32_t offset_FunctionTracePackPush = 0xa2;
+    static constexpr uint32_t offset_FunctionTracePack = 0x05;
+    static constexpr uint32_t offset_FunctionTracePackPush = 0x0a;
 #endif
 
   public:
@@ -74,32 +131,21 @@ struct FunctionTracePack final : public CodePack {
               const FunctionTracePack *pack,
               decltype(&FunctionTracePack::Push) func_to_push,
               const void *trampoline) const {
-      *at<const void*>(start_address, offset_Trampoline) = trampoline;
       *at<const void*>(start_address, offset_FunctionTracePack) = pack;
       *at<decltype(func_to_push)>(start_address, offset_FunctionTracePackPush)
         = func_to_push;
-#ifdef _X86_
-      *at<const void*>(start_address, offset_ReturnUnwind)
-        = at<const void>(start_address, Size() - 2);
-#endif
-      return true;
+      return PutImmediateNearJump(
+        at<void>(start_address, static_cast<uint32_t>(Size() - 5)),
+        trampoline);
     }
   };
 
   struct Record {
     const uint32_t tid_;
-    const uint64_t ticks_;
     const void *ret_;
-    const void *args_[3];
-    Record(uint64_t ticks,
-           void *ret,
-           void *arg1,
-           void *arg2,
-           void *arg3)
+    Record(const void *ret)
       : tid_(GetCurrentThreadId()),
-        ticks_(ticks),
-        ret_(ret),
-        args_{arg1, arg2, arg3}
+        ret_(ret)
     {}
   };
 
@@ -151,26 +197,7 @@ struct FunctionTracePack final : public CodePack {
         records_.end());
   }
 };
-/*
-void *FunctionTracePack_Start(void *arg1,
-                              void *arg2,
-                              void *arg3,
-                              void *arg4,
-                              void *arg5,
-                              void *arg6,
-                              void *arg7,
-                              void *arg8) {
-  auto instance = reinterpret_cast<FunctionTracePack*>(0xaabbccdd11223344);
-  auto trampoline = reinterpret_cast<decltype(&FunctionTracePack_Start)>(0xddbbccaa44332211);
-  auto rsp = reinterpret_cast<void**>(0x8877665544332211);
-  uint64_t t = __rdtscp(0);
-  auto ret = trampoline(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-  instance->Push(__rdtscp(0) - t,
-                 rsp,
-                 arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-  return ret;
-}
-*/
+
 void FunctionTrace(Package *package) {
   auto target = hex_to_uint64(package->args);
   if (!target) {
