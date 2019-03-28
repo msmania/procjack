@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <psapi.h>
 #include <vector>
 #include <memory>
 #include <intrin.h>
@@ -51,17 +52,43 @@ struct CPU_CONTEXT {
 };
 
 struct FunctionTracePack final : public CodePack {
+  enum ProcessType : int {
+    Edge,
+    Chrome,
+    Other,
+  };
+  static ProcessType IsEdgeOrChrome() {
+    WCHAR basename[MAX_PATH];
+    auto len = GetModuleBaseName(GetCurrentProcess(),
+                                 GetModuleHandle(nullptr),
+                                 basename,
+                                 MAX_PATH);
+    if (len > 0) {
+      return (basename[0] == 'C' || basename[0] == 'c')
+             ? Chrome
+             : (basename[0] == 'M' || basename[0] == 'm')
+               ? Edge : Other;
+    }
+    return Other;
+  }
+
   __declspec(noinline)
-  void Push(const CPU_CONTEXT &context) {
+  void Push(CPU_CONTEXT &context) {
     InterlockedIncrement(&call_count_);
+    const auto type = IsEdgeOrChrome();
     AcquireSRWLockExclusive(&record_lock_);
     if (records_.size() < max_records_) {
 #ifdef _WIN64
       const void *ret = *reinterpret_cast<void**>(context.rsp);
+      const uint32_t size = static_cast<uint32_t>(
+        type == Chrome ? context.rdx
+                       : type == Edge ? context.rcx : 0);
+      if (type == Edge) context.rcx = max(context.rcx, 8 * 1024 + 1);
 #else
       const void *ret = *reinterpret_cast<void**>(context.esp);
+      const uint32_t size = 0;
 #endif
-      records_.emplace_back(ret);
+      records_.emplace_back(ret, size);
     }
     ReleaseSRWLockExclusive(&record_lock_);
 #if 0
@@ -143,9 +170,11 @@ struct FunctionTracePack final : public CodePack {
   struct Record {
     const uint32_t tid_;
     const void *ret_;
-    Record(const void *ret)
+    const uint32_t size_;
+    Record(const void *ret, uint32_t size)
       : tid_(GetCurrentThreadId()),
-        ret_(ret)
+        ret_(ret),
+        size_(size)
     {}
   };
 
