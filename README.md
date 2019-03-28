@@ -31,7 +31,7 @@ This project consists of multiple modules.
 
 3. Clone and build Google Test<br />https://github.com/google/googletest
 
-4. Clone and build my private branch of Microsoft Detours until [my PR](https://github.com/Microsoft/Detours/pull/27) is merged<br />https://github.com/msmania/detours/tree/publish-alloc_trampoline
+4. Clone and build Microsoft Detours<br />https://github.com/Microsoft/Detours
 
 5. Update the following labels in `common.mak`
 
