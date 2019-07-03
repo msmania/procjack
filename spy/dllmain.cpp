@@ -24,7 +24,7 @@ void Hello(Package *package) {
       L" PEB  = %p\n"
       L" Args = %hs\n",
       package,
-      reinterpret_cast<LPCWSTR>(package->dllpath),
+      reinterpret_cast<LPCWSTR>(package->nw.dllpath),
       package->peb.p,
-      package->args);
+      package->nw.args);
 }

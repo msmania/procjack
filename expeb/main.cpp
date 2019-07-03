@@ -146,7 +146,7 @@ void WINAPI ShellCode(Package *p) {
   size_t string_VirtualFree = 0x123;
   size_t string_ExitThread = 0x456;
   constexpr uint16_t ordinal = 0xdead;
-  void *hm = p->xxxLoadLibrary(p->dllpath);
+  void *hm = p->xxxLoadLibrary(p->nw.dllpath);
   if (hm) {
     auto f = p->xxxGetProcAddress(hm, MAKEINTRESOURCEA(ordinal));
     if (f) reinterpret_cast<LPTHREAD_START_ROUTINE>(f)(p);

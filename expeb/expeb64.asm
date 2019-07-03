@@ -6,9 +6,9 @@ ShellCode:
   mov   rax,qword [gs:30h]
   mov     rbx,rcx
   mov     rdx,qword [rax+60h]
-  mov     qword [rcx+0A08h],rdx
+  mov     qword [rcx+1000h],rdx
   mov     r10,qword [rdx+18h]
-  mov     rdx,qword [rcx+0A10h]
+  mov     rdx,qword [rcx+1008h]
   add     r10,20h
   mov     r9,qword [r10]
   cmp     r9,r10
@@ -62,7 +62,7 @@ label_0x8d:
 
 label_0x94:
   mov     rdx,qword [r9+20h]
-  mov     qword [rcx+0A10h],rdx
+  mov     qword [rcx+1008h],rdx
   mov     r8,rdx
 
 label_0xa2:
@@ -127,7 +127,7 @@ label_0x131:
   add     rcx,r8
   mov     edx,dword [rsi+rax*4]
   add     rdx,r8
-  cmp     qword [rbx+0A18h],0
+  cmp     qword [rbx+1010h],0
   jne     label_0x176
 
 label_0x14d:
@@ -147,11 +147,11 @@ label_0x167:
   jne     label_0x176
 
 label_0x16d:
-  mov     qword [rbx+0A18h],rdx
+  mov     qword [rbx+1010h],rdx
   jmp     label_0x1dd
 
 label_0x176:
-  cmp     qword [rbx+0A20h],0
+  cmp     qword [rbx+1018h],0
   jne     label_0x1a3
 
 label_0x180:
@@ -167,11 +167,11 @@ label_0x191:
   jne     label_0x1a3
 
 label_0x19a:
-  mov     qword [rbx+0A20h],rdx
+  mov     qword [rbx+1018h],rdx
   jmp     label_0x1dd
 
 label_0x1a3:
-  cmp     qword [rbx+0A28h],0
+  cmp     qword [rbx+1020h],0
   jne     label_0x1dd
 
 label_0x1ad:
@@ -193,7 +193,7 @@ label_0x1c7:
   jne     label_0x1dd
 
 label_0x1d6:
-  mov     qword [rbx+0A28h],rdx
+  mov     qword [rbx+1020h],rdx
 
 label_0x1dd:
   inc     r9d
@@ -201,7 +201,7 @@ label_0x1dd:
   jb      label_0x131
 
 label_0x1ea:
-  mov     rax,qword [rbx+0A18h]
+  mov     rax,qword [rbx+1010h]
   lea     rcx,[rbx+800h]
   call    rax
   mov     rsi,qword [rsp+40h]
@@ -210,7 +210,7 @@ label_0x1ea:
   je      label_0x23e
 
 label_0x219:
-  mov     r8,qword [rbx+0A28h]
+  mov     r8,qword [rbx+1020h]
   mov     edx,0DEADh
   mov     rcx,rax
   call    r8
@@ -223,16 +223,16 @@ label_0x230:
 
 label_0x235:
   mov     rcx,rdi
-  call    qword [rbx+0A20h]
+  call    qword [rbx+1018h]
 
 label_0x23e:
-  mov     rax,qword [rbx+0A28h]
+  mov     rax,qword [rbx+1020h]
   lea     rdx,[rbx + string_ExitThread]
-  mov     rcx,qword [rbx+0A10h]
+  mov     rcx,qword [rbx+1008h]
   call    rax
-  mov     r8,qword [rbx+0A28h]
+  mov     r8,qword [rbx+1020h]
   lea     rdx,[rbx + string_VirtualFree]
-  mov     rcx,qword [rbx+0A10h]
+  mov     rcx,qword [rbx+1008h]
   mov     rdi,rax
   call    r8
   test    rax,rax

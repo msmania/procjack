@@ -3,7 +3,7 @@
 #include "../../pj/utils.h"
 
 uint64_t hex_to_uint64(const char *s);
-std::vector<uint64_t> address_chain(char *str);
+std::vector<uint64_t> address_chain(const char *str);
 
 TEST(string, hex) {
   EXPECT_EQ(hex_to_uint64("a123ffff"), 0xa123ffff);

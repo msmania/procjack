@@ -1,4 +1,5 @@
 #include <vector>
+#include <string>
 #include <algorithm>
 
 uint64_t hex_to_uint64(const char *s) {
@@ -28,16 +29,21 @@ uint64_t hex_to_uint64(const char *s) {
   return valid_chars <= 16 ? ret : 0;
 }
 
-std::vector<uint64_t> address_chain(char *str) {
+std::vector<uint64_t> address_chain(const char *cstr) {
   std::vector<uint64_t> ret;
-  char *s = str;
-  for (char *p = str; *p; ++p) {
-    if (*p == '-') {
-      *p = '\0';
-      ret.push_back(hex_to_uint64(s));
-      s = p + 1;
+  size_t len = strlen(cstr);
+  if (auto str = new char[len + 1]) {
+    memcpy(str, cstr, len + 1);
+    char *s = str;
+    for (char *p = str; *p; ++p) {
+      if (*p == '-') {
+        *p = '\0';
+        ret.push_back(hex_to_uint64(s));
+        s = p + 1;
+      }
     }
+    ret.push_back(hex_to_uint64(s));
+    delete [] str;
   }
-  ret.push_back(hex_to_uint64(s));
   return ret;
 }

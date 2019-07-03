@@ -199,7 +199,7 @@ struct FunctionTracePack final : public CodePack {
 };
 
 void FunctionTrace(Package *package) {
-  auto target = hex_to_uint64(package->args);
+  auto target = hex_to_uint64(package->nw.args);
   if (!target) {
     Log(L"Invalid address!\n");
     return;

@@ -97,13 +97,19 @@ The function can receive one pointer pointing to meta information, that is repre
 
 ```cpp
 struct Package {
-  uint8_t shellcode[SHELLCODE_CAPACITY];
-  wchar_t dllpath[260];
+  union NonWritable {
+    struct {
+      uint8_t shellcode[SHELLCODE_CAPACITY];
+      wchar_t dllpath[260];
+      char args[1];
+    };
+    uint8_t dummy[4096];
+  } nw;
+
   HybridPointer<PEB> peb;
   HybridPointer<void> kernel32;
   HybridPointer<void*(WINAPI)(void*)> xxxLoadLibrary;
   HybridPointer<uint32_t(WINAPI)(void*)> xxxFreeLibrary;
   HybridPointer<void*(WINAPI)(void*, void*)> xxxGetProcAddress;
-  char args[1];
 };
 ```

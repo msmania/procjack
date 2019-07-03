@@ -8,9 +8,9 @@ ShellCode:
   push    esi
   push    edi
   mov     edi,dword [esp+24h]
-  mov     dword [edi+0A08h],eax
+  mov     dword [edi+1000h],eax
   mov     ebp,dword [eax+0Ch]
-  mov     edx,dword [edi+0A10h]
+  mov     edx,dword [edi+1008h]
   add     ebp,14h
   mov     ebx,dword [ebp]
   cmp     ebx,ebp
@@ -68,7 +68,7 @@ label_0x86:
 label_0x8d:
   mov     edx,dword [ebx+10h]
   mov     esi,edx
-  mov     dword [edi+0A10h],edx
+  mov     dword [edi+1008h],edx
 
 label_0x98:
   mov     ebx,dword [ebx]
@@ -136,7 +136,7 @@ label_0x120:
   mov     edx,dword [esp+24h]
   mov     edx,dword [edx+eax*4]
   add     edx,esi
-  cmp     dword [edi+0A18h],0
+  cmp     dword [edi+1010h],0
   jne     label_0x163
 
 label_0x13b:
@@ -156,11 +156,11 @@ label_0x155:
   jne     label_0x163
 
 label_0x15b:
-  mov     dword [edi+0A18h],edx
+  mov     dword [edi+1010h],edx
   jmp     label_0x1c6
 
 label_0x163:
-  cmp     dword [edi+0A20h],0
+  cmp     dword [edi+1018h],0
   jne     label_0x18e
 
 label_0x16c:
@@ -176,11 +176,11 @@ label_0x17d:
   jne     label_0x18e
 
 label_0x186:
-  mov     dword [edi+0A20h],edx
+  mov     dword [edi+1018h],edx
   jmp     label_0x1c6
 
 label_0x18e:
-  cmp     dword [edi+0A28h],0
+  cmp     dword [edi+1020h],0
   jne     label_0x1c6
 
 label_0x197:
@@ -202,7 +202,7 @@ label_0x1b1:
   jne     label_0x1c6
 
 label_0x1c0:
-  mov     dword [edi+0A28h],edx
+  mov     dword [edi+1020h],edx
 
 label_0x1c6:
   mov     eax,dword [esp+10h]
@@ -212,7 +212,7 @@ label_0x1c6:
   jb      label_0x120
 
 label_0x1d8:
-  mov     ecx,dword [edi+0A18h]
+  mov     ecx,dword [edi+1010h]
   lea     eax,[edi+800h]
   push    eax
   call    ecx
@@ -221,7 +221,7 @@ label_0x1d8:
   je      label_0x21b
 
 label_0x1fd:
-  mov     ecx,dword [edi+0A28h]
+  mov     ecx,dword [edi+1020h]
   push    0DEADh
   push    esi
   call    ecx
@@ -233,21 +233,21 @@ label_0x20f:
   call    eax
 
 label_0x212:
-  mov     eax,dword [edi+0A20h]
+  mov     eax,dword [edi+1018h]
   push    esi
   call    eax
 
 label_0x21b:
-  mov     eax,dword [edi+0A28h]
+  mov     eax,dword [edi+1020h]
   lea     ecx,[edi+string_ExitThread]
   push    ecx
-  push    dword [edi+0A10h]
+  push    dword [edi+1008h]
   call    eax
-  mov     ecx,dword [edi+0A28h]
+  mov     ecx,dword [edi+1020h]
   mov     esi,eax
   lea     eax,[edi+string_VirtualFree]
   push    eax
-  push    dword [edi+0A10h]
+  push    dword [edi+1008h]
   call    ecx
   test    eax,eax
   je      label_0x259

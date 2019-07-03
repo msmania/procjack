@@ -25,11 +25,8 @@ void Inject(DWORD RemoteProcessId,
   constexpr WCHAR PLATFORM_LABEL[][10] = { L"WIN32", L"WIN64", L"WOW64" };
 
   PackageCreator package;
-
   HANDLE TargetProcess = nullptr;
   PVOID RemoteAddress = nullptr;
-
-  SIZE_T BytesWritten = 0;
   HANDLE RemoteThread = nullptr;
   DWORD RemoteThreadId = 0;
   DWORD WaitResult = 0;
@@ -69,24 +66,8 @@ void Inject(DWORD RemoteProcessId,
     goto cleanup;
   }
 
-  RemoteAddress = VirtualAllocEx(TargetProcess,
-                                 nullptr,
-                                 package.Size(),
-                                 MEM_RESERVE | MEM_COMMIT,
-                                 PAGE_EXECUTE_READWRITE);
-  if (!RemoteAddress) {
-    LOGERROR(L"VirtualAllocEx failed - %08x\n", GetLastError());
-    goto cleanup;
-  }
-
-  if (!WriteProcessMemory(TargetProcess,
-                          RemoteAddress,
-                          package.As<uint8_t>(),
-                          package.Size(),
-                          &BytesWritten)) {
-    LOGERROR(L"WriteProcessMemory failed - %08x\n", GetLastError());
-    goto cleanup;
-  }
+  RemoteAddress = package.Inject(TargetProcess);
+  if (!RemoteAddress) goto cleanup;
 
   RemoteThread = CreateRemoteThread(
     TargetProcess,

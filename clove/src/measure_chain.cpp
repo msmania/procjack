@@ -7,7 +7,7 @@
 #include "page.h"
 
 void Log(LPCWSTR format, ...);
-std::vector<uint64_t> address_chain(char *str);
+std::vector<uint64_t> address_chain(const char *str);
 void WaitAndThenCleanup();
 
 extern "C" {
@@ -220,7 +220,7 @@ struct MeasurementChainPack final : public CodePack {
 };
 
 void MeasurementChain(Package *package) {
-  auto chain = address_chain(package->args);
+  auto chain = address_chain(package->nw.args);
   if (chain.size() < 2) {
     Log(L"Invalid parameter!\n");
     return;

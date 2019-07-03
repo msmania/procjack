@@ -60,16 +60,23 @@ union HybridPointer {
 };
 
 struct Package {
-  uint8_t shellcode[SHELLCODE_CAPACITY];
-  wchar_t dllpath[260];
+  union NonWritable {
+    struct {
+      uint8_t shellcode[SHELLCODE_CAPACITY];
+      wchar_t dllpath[260];
+      char args[1];
+    };
+    uint8_t dummy[4096];
+  } nw;
+
   HybridPointer<PEB> peb;
   HybridPointer<void> kernel32;
   HybridPointer<void*(WINAPI)(void*)> xxxLoadLibrary;
   HybridPointer<uint32_t(WINAPI)(void*)> xxxFreeLibrary;
   HybridPointer<void*(WINAPI)(void*, void*)> xxxGetProcAddress;
-  char args[1];
 };
 
-constexpr uint32_t PACKAGE_SIZE = 4096;
-static_assert(PACKAGE_SIZE >= sizeof(Package), "Increase PackageSize");
-constexpr uint32_t ARGS_CAPACITY = PACKAGE_SIZE - offsetof(Package, args);
+constexpr uint32_t VALLOC_GRANULARITY = 1 << 16;
+static_assert(sizeof(Package) <= VALLOC_GRANULARITY, "Too big Package!");
+constexpr uint32_t ARGS_CAPACITY =
+  offsetof(Package, peb) - offsetof(Package, nw.args);
