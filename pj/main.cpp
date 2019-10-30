@@ -9,7 +9,11 @@
 
 std::string to_utf8(const wchar_t *utf16);
 std::string build_optional_args(int argc, wchar_t *argv[]);
+#ifdef DOWNLEVEL
+bool DisablePolicy(HANDLE) {return false;}
+#else
 bool DisablePolicy(HANDLE target);
+#endif
 
 void Inject(DWORD RemoteProcessId,
             LPCWSTR FilenameToInject,

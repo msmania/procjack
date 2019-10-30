@@ -1,3 +1,5 @@
+#ifndef DOWNLEVEL
+
 #include <windows.h>
 #include <stdio.h>
 
@@ -118,3 +120,5 @@ bool DisablePolicy(HANDLE target) {
   }
   return ret;
 }
+
+#endif

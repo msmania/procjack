@@ -22,6 +22,7 @@ CFLAGS=\
 	/O2\
 	/EHsc\
 	/W4\
+	/DDOWNLEVEL\
 
 LFLAGS=\
 	/NOLOGO\
