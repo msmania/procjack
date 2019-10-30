@@ -4,6 +4,7 @@ TARGET=spy.dll
 DEF=spy.def
 OBJS=\
 	$(OBJDIR)\dllmain.obj\
+	$(OBJDIR)\spy.res\
 
 # warning C4100: unreferenced formal parameter
 CFLAGS=\
@@ -25,6 +26,9 @@ LFLAGS=\
 	/DLL\
 	/DEF:$(DEF)\
 
+LIBS=\
+	user32.lib\
+
 all: $(OUTDIR)\$(TARGET)
 
 $(OUTDIR)\$(TARGET): $(OBJS)
@@ -34,6 +38,10 @@ $(OUTDIR)\$(TARGET): $(OBJS)
 {$(SRCDIR)}.cpp{$(OBJDIR)}.obj:
 	@if not exist $(OBJDIR) mkdir $(OBJDIR)
 	$(CC) $(CFLAGS) $<
+
+{$(SRCDIR)}.rc{$(OBJDIR)}.res:
+	@if not exist $(OBJDIR) mkdir $(OBJDIR)
+	rc /nologo /fo "$@" $<
 
 clean:
 	@if exist $(OBJDIR) $(RD) $(OBJDIR)
