@@ -14,7 +14,7 @@ CFLAGS=\
 	/Fo"$(OBJDIR)\\"\
 	/Fd"$(OBJDIR)\\"\
 	/DUNICODE\
-	/O2\
+	/Od\
 	/EHsc\
 	/W4\
 	/wd4100\
@@ -27,7 +27,6 @@ LFLAGS=\
 	/DEF:$(DEF)\
 
 LIBS=\
-	user32.lib\
 
 all: $(OUTDIR)\$(TARGET)
 
