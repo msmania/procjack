@@ -4,8 +4,6 @@ private:
   LPVOID buffer_;
   SIZE_T size_;
 
-  void Release();
-
 public:
   Blob();
   Blob(SIZE_T size);
@@ -25,4 +23,5 @@ public:
   Blob &operator=(Blob &&other);
   SIZE_T Size() const;
   bool Alloc(SIZE_T size);
+  void Release();
 };

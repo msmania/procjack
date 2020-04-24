@@ -1,4 +1,3 @@
-#include <cstdint>
 #include <functional>
 #include <windows.h>
 #include <magnification.h>
@@ -214,62 +213,105 @@ void HookZoom(Package *package) {
   }
 }
 
-BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
-  int cchLen = 2;
-  Blob buf;
-  for (;;) {
-    if (!buf.Alloc(cchLen * sizeof(WCHAR))) {
-      return FALSE;
+class SearchByWindowClassName final {
+  static BOOL CALLBACK EnumWindowsProc(HWND window, LPARAM lParam) {
+    if (!lParam) return FALSE;
+    return
+      reinterpret_cast<SearchByWindowClassName*>(lParam)->EnumInternal(window);
+  }
+
+  static Blob GetClassNameSafely(HWND window) {
+    int cchLen = 64;
+    Blob blob;
+    for (;;) {
+      if (!blob.Alloc(cchLen * sizeof(WCHAR))) {
+        break;
+      }
+
+      int len = GetClassName(window, blob.As<WCHAR>(), cchLen);
+      if (!len) {
+        Log(L"GetClassName failed - %08x\n", GetLastError());
+        break;
+      }
+
+      if (len == cchLen - 1) {
+        cchLen *= 2;
+        continue;
+      }
+
+      return blob;
     }
 
-    int len = GetClassName(hwnd, buf.As<WCHAR>(), cchLen);
-    if (!len) {
-      Log(L"GetClassName failed - %08x\n", GetLastError());
+    blob.Release();
+    return blob;
+  }
+
+  using CallbackFunc = std::function<void(HWND, const RECT&)>;
+
+  LPCWSTR targetName_;
+  CallbackFunc callback_;
+
+  BOOL EnumInternal(HWND window) {
+    Blob className = GetClassNameSafely(window);
+    if (targetName_
+        && (className.Size() == 0
+            || wcscmp(className.As<WCHAR>(), targetName_) != 0)) {
       return TRUE;
     }
 
-    if (len == cchLen - 1) {
-      cchLen *= 2;
-      continue;
+    RECT rect;
+    if (!GetWindowRect(window, &rect)) {
+      Log(L"GetWindowRect failed - %08x\n", GetLastError());
+      return TRUE;
+    }
+    if (rect.left == rect.right
+        || rect.top == rect.bottom) {
+      return TRUE;
     }
 
-    if (wcscmp(buf.As<WCHAR>(), L"MozillaWindowClass") == 0) {
-      RECT rect;
-      if (!GetWindowRect(hwnd, &rect)) {
-        Log(L"GetWindowRect failed - %08x\n", GetLastError());
-        return TRUE;
-      }
-      if (rect.left == rect.right
-          || rect.top == rect.bottom) {
-        return TRUE;
-      }
-
-      if (!(GetWindowLong(hwnd, GWL_STYLE) & WS_VISIBLE)) {
-        return TRUE;
-      }
-
-      len = GetWindowTextLength(hwnd) + 1;
-      Blob caption(len * sizeof(WCHAR));
-      if (!GetWindowText(hwnd, caption.As<WCHAR>(), len)) {
-        Log(L"GetWindowText failed - %08x\n", GetLastError());
-        return TRUE;
-      }
-
-      Log(L"> %p: ""%s"" (%d, %d)-(%d, %d), %dx%d\n",
-          hwnd,
-          caption.As<WCHAR>(),
-          rect.left, rect.top,
-          rect.right, rect.bottom,
-          rect.right - rect.left,
-          rect.bottom - rect.top);
+    LONG styles = GetWindowLong(window, GWL_STYLE);
+    if (!(styles & WS_VISIBLE)
+        || (styles & WS_MINIMIZE)) {
+      return TRUE;
     }
-    break;
+
+    if (callback_) {
+      callback_(window, rect);
+    }
+
+    return TRUE;
   }
-  return TRUE;
-}
+
+public:
+  SearchByWindowClassName()
+    : targetName_(nullptr)
+  {}
+
+  void Sync(LPCWSTR className, CallbackFunc callback) {
+    targetName_ = className;
+    callback_ = callback;
+    if (!EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(this))) {
+      Log(L"EnumWindows failed - %08x\n", GetLastError());
+    }
+  }
+};
 
 void SearchFox(Package *package) {
-  if (!EnumWindows(EnumWindowsProc, 0)) {
-    Log(L"EnumWindows failed - %08x\n", GetLastError());
-  }
+  SearchByWindowClassName searcher;
+  searcher.Sync(L"MozillaWindowClass", [](HWND window, const RECT &rect) {
+    int len = GetWindowTextLength(window) + 1;
+    Blob caption(len * sizeof(WCHAR));
+    if (!GetWindowText(window, caption.As<WCHAR>(), len)) {
+      Log(L"GetWindowText failed - %08x\n", GetLastError());
+      return;
+    }
+
+    Log(L"> %p: ""%s"" (%d, %d)-(%d, %d), %dx%d\n",
+        window,
+        caption.As<WCHAR>(),
+        rect.left, rect.top,
+        rect.right, rect.bottom,
+        rect.right - rect.left,
+        rect.bottom - rect.top);
+  });
 }
