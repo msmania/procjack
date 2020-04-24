@@ -3,6 +3,7 @@
 TARGET=spy.dll
 DEF=spy.def
 OBJS=\
+	$(OBJDIR)\blob.obj\
 	$(OBJDIR)\dllmain.obj\
 	$(OBJDIR)\spy.res\
 	$(OBJDIR)\zoom.obj\
@@ -31,6 +32,7 @@ LFLAGS=\
 
 LIBS=\
 	detours.lib\
+	user32.lib\
 
 all: $(OUTDIR)\$(TARGET)
 

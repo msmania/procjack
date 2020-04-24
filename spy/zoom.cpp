@@ -4,6 +4,7 @@
 #include <magnification.h>
 #include <detours.h>
 #include "../common.h"
+#include "blob.h"
 
 void Log(LPCWSTR format, ...);
 
@@ -185,5 +186,65 @@ void HookZoom(Package *package) {
 
   for (;;) {
     Sleep(100);
+  }
+}
+
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
+  int cchLen = 2;
+  Blob buf;
+  for (;;) {
+    if (!buf.Alloc(cchLen * sizeof(WCHAR))) {
+      return FALSE;
+    }
+
+    int len = GetClassName(hwnd, buf.As<WCHAR>(), cchLen);
+    if (!len) {
+      Log(L"GetClassName failed - %08x\n", GetLastError());
+      return TRUE;
+    }
+
+    if (len == cchLen - 1) {
+      cchLen *= 2;
+      continue;
+    }
+
+    if (wcscmp(buf.As<WCHAR>(), L"MozillaWindowClass") == 0) {
+      RECT rect;
+      if (!GetWindowRect(hwnd, &rect)) {
+        Log(L"GetWindowRect failed - %08x\n", GetLastError());
+        return TRUE;
+      }
+      if (rect.left == rect.right
+          || rect.top == rect.bottom) {
+        return TRUE;
+      }
+
+      if (!(GetWindowLong(hwnd, GWL_STYLE) & WS_VISIBLE)) {
+        return TRUE;
+      }
+
+      len = GetWindowTextLength(hwnd) + 1;
+      Blob caption(len * sizeof(WCHAR));
+      if (!GetWindowText(hwnd, caption.As<WCHAR>(), len)) {
+        Log(L"GetWindowText failed - %08x\n", GetLastError());
+        return TRUE;
+      }
+
+      Log(L"> %p: ""%s"" (%d, %d)-(%d, %d), %dx%d\n",
+          hwnd,
+          caption.As<WCHAR>(),
+          rect.left, rect.top,
+          rect.right, rect.bottom,
+          rect.right - rect.left,
+          rect.bottom - rect.top);
+    }
+    break;
+  }
+  return TRUE;
+}
+
+void SearchFox(Package *package) {
+  if (!EnumWindows(EnumWindowsProc, 0)) {
+    Log(L"EnumWindows failed - %08x\n", GetLastError());
   }
 }
