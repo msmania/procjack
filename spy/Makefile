@@ -5,6 +5,7 @@ DEF=spy.def
 OBJS=\
 	$(OBJDIR)\dllmain.obj\
 	$(OBJDIR)\spy.res\
+	$(OBJDIR)\zoom.obj\
 
 # warning C4100: unreferenced formal parameter
 CFLAGS=\
@@ -13,6 +14,7 @@ CFLAGS=\
 	/c\
 	/Fo"$(OBJDIR)\\"\
 	/Fd"$(OBJDIR)\\"\
+	/I"$(DETOUR_DIR)\include"\
 	/DUNICODE\
 	/Od\
 	/EHsc\
@@ -25,8 +27,10 @@ LFLAGS=\
 	/SUBSYSTEM:WINDOWS\
 	/DLL\
 	/DEF:$(DEF)\
+	/LIBPATH:"$(DETOUR_DIR)\lib.$(PLATFORM)"\
 
 LIBS=\
+	detours.lib\
 
 all: $(OUTDIR)\$(TARGET)
 

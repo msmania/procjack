@@ -1,3 +1,4 @@
 ; https://msdn.microsoft.com/en-us/library/hyx1zcd3.aspx
 EXPORTS
   Hello @100 NONAME PRIVATE
+  HookZoom @200 NONAME PRIVATE
