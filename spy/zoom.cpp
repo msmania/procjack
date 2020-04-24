@@ -46,13 +46,38 @@ namespace hook {
 
   void* orig_MagSetColorEffect;
   BOOL WINAPI MagSetColorEffect(HWND hwnd, PMAGCOLOREFFECT pEffect) {
-    Log(L">> MagSetColorEffect(%p, [%f %f %f %f %f])\n",
+    Log(L">> MagSetColorEffect(%p,\n"
+         "                     [%f %f %f %f %f]\n"
+         "                     [%f %f %f %f %f]\n"
+         "                     [%f %f %f %f %f]\n"
+         "                     [%f %f %f %f %f]\n"
+         "                     [%f %f %f %f %f])\n",
         hwnd,
         pEffect->transform[0][0],
         pEffect->transform[0][1],
         pEffect->transform[0][2],
         pEffect->transform[0][3],
-        pEffect->transform[0][4]);
+        pEffect->transform[0][4],
+        pEffect->transform[1][0],
+        pEffect->transform[1][1],
+        pEffect->transform[1][2],
+        pEffect->transform[1][3],
+        pEffect->transform[1][4],
+        pEffect->transform[2][0],
+        pEffect->transform[2][1],
+        pEffect->transform[2][2],
+        pEffect->transform[2][3],
+        pEffect->transform[2][4],
+        pEffect->transform[3][0],
+        pEffect->transform[3][1],
+        pEffect->transform[3][2],
+        pEffect->transform[3][3],
+        pEffect->transform[3][4],
+        pEffect->transform[4][0],
+        pEffect->transform[4][1],
+        pEffect->transform[4][2],
+        pEffect->transform[4][3],
+        pEffect->transform[4][4]);
     BOOL ret = reinterpret_cast<decltype(&::MagSetColorEffect)>(
       orig_MagSetColorEffect)(hwnd, pEffect);
     Log(L"<< MagSetColorEffect: %d\n",
@@ -177,7 +202,7 @@ void HookZoom(Package *package) {
 
   DetourTransaction([&]() {
     //DETOUR_ATTACH(MagInitialize);
-    //DETOUR_ATTACH(MagSetColorEffect);
+    DETOUR_ATTACH(MagSetColorEffect);
     DETOUR_ATTACH(MagSetWindowSource);
     //DETOUR_ATTACH(MagSetWindowFilterList);
     //DETOUR_ATTACH(MagUninitialize);
