@@ -167,25 +167,46 @@ namespace hook {
   }
 
   void* orig_MagSetWindowSource;
-  BOOL WINAPI MagSetWindowSource(HWND hwnd, RECT rect) {
+  BOOL WINAPI MagSetWindowSource(HWND hwnd, RECT rectShared) {
+#if 0
     static HWND h0 = nullptr;
     static RECT r0 = {};
-    bool isSame = (h0 == hwnd && memcmp(&r0, &rect, sizeof(RECT)) == 0);
+    bool isSame = (h0 == hwnd && memcmp(&r0, &rectShared, sizeof(RECT)) == 0);
     if (!isSame) {
-      h0 = hwnd, r0 = rect;
+      h0 = hwnd, r0 = rectShared;
       Log(L">> MagSetWindowSource(%p, (%d, %d)-(%d, %d), %dx%d)\n",
           hwnd,
-          rect.left, rect.top,
-          rect.right, rect.bottom,
-          rect.right - rect.left,
-          rect.bottom - rect.top);
+          rectShared.left, rectShared.top,
+          rectShared.right, rectShared.bottom,
+          rectShared.right - rectShared.left,
+          rectShared.bottom - rectShared.top);
     }
+#endif
+    SearchByWindowClassName searcher;
+    searcher.Sync(L"MozillaWindowClass",
+                  [&rectShared]
+                  (HWND window, const RECT &rectFirefox) {
+                    SYSTEMTIME st;
+                    GetSystemTime(&st);
+
+                    RECT intersect;
+                    if (IntersectRect(&intersect, &rectShared, &rectFirefox)) {
+                      Log(L"%02d:%02d:%02d.%d: Firefox window %p is shared!!\n",
+                          st.wHour,
+                          st.wMinute,
+                          st.wSecond,
+                          st.wMilliseconds,
+                          window);
+                    }
+                  });
     BOOL ret = reinterpret_cast<decltype(&::MagSetWindowSource)>(
-      orig_MagSetWindowSource)(hwnd, rect);
+      orig_MagSetWindowSource)(hwnd, rectShared);
+#if 0
     if (!isSame) {
       Log(L"<< MagSetWindowSource: %d\n",
           ret);
     }
+#endif
     return ret;
   }
 
@@ -283,7 +304,7 @@ void HookZoom(Package *package) {
 
   DetourTransaction([&]() {
     //DETOUR_ATTACH(MagInitialize);
-    DETOUR_ATTACH(MagSetColorEffect);
+    //DETOUR_ATTACH(MagSetColorEffect);
     DETOUR_ATTACH(MagSetWindowSource);
     //DETOUR_ATTACH(MagSetWindowFilterList);
     //DETOUR_ATTACH(MagUninitialize);
