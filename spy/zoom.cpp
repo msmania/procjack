@@ -264,8 +264,7 @@ class SearchByWindowClassName final {
       Log(L"GetWindowRect failed - %08x\n", GetLastError());
       return TRUE;
     }
-    if (rect.left == rect.right
-        || rect.top == rect.bottom) {
+    if (IsRectEmpty(&rect)) {
       return TRUE;
     }
 
