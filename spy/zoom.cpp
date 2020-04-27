@@ -243,6 +243,37 @@ namespace hook {
     }
     return ret;
   }
+
+  void* orig_SendMessageW;
+  LRESULT WINAPI SendMessageW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
+    constexpr UINT ZOOM_START_SHARING = 0x465;
+    constexpr UINT ZOOM_STOP_SHARING = 0x466;
+    constexpr UINT ZOOM_SHARE_MONITOR = 0x468;
+    constexpr UINT ZOOM_SHARE_WINDOW = 0x469;
+
+    switch (Msg) {
+    case ZOOM_START_SHARING:
+      Log(L">> Zoom: Desktop sharing has started!\n");
+      break;
+    case ZOOM_STOP_SHARING:
+      Log(L">> Zoom: Desktop sharing has stopped!\n");
+      break;
+    case ZOOM_SHARE_MONITOR:
+      if (lParam) {
+        Log(L">> Zoom: source=%s\n", reinterpret_cast<LPCWSTR>(lParam));
+      }
+      break;
+    case ZOOM_SHARE_WINDOW:
+      if (lParam) {
+        Log(L">> Zoom: source=HWND %p\n", *reinterpret_cast<HWND*>(lParam));
+      }
+      break;
+    }
+
+    BOOL ret = reinterpret_cast<decltype(&::SendMessageW)>(
+      orig_SendMessageW)(hWnd, Msg, wParam, lParam);
+    return ret;
+  }
 }
 
 bool DetourTransaction(std::function<bool()> callback) {
@@ -340,4 +371,18 @@ void SearchFox(Package *package) {
         rect.right - rect.left,
         rect.bottom - rect.top);
   });
+}
+
+void HookZoom2(Package *package) {
+  Loader magDll(L"user32.dll");
+  if (!magDll) return;
+
+  DetourTransaction([&]() {
+    DETOUR_ATTACH(SendMessageW);
+    return true;
+  });
+
+  for (;;) {
+    Sleep(100);
+  }
 }
