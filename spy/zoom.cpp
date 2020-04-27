@@ -5,6 +5,8 @@
 #include "../common.h"
 #include "blob.h"
 
+//#define ZOOM_LOG 1
+
 void Log(LPCWSTR format, ...);
 
 class SearchByWindowClassName final {
@@ -168,7 +170,7 @@ namespace hook {
 
   void* orig_MagSetWindowSource;
   BOOL WINAPI MagSetWindowSource(HWND hwnd, RECT rectShared) {
-#if 0
+#if ZOOM_LOG
     static HWND h0 = nullptr;
     static RECT r0 = {};
     bool isSame = (h0 == hwnd && memcmp(&r0, &rectShared, sizeof(RECT)) == 0);
@@ -181,7 +183,7 @@ namespace hook {
           rectShared.right - rectShared.left,
           rectShared.bottom - rectShared.top);
     }
-#endif
+#else
     SearchByWindowClassName searcher;
     searcher.Sync(L"MozillaWindowClass",
                   [&rectShared]
@@ -199,14 +201,18 @@ namespace hook {
                           window);
                     }
                   });
+#endif
+
     BOOL ret = reinterpret_cast<decltype(&::MagSetWindowSource)>(
       orig_MagSetWindowSource)(hwnd, rectShared);
-#if 0
+
+#if ZOOM_LOG
     if (!isSame) {
       Log(L"<< MagSetWindowSource: %d\n",
           ret);
     }
 #endif
+
     return ret;
   }
 
