@@ -80,3 +80,24 @@ constexpr uint32_t VALLOC_GRANULARITY = 1 << 16;
 static_assert(sizeof(Package) <= VALLOC_GRANULARITY, "Too big Package!");
 constexpr uint32_t ARGS_CAPACITY =
   offsetof(Package, peb) - offsetof(Package, nw.args);
+
+template<typename T>
+class LoaderT final {
+  HMODULE base_;
+
+public:
+  LoaderT(const T *name) : base_(LoadLibrary(name))
+  {}
+
+  ~LoaderT() {
+    if (base_) FreeLibrary(base_);
+  }
+
+  operator bool() const { return !!base_; }
+  operator HMODULE() const { return base_; }
+};
+#ifdef UNICODE
+using Loader = LoaderT<wchar_t>;
+#else
+using Loader = LoaderT<char>;
+#endif

@@ -29,3 +29,19 @@ void Hello(Package *package) {
       package->peb.p,
       package->nw.args);
 }
+
+LRESULT HookProc(int code, WPARAM w, LPARAM l) {
+  static decltype(&::CallNextHookEx) sCallNextHookEx = []() {
+    Loader user32(L"user32.dll");
+    return reinterpret_cast<decltype(&::CallNextHookEx)>(
+        GetProcAddress(user32, "CallNextHookEx"));
+  }();
+  if (auto msg = reinterpret_cast<PCWPSTRUCT>(l)) {
+    Log(L"HookProc: %08x %04x %08x %08x\n",
+        msg->hwnd,
+        msg->message,
+        msg->wParam,
+        msg->lParam);
+  }
+  return sCallNextHookEx(/*hhk*/nullptr, code, w, l);
+}

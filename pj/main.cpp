@@ -110,6 +110,40 @@ cleanup:
   if (TargetProcess) CloseHandle(TargetProcess);
 }
 
+void ApplyWindowHook(LPCWSTR windowClassName, LPCWSTR injectee, int ordinal) {
+  if (!windowClassName) return;
+
+  DWORD tid;
+  if (windowClassName[0] == L'*' && windowClassName[1] == 0) {
+    tid = 0;
+  }
+  else {
+    auto targetWindow = FindWindow(windowClassName, nullptr);
+    if (!targetWindow) {
+      LOGERROR(L"Window class `%s` not found\n", windowClassName);
+      return;
+    }
+
+    tid = GetWindowThreadProcessId(targetWindow, nullptr);
+    LOGINFO(L"[%s] %p tid:%04x\n", windowClassName, targetWindow, tid);
+  }
+
+  Loader spy(injectee);
+  HHOOK hook = SetWindowsHookEx(
+    WH_CALLWNDPROC,
+    reinterpret_cast<HOOKPROC>(GetProcAddress(spy, MAKEINTRESOURCEA(ordinal))),
+    spy,
+    tid);
+  if (!hook) {
+    LOGERROR(L"SetWindowsHookEx failed - %08x\n", GetLastError());
+    return;
+  }
+
+  LOGINFO(L"Window hook has been applied.  Hit Enter to finish...\n");
+  getchar();
+  UnhookWindowsHookEx(hook);
+}
+
 int wmain(int argc, wchar_t *argv[]) {
   if (argc < 3) {
     LOGINFO(L"\nUSAGE: pj.exe [-d] [-w] <PID> <FILE>[?ORDINAL] [ARGS]\n"
@@ -131,11 +165,18 @@ int wmain(int argc, wchar_t *argv[]) {
   auto pair = split<wchar_t>(argv[arg_index + 1], L'?');
   auto optional_args = build_optional_args(argc - arg_index - 2,
                                            &argv[arg_index + 2]);
-  Inject(_wtoi(argv[arg_index]),
-         pair.first.c_str(),
-         pair.second,
-         optional_args,
-         wait,
-         disable_policy);
+
+  int maybePid = _wtoi(argv[arg_index]);
+  if (maybePid) {
+    Inject(maybePid,
+           pair.first.c_str(),
+           pair.second,
+           optional_args,
+           wait,
+           disable_policy);
+  }
+  else {
+    ApplyWindowHook(argv[arg_index], pair.first.c_str(), pair.second);
+  }
   return 0;
 }

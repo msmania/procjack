@@ -11,6 +11,7 @@ OBJS=\
 LIBS=\
 	advapi32.lib\
 	authz.lib\
+	user32.lib\
 
 CFLAGS=\
 	/nologo\
