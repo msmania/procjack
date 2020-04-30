@@ -5,6 +5,7 @@ DEF=spy.def
 OBJS=\
 	$(OBJDIR)\dllmain.obj\
 	$(OBJDIR)\spy.res\
+	$(OBJDIR)\zoom.obj\
 
 # warning C4100: unreferenced formal parameter
 CFLAGS=\
@@ -27,6 +28,7 @@ LFLAGS=\
 	/DEF:$(DEF)\
 
 LIBS=\
+	user32.lib\
 
 all: $(OUTDIR)\$(TARGET)
 
